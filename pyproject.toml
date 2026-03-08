@@ -21,12 +21,21 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0.0",
+  "pytest-asyncio>=0.24.0",
+  "respx>=0.21.0",
   "ruff>=0.15.0",
   "ty>=0.0.21",
 ]
 
 [project.urls]
 Homepage = "https://api.uds.app/partner/v2"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
 
 [tool.ruff]
 line-length = 79

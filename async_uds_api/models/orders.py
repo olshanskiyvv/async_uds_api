@@ -6,10 +6,18 @@ from typing import List, Optional, Union
 
 from pydantic import BaseModel, Field
 
-from async_uds_api.models.common import BranchInfo
 from async_uds_api.models.customers import PurchaseCalc
 from async_uds_api.models.goods import GoodsMeasurement
 from async_uds_api.models.settings import MembershipTier
+
+
+class BranchInfo(BaseModel):
+    id: int = Field(description="Branch ID in the UDS.")
+    display_name: str = Field(
+        alias="displayName",
+        validation_alias="displayName",
+        description="Branch name.",
+    )
 
 
 class GoodsOrderState(str, Enum):

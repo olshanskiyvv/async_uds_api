@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-from async_uds_api.models.common import BranchInfo
+from async_uds_api.models.orders import BranchInfo
 from async_uds_api.models.customers import OperationCustomer
 
 

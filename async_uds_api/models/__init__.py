@@ -1,4 +1,3 @@
-from async_uds_api.models.common import BranchInfo
 from async_uds_api.models.customers import (
     Customer,
     CustomerDetail,
@@ -43,6 +42,7 @@ from async_uds_api.models.operations import (
     VoucherInfo,
 )
 from async_uds_api.models.orders import (
+    BranchInfo,
     CustomerShortInfo,
     Delivery,
     DeliveryCase,

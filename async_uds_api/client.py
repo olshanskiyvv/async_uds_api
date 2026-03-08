@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional, Type
 
 import httpx
 
-from async_uds_api.api import CustomersAPI, OperationsAPI, SettingsAPI, TagsAPI
+from async_uds_api.api import CustomersAPI, GoodsAPI, OperationsAPI, SettingsAPI, TagsAPI
 from async_uds_api.errors import (
     UDSAPIError,
     UDSBadRequestError,
@@ -32,6 +32,7 @@ class UDSClient:
     - customers: CustomersAPI
     - operations: OperationsAPI
     - tags: TagsAPI
+    - goods: GoodsAPI
     """
 
     def __init__(
@@ -57,6 +58,7 @@ class UDSClient:
         self.customers = CustomersAPI(self)
         self.operations = OperationsAPI(self)
         self.tags = TagsAPI(self)
+        self.goods = GoodsAPI(self)
 
     async def aclose(self) -> None:
         if not self._external_client:
@@ -155,3 +157,25 @@ class UDSClient:
             assert isinstance(data, dict)
             return data
         return {}
+
+    async def _put_json(
+        self,
+        path: str,
+        *,
+        body: Optional[Dict[str, Any]] = None,
+        params: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        response = await self._request("PUT", path, params=params, json=body)
+        if response.content:
+            data = response.json()
+            assert isinstance(data, dict)
+            return data
+        return {}
+
+    async def _delete(
+        self,
+        path: str,
+        *,
+        params: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        await self._request("DELETE", path, params=params)

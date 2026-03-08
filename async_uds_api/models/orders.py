@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 from async_uds_api.models.common import BranchInfo
 from async_uds_api.models.customers import PurchaseCalc
+from async_uds_api.models.goods import GoodsMeasurement
 from async_uds_api.models.settings import MembershipTier
 
 
@@ -22,23 +23,6 @@ class GoodsOrderState(str, Enum):
 class GoodsOrderUpdateStatus(str, Enum):
     ACCEPTED = "ACCEPTED"
     READY = "READY"
-
-
-class GoodsMeasurement(str, Enum):
-    PIECE = "PIECE"
-    CENTIMETRE = "CENTIMETRE"
-    METRE = "METRE"
-    MILLILITRE = "MILLILITRE"
-    LITRE = "LITRE"
-    GRAM = "GRAM"
-    KILOGRAM = "KILOGRAM"
-    TON = "TON"
-    SQUARE_METRE = "SQUARE_METRE"
-    CUBIC_METRE = "CUBIC_METRE"
-    DAY = "DAY"
-    HOUR = "HOUR"
-    MINUTE = "MINUTE"
-    KILOMETRE = "KILOMETRE"
 
 
 class DeliveryTypes(str, Enum):

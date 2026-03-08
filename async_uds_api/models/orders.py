@@ -184,7 +184,10 @@ class GoodsOrderItem(BaseModel):
         default=None,
         alias="variantName",
         validation_alias="variantName",
-        description="Name of the item option, if the type of this item is VARYING_ITEM.",
+        description=(
+            "Name of the item option, if the type of this item is "
+            "VARYING_ITEM."
+        ),
     )
     sku: str | None = Field(
         default=None,

@@ -15,7 +15,9 @@ class ImageUploadUrl(BaseModel):
     image_id: str = Field(
         alias="imageId",
         validation_alias="imageId",
-        description="Image identifier. This value has to be attached to goods entity.",
+        description=(
+            "Image identifier. This value has to be attached to goods entity."
+        ),
     )
     url: str = Field(description="Presigned upload url.")
     method: str = Field(description="Http method name.")

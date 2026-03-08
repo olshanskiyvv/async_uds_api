@@ -14,13 +14,18 @@ class MembershipTierConditionsEffectiveInvitedCount(BaseModel):
 class MembershipTierConditions(BaseModel):
     total_cash_spent: MembershipTierConditionsTotalCashSpent | None = Field(
         default=None,
-        description="Upgrade status when customer reaches that amount of cash spent.",
+        description=(
+            "Upgrade status when customer reaches that amount of cash spent."
+        ),
     )
     effective_invited_count: (
         MembershipTierConditionsEffectiveInvitedCount | None
     ) = Field(
         default=None,
-        description="Upgrade to tier when customer reaches target effectiveInvitedCount.",
+        description=(
+            "Upgrade to tier when customer reaches target "
+            "effectiveInvitedCount."
+        ),
     )
 
 
@@ -33,7 +38,9 @@ class MembershipTier(BaseModel):
     rate: float = Field(description="Status rate.")
     max_scores_discount: float | None = Field(
         default=None,
-        description="Maximum discount (as a percentage) allowed for redeeming points.",
+        description=(
+            "Maximum discount (as a percentage) allowed for redeeming points."
+        ),
     )
     conditions: MembershipTierConditions | None = Field(
         default=None,
@@ -72,7 +79,9 @@ class LoyaltyProgramSettings(BaseModel):
         default=None,
         alias="receiptLimit",
         validation_alias="receiptLimit",
-        description="Maximum transaction amount that can be made through UDS Cashier.",
+        description=(
+            "Maximum transaction amount that can be made through UDS Cashier."
+        ),
     )
     defer_points_for_days: float | None = Field(
         default=None,
@@ -123,8 +132,14 @@ class CompanySettings(BaseModel):
     write_invoice: bool = Field(
         alias="writeInvoice",
         validation_alias="writeInvoice",
-        description="Necessity to indicate a bill number when performing transactions through UDS Cashier.",
+        description=(
+            "Necessity to indicate a bill number when performing "
+            "transactions through UDS Cashier."
+        ),
     )
     slug: str = Field(
-        description="The domain name that appears in the link to your company's web page.",
+        description=(
+            "The domain name that appears in the link to your company's "
+            "web page."
+        ),
     )

@@ -132,7 +132,10 @@ class PurchaseCalc(BaseModel):
         default=None,
         alias="cashBack",
         validation_alias="cashBack",
-        description="Reward (cashback) to be accrued after transaction completion (in points).",
+        description=(
+            "Reward (cashback) to be accrued after transaction completion "
+            "(in points)."
+        ),
     )
     extras_delivery: float | None = Field(
         default=None,
@@ -144,7 +147,9 @@ class PurchaseCalc(BaseModel):
         default=None,
         alias="maxScoresDiscount",
         validation_alias="maxScoresDiscount",
-        description="Maximum discount (as a percentage) allowed for redeeming points.",
+        description=(
+            "Maximum discount (as a percentage) allowed for redeeming points."
+        ),
     )
 
 

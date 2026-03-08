@@ -55,7 +55,10 @@ class GoodsOffer(BaseModel):
         default=None,
         alias="skipLoyalty",
         validation_alias="skipLoyalty",
-        description="Flag of goods item price which cashback is not credited and to which the discount does not apply.",
+        description=(
+            "Flag of goods item price which cashback is not credited and "
+            "to which the discount does not apply."
+        ),
     )
 
 
@@ -64,7 +67,10 @@ class GoodsInventory(BaseModel):
         default=None,
         alias="inStock",
         validation_alias="inStock",
-        description="Item quantity in stock. The 'null' value means unlimited quantity.",
+        description=(
+            "Item quantity in stock. The 'null' value means unlimited "
+            "quantity."
+        ),
     )
 
 
@@ -102,7 +108,10 @@ class GoodsItemType(BaseModel):
     )
     increment: float | None = Field(
         default=None,
-        description="Amount of the item that the buyer can increase or decrease by 1 interval.",
+        description=(
+            "Amount of the item that the buyer can increase or decrease "
+            "by 1 interval."
+        ),
     )
     min_quantity: float | None = Field(
         default=None,

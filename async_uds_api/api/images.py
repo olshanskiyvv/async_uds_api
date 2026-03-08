@@ -47,7 +47,8 @@ class ImagesAPI:
             ImageUploadUrl with image_id, url, method, headers, expires
 
         Raises:
-            UDSImageUnsupportedSourceError: If content_type is not a valid MIME type
+            UDSImageUnsupportedSourceError: If content_type is not a valid
+                MIME type.
         """
         self._validate_content_type(content_type)
 
@@ -84,7 +85,8 @@ class ImagesAPI:
             UDSImageReadError: If file cannot be read
             UDSImageDownloadError: If image cannot be downloaded from URL
             UDSImageUploadError: If upload to presigned URL fails
-            UDSImageUnsupportedSourceError: If source is not valid or content_type is invalid
+            UDSImageUnsupportedSourceError: If source is not valid or
+                content_type is invalid.
         """
         if isinstance(source, bytes):
             if content_type is None:
@@ -114,7 +116,8 @@ class ImagesAPI:
             content_type: MIME type string (e.g., "image/jpeg")
 
         Raises:
-            UDSImageUnsupportedSourceError: If content_type is not a valid MIME type
+            UDSImageUnsupportedSourceError: If content_type is not a valid
+                MIME type.
         """
         mime_pattern = (
             r"^[a-zA-Z0-9!#$%^&\*\_\-+{}|\.]+/[a-zA-Z0-9!#$%^&\*\_\-+{}|\.]+$"

@@ -21,10 +21,24 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0.0",
+  "ruff>=0.15.0",
+  "ty>=0.0.21",
 ]
 
 [project.urls]
 Homepage = "https://api.uds.app/partner/v2"
+
+[tool.ruff]
+line-length = 79
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
 
 [tool.setuptools.packages.find]
 where = ["."]

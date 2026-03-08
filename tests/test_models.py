@@ -24,10 +24,12 @@ from async_uds_api.models import (
 class TestCustomerModel:
     def test_customer_model_creation(self):
         """Test Customer model creation."""
-        customer = Customer(
-            uid="abc123",
-            displayName="John Doe",
-            phone="+79001234567",
+        customer = Customer.model_validate(
+            {
+                "uid": "abc123",
+                "displayName": "John Doe",
+                "phone": "+79001234567",
+            }
         )
 
         assert customer.uid == "abc123"
@@ -36,9 +38,11 @@ class TestCustomerModel:
 
     def test_customer_model_with_aliases(self):
         """Test Customer model field aliases."""
-        customer = Customer(
-            displayName="Jane Smith",
-            birthDate=date(1990, 1, 1),
+        customer = Customer.model_validate(
+            {
+                "displayName": "Jane Smith",
+                "birthDate": "1990-01-01",
+            }
         )
 
         assert customer.display_name == "Jane Smith"
@@ -138,10 +142,12 @@ class TestGoodsModels:
 
     def test_goods_with_external_id(self):
         """Test GoodsDetailed with external ID."""
-        goods = GoodsDetailed(
-            name="Test Item",
-            data=GoodsItemType(type=GoodsType.ITEM),
-            externalId="external-123",
+        goods = GoodsDetailed.model_validate(
+            {
+                "name": "Test Item",
+                "data": {"type": "ITEM"},
+                "externalId": "external-123",
+            }
         )
 
         assert goods.external_id == "external-123"
@@ -150,10 +156,12 @@ class TestGoodsModels:
 class TestImageModels:
     def test_image_upload_url_model(self):
         """Test ImageUploadUrl model."""
-        upload_url = ImageUploadUrl(
-            imageId="test-image-id",
-            url="https://example.com/upload",
-            method="PUT",
+        upload_url = ImageUploadUrl.model_validate(
+            {
+                "imageId": "test-image-id",
+                "url": "https://example.com/upload",
+                "method": "PUT",
+            }
         )
 
         assert upload_url.image_id == "test-image-id"
@@ -168,11 +176,13 @@ class TestImageModels:
 
     def test_image_upload_url_with_headers(self):
         """Test ImageUploadUrl with headers."""
-        upload_url = ImageUploadUrl(
-            imageId="test-image-id",
-            url="https://example.com/upload",
-            method="PUT",
-            headers=ImageUploadUrlHeaders(**{"Content-Type": ["image/jpeg"]}),
+        upload_url = ImageUploadUrl.model_validate(
+            {
+                "imageId": "test-image-id",
+                "url": "https://example.com/upload",
+                "method": "PUT",
+                "headers": {"Content-Type": ["image/jpeg"]},
+            }
         )
 
         assert upload_url.headers is not None
@@ -230,9 +240,11 @@ class TestOperationModels:
 class TestBranchInfo:
     def test_branch_info_model(self):
         """Test BranchInfo model."""
-        branch = BranchInfo(
-            id=1,
-            displayName="Main Branch",
+        branch = BranchInfo.model_validate(
+            {
+                "id": 1,
+                "displayName": "Main Branch",
+            }
         )
 
         assert branch.id == 1
@@ -242,9 +254,11 @@ class TestBranchInfo:
 class TestModelSerialization:
     def test_model_dump_by_alias(self):
         """Test model_dump with by_alias=True."""
-        customer = Customer(
-            uid="abc123",
-            displayName="John Doe",
+        customer = Customer.model_validate(
+            {
+                "uid": "abc123",
+                "displayName": "John Doe",
+            }
         )
 
         data = customer.model_dump(by_alias=True, exclude_none=True)

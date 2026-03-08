@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional, Type
 
 import httpx
 
-from async_uds_api.api import CustomersAPI, GoodsAPI, OperationsAPI, SettingsAPI, TagsAPI
+from async_uds_api.api import CustomersAPI, GoodsAPI, ImagesAPI, OperationsAPI, SettingsAPI, TagsAPI
 from async_uds_api.errors import (
     UDSAPIError,
     UDSBadRequestError,
@@ -33,6 +33,7 @@ class UDSClient:
     - operations: OperationsAPI
     - tags: TagsAPI
     - goods: GoodsAPI
+    - images: ImagesAPI
     """
 
     def __init__(
@@ -59,10 +60,14 @@ class UDSClient:
         self.operations = OperationsAPI(self)
         self.tags = TagsAPI(self)
         self.goods = GoodsAPI(self)
+        self.images = ImagesAPI(self)
 
     async def aclose(self) -> None:
         if not self._external_client:
             await self._client.aclose()
+        
+        if hasattr(self.images, '_close_upload_client'):
+            await self.images._close_upload_client()
 
     async def __aenter__(self) -> "UDSClient":
         return self

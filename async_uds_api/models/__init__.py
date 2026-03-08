@@ -27,6 +27,7 @@ from async_uds_api.models.goods import (
     PaymentSubject,
     VatCode,
 )
+from async_uds_api.models.images import ImageUploadUrl, ImageUploadUrlHeaders
 from async_uds_api.models.operations import (
     CashierInfo,
     CreateOperation,
@@ -99,6 +100,8 @@ __all__ = [
     "GoodsVaryingItemType",
     "PaymentSubject",
     "VatCode",
+    "ImageUploadUrl",
+    "ImageUploadUrlHeaders",
     "CashierInfo",
     "CreateOperation",
     "CreateOperationParticipant",

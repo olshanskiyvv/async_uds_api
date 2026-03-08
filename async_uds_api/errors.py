@@ -49,3 +49,40 @@ class UDSUnexpectedError(UDSAPIError):
     Любая другая ошибка от API.
     """
 
+
+class UDSImageError(Exception):
+    """
+    Базовое исключение для ошибок загрузки изображений.
+    """
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+
+class UDSImageReadError(UDSImageError):
+    """
+    Ошибка чтения файла изображения.
+    """
+    pass
+
+
+class UDSImageDownloadError(UDSImageError):
+    """
+    Ошибка скачивания изображения по URL.
+    """
+    pass
+
+
+class UDSImageUploadError(UDSImageError):
+    """
+    Ошибка загрузки изображения на сервер.
+    """
+    pass
+
+
+class UDSImageUnsupportedSourceError(UDSImageError):
+    """
+    Неподдерживаемый источник изображения.
+    """
+    pass
+

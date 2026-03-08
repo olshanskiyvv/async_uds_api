@@ -2,12 +2,14 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from ..models import (
     CreateOperation,
+    CreateVoucher,
     Operation,
     OperationsPage,
     PurchaseCalcRequest,
     PurchaseCalcResponse,
     RefundOperationRequest,
     RewardRequest,
+    VoucherInfo,
 )
 
 if TYPE_CHECKING:
@@ -77,3 +79,8 @@ class OperationsAPI:
     ) -> None:
         body = reward_request.model_dump(by_alias=True, exclude_none=True)
         await self._client._post_json("/operations/reward", body=body)
+
+    async def create_voucher(self, voucher: CreateVoucher) -> VoucherInfo:
+        body = voucher.model_dump(by_alias=True, exclude_none=True)
+        data = await self._client._post_json("/operations/voucher", body=body)
+        return VoucherInfo.model_validate(data)

@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING
 
-from ..models import CompanySettings
+from async_uds_api.models import CompanySettings
 
 if TYPE_CHECKING:
-    from ..client import UDSClient
+    from async_uds_api.client import UDSClient
 
 
 class SettingsAPI:

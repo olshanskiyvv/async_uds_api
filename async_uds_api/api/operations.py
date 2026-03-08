@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
-from ..models import (
+from async_uds_api.models import (
     CreateOperation,
     CreateVoucher,
     Operation,
@@ -13,7 +13,7 @@ from ..models import (
 )
 
 if TYPE_CHECKING:
-    from ..client import UDSClient
+    from async_uds_api.client import UDSClient
 
 
 class OperationsAPI:

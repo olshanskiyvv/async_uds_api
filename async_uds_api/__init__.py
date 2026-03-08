@@ -1,5 +1,5 @@
-from .client import UDSClient
-from .errors import (
+from async_uds_api.client import UDSClient
+from async_uds_api.errors import (
     UDSAPIError,
     UDSBadRequestError,
     UDSForbiddenError,
@@ -7,6 +7,7 @@ from .errors import (
     UDSUnauthorizedError,
     UDSUnexpectedError,
 )
+from async_uds_api.webhooks import verify_webhook_signature
 
 __all__ = [
     "UDSClient",
@@ -16,5 +17,5 @@ __all__ = [
     "UDSForbiddenError",
     "UDSNotFoundError",
     "UDSUnexpectedError",
+    "verify_webhook_signature",
 ]
-

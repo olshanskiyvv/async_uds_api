@@ -6,8 +6,8 @@ from typing import Any, Dict, Optional, Type
 
 import httpx
 
-from .api import CustomersAPI, OperationsAPI, SettingsAPI, TagsAPI
-from .errors import (
+from async_uds_api.api import CustomersAPI, OperationsAPI, SettingsAPI, TagsAPI
+from async_uds_api.errors import (
     UDSAPIError,
     UDSBadRequestError,
     UDSForbiddenError,

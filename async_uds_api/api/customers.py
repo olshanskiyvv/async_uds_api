@@ -1,6 +1,6 @@
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from ..models import CustomerDetail, CustomersPage, PurchaseCalcResponse
+from ..models import CustomerDetail, CustomersPage, PurchaseCalcResponse, TagsPage
 
 if TYPE_CHECKING:
     from ..client import UDSClient
@@ -65,3 +65,14 @@ class CustomersAPI:
     async def get(self, customer_id: int) -> CustomerDetail:
         data = await self._client._get_json(f"/customers/{customer_id}")
         return CustomerDetail.model_validate(data)
+
+    async def get_tags(self, customer_id: int) -> TagsPage:
+        data = await self._client._get_json(f"/customers/{customer_id}/tags")
+        return TagsPage.model_validate(data)
+
+    async def set_tags(self, customer_id: int, tag_ids: List[int]) -> TagsPage:
+        body = {"ids": tag_ids}
+        data = await self._client._post_json(
+            f"/customers/{customer_id}/tags", body=body
+        )
+        return TagsPage.model_validate(data)

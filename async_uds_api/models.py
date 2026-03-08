@@ -176,6 +176,11 @@ class TagModel(BaseModel):
     name: str = Field(description="Tag name.")
 
 
+class TagsPage(BaseModel):
+    rows: List[TagModel] = Field(default_factory=list, description="List of tags.")
+    total: int = Field(default=0, description="Tags total count.")
+
+
 class CustomerDetail(Customer):
     tags: Sequence[TagModel] = Field(
         default_factory=list,

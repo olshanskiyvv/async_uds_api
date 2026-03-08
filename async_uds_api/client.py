@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional, Type
 
 import httpx
 
-from .api import CustomersAPI, OperationsAPI, SettingsAPI
+from .api import CustomersAPI, OperationsAPI, SettingsAPI, TagsAPI
 from .errors import (
     UDSAPIError,
     UDSBadRequestError,
@@ -31,6 +31,7 @@ class UDSClient:
     - settings: SettingsAPI
     - customers: CustomersAPI
     - operations: OperationsAPI
+    - tags: TagsAPI
     """
 
     def __init__(
@@ -55,6 +56,7 @@ class UDSClient:
         self.settings = SettingsAPI(self)
         self.customers = CustomersAPI(self)
         self.operations = OperationsAPI(self)
+        self.tags = TagsAPI(self)
 
     async def aclose(self) -> None:
         if not self._external_client:

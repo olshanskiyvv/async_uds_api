@@ -3,7 +3,13 @@ from __future__ import annotations
 from typing import Optional
 
 
-class UDSAPIError(Exception):
+class UDSClientError(Exception):
+    """
+    Базовая ошибка клиента UDS API.
+    """
+
+
+class UDSAPIError(UDSClientError):
     """
     Базовое исключение для ошибок UDS Partner API.
     """
@@ -50,23 +56,26 @@ class UDSUnexpectedError(UDSAPIError):
     """
 
 
-class UDSImageError(Exception):
+class UDSImageError(UDSClientError):
     """
-    Базовое исключение для ошибок загрузки изображений.
+    Базовая ошибка работы с изображениями.
     """
 
-    def __init__(self, message: str) -> None:
-        super().__init__(message)
+
+class UDSImageSourceError(UDSImageError):
+    """
+    Ошибка получения изображения из источника.
+    """
 
 
-class UDSImageReadError(UDSImageError):
+class UDSImageReadError(UDSImageSourceError):
     """
     Ошибка чтения файла изображения.
     """
     pass
 
 
-class UDSImageDownloadError(UDSImageError):
+class UDSImageDownloadError(UDSImageSourceError):
     """
     Ошибка скачивания изображения по URL.
     """
@@ -82,7 +91,6 @@ class UDSImageUploadError(UDSImageError):
 
 class UDSImageUnsupportedSourceError(UDSImageError):
     """
-    Неподдерживаемый источник изображения.
+    Неподдерживаемый источник или MIME-тип изображения.
     """
     pass
-

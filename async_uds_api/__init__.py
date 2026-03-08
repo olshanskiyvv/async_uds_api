@@ -2,10 +2,12 @@ from async_uds_api.client import UDSClient
 from async_uds_api.errors import (
     UDSAPIError,
     UDSBadRequestError,
+    UDSClientError,
     UDSForbiddenError,
     UDSImageDownloadError,
     UDSImageError,
     UDSImageReadError,
+    UDSImageSourceError,
     UDSImageUploadError,
     UDSImageUnsupportedSourceError,
     UDSNotFoundError,
@@ -16,6 +18,7 @@ from async_uds_api.webhooks import verify_webhook_signature
 
 __all__ = [
     "UDSClient",
+    "UDSClientError",
     "UDSAPIError",
     "UDSBadRequestError",
     "UDSUnauthorizedError",
@@ -24,6 +27,7 @@ __all__ = [
     "UDSUnexpectedError",
     "verify_webhook_signature",
     "UDSImageError",
+    "UDSImageSourceError",
     "UDSImageReadError",
     "UDSImageDownloadError",
     "UDSImageUploadError",

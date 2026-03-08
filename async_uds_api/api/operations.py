@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any
 
 from async_uds_api.models import (
     CreateOperation,
@@ -23,11 +23,11 @@ class OperationsAPI:
     async def list(
         self,
         *,
-        max: Optional[int] = None,
-        offset: Optional[int] = None,
-        cursor: Optional[str] = None,
+        max: int | None = None,
+        offset: int | None = None,
+        cursor: str | None = None,
     ) -> OperationsPage:
-        params: Dict[str, Any] = {}
+        params: dict[str, Any] = {}
         if max is not None:
             params["max"] = max
         if offset is not None:
@@ -52,7 +52,7 @@ class OperationsAPI:
     async def refund(
         self,
         operation_id: int,
-        refund: Optional[RefundOperationRequest] = None,
+        refund: RefundOperationRequest | None = None,
     ) -> Operation:
         body = (
             refund.model_dump(by_alias=True, exclude_none=True)

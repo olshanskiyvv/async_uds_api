@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Optional
-
 from pydantic import BaseModel, Field
 
 
@@ -14,28 +12,30 @@ class MembershipTierConditionsEffectiveInvitedCount(BaseModel):
 
 
 class MembershipTierConditions(BaseModel):
-    total_cash_spent: Optional[MembershipTierConditionsTotalCashSpent] = Field(
+    total_cash_spent: MembershipTierConditionsTotalCashSpent | None = Field(
         default=None,
         description="Upgrade status when customer reaches that amount of cash spent.",
     )
-    effective_invited_count: Optional[MembershipTierConditionsEffectiveInvitedCount] = Field(
+    effective_invited_count: (
+        MembershipTierConditionsEffectiveInvitedCount | None
+    ) = Field(
         default=None,
         description="Upgrade to tier when customer reaches target effectiveInvitedCount.",
     )
 
 
 class MembershipTier(BaseModel):
-    uid: Optional[str] = Field(
+    uid: str | None = Field(
         default=None,
         description="Status UID.",
     )
     name: str = Field(description="Status name.")
     rate: float = Field(description="Status rate.")
-    max_scores_discount: Optional[float] = Field(
+    max_scores_discount: float | None = Field(
         default=None,
         description="Maximum discount (as a percentage) allowed for redeeming points.",
     )
-    conditions: Optional[MembershipTierConditions] = Field(
+    conditions: MembershipTierConditions | None = Field(
         default=None,
         description="Conditions to upgrade customer's status automatically.",
     )
@@ -46,41 +46,41 @@ class LoyaltyProgramSettings(BaseModel):
         alias="baseMembershipTier",
         validation_alias="baseMembershipTier",
     )
-    membership_tiers: List[MembershipTier] = Field(
+    membership_tiers: list[MembershipTier] = Field(
         alias="membershipTiers",
         validation_alias="membershipTiers",
         description="Status settings.",
     )
-    referral_cashback_rates: List[float] = Field(
+    referral_cashback_rates: list[float] = Field(
         alias="referralCashbackRates",
         validation_alias="referralCashbackRates",
         description="Referral cashback rates (3 levels as a percentage).",
     )
-    cashier_award: Optional[float] = Field(
+    cashier_award: float | None = Field(
         default=None,
         alias="cashierAward",
         validation_alias="cashierAward",
         description="Cashier's reward rate for the performed transaction.",
     )
-    referral_reward: Optional[float] = Field(
+    referral_reward: float | None = Field(
         default=None,
         alias="referralReward",
         validation_alias="referralReward",
         description="Customer's reward for an effective recommendation.",
     )
-    receipt_limit: Optional[float] = Field(
+    receipt_limit: float | None = Field(
         default=None,
         alias="receiptLimit",
         validation_alias="receiptLimit",
         description="Maximum transaction amount that can be made through UDS Cashier.",
     )
-    defer_points_for_days: Optional[float] = Field(
+    defer_points_for_days: float | None = Field(
         default=None,
         alias="deferPointsForDays",
         validation_alias="deferPointsForDays",
         description="Term (in days) to accrue deferred points.",
     )
-    first_purchase_points: Optional[float] = Field(
+    first_purchase_points: float | None = Field(
         default=None,
         alias="firstPurchasePoints",
         validation_alias="firstPurchasePoints",
@@ -96,7 +96,7 @@ class CompanySettings(BaseModel):
         validation_alias="promoCode",
         description="Company promo code for customers to join.",
     )
-    currency: Optional[str] = Field(
+    currency: str | None = Field(
         default=None,
         description="Currency in ISO-4217 format.",
     )
@@ -105,7 +105,7 @@ class CompanySettings(BaseModel):
         validation_alias="baseDiscountPolicy",
         description="Defines loyalty program type.",
     )
-    loyalty_program_settings: Optional[LoyaltyProgramSettings] = Field(
+    loyalty_program_settings: LoyaltyProgramSettings | None = Field(
         default=None,
         alias="loyaltyProgramSettings",
         validation_alias="loyaltyProgramSettings",

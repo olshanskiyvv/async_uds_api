@@ -2,11 +2,18 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Type
+from typing import Any
 
 import httpx
 
-from async_uds_api.api import CustomersAPI, GoodsAPI, ImagesAPI, OperationsAPI, SettingsAPI, TagsAPI
+from async_uds_api.api import (
+    CustomersAPI,
+    GoodsAPI,
+    ImagesAPI,
+    OperationsAPI,
+    SettingsAPI,
+    TagsAPI,
+)
 from async_uds_api.errors import (
     UDSAPIError,
     UDSBadRequestError,
@@ -43,7 +50,7 @@ class UDSClient:
         *,
         base_url: str = DEFAULT_BASE_URL,
         timeout: float = 10.0,
-        client: Optional[httpx.AsyncClient] = None,
+        client: httpx.AsyncClient | None = None,
     ) -> None:
         self._company_id = company_id
         self._api_key = api_key
@@ -65,17 +72,17 @@ class UDSClient:
     async def aclose(self) -> None:
         if not self._external_client:
             await self._client.aclose()
-        
-        if hasattr(self.images, '_close_upload_client'):
+
+        if hasattr(self.images, "_close_upload_client"):
             await self.images._close_upload_client()
 
-    async def __aenter__(self) -> "UDSClient":
+    async def __aenter__(self) -> UDSClient:
         return self
 
     async def __aexit__(self, exc_type, exc, tb) -> None:
         await self.aclose()
 
-    def _build_headers(self) -> Dict[str, str]:
+    def _build_headers(self) -> dict[str, str]:
         now = datetime.now(timezone.utc).isoformat()
         return {
             "Accept": "application/json",
@@ -92,8 +99,8 @@ class UDSClient:
         method: str,
         path: str,
         *,
-        params: Optional[Dict[str, Any]] = None,
-        json: Optional[Dict[str, Any]] = None,
+        params: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
     ) -> httpx.Response:
         try:
             response = await self._client.request(
@@ -106,12 +113,10 @@ class UDSClient:
             )
             response.raise_for_status()
             return response
-        except (
-            httpx.HTTPStatusError
-        ) as exc:
+        except httpx.HTTPStatusError as exc:
             res = exc.response
             status = res.status_code
-            error_code: Optional[str] = None
+            error_code: str | None = None
             message: str = res.text
 
             try:
@@ -122,7 +127,7 @@ class UDSClient:
             except Exception:
                 pass
 
-            exc_cls: Type[UDSAPIError]
+            exc_cls: type[UDSAPIError]
             if status == 400:
                 exc_cls = UDSBadRequestError
             elif status == 401:
@@ -142,8 +147,8 @@ class UDSClient:
         self,
         path: str,
         *,
-        params: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         response = await self._request("GET", path, params=params)
         data = response.json()
         assert isinstance(data, dict)
@@ -153,9 +158,9 @@ class UDSClient:
         self,
         path: str,
         *,
-        body: Optional[Dict[str, Any]] = None,
-        params: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        body: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         response = await self._request("POST", path, params=params, json=body)
         if response.content:
             data = response.json()
@@ -167,9 +172,9 @@ class UDSClient:
         self,
         path: str,
         *,
-        body: Optional[Dict[str, Any]] = None,
-        params: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        body: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         response = await self._request("PUT", path, params=params, json=body)
         if response.content:
             data = response.json()
@@ -181,6 +186,6 @@ class UDSClient:
         self,
         path: str,
         *,
-        params: Optional[Dict[str, Any]] = None,
+        params: dict[str, Any] | None = None,
     ) -> None:
         await self._request("DELETE", path, params=params)

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any
 
 from async_uds_api.models import GoodsDetailed, GoodsPage
 
@@ -37,11 +37,11 @@ class GoodsAPI:
     async def list(
         self,
         *,
-        max: Optional[int] = None,
-        offset: Optional[int] = None,
-        node_id: Optional[int] = None,
+        max: int | None = None,
+        offset: int | None = None,
+        node_id: int | None = None,
     ) -> GoodsPage:
-        params: Dict[str, Any] = {}
+        params: dict[str, Any] = {}
         if max is not None:
             params["max"] = max
         if offset is not None:
@@ -61,7 +61,9 @@ class GoodsAPI:
         data = await self._client._get_json(f"/goods/{goods_id}")
         return GoodsDetailed.model_validate(data)
 
-    async def update(self, goods_id: int, goods: GoodsDetailed) -> GoodsDetailed:
+    async def update(
+        self, goods_id: int, goods: GoodsDetailed
+    ) -> GoodsDetailed:
         body = goods.model_dump(by_alias=True, exclude_none=True)
         data = await self._client._put_json(f"/goods/{goods_id}", body=body)
         return GoodsDetailed.model_validate(data)

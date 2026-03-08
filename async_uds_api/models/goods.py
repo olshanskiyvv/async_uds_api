@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -46,13 +45,13 @@ class PaymentSubject(str, Enum):
 
 
 class GoodsOffer(BaseModel):
-    offer_price: Optional[float] = Field(
+    offer_price: float | None = Field(
         default=None,
         alias="offerPrice",
         validation_alias="offerPrice",
         description="Discount price.",
     )
-    skip_loyalty: Optional[bool] = Field(
+    skip_loyalty: bool | None = Field(
         default=None,
         alias="skipLoyalty",
         validation_alias="skipLoyalty",
@@ -61,7 +60,7 @@ class GoodsOffer(BaseModel):
 
 
 class GoodsInventory(BaseModel):
-    in_stock: Optional[int] = Field(
+    in_stock: int | None = Field(
         default=None,
         alias="inStock",
         validation_alias="inStock",
@@ -70,14 +69,14 @@ class GoodsInventory(BaseModel):
 
 
 class GoodsVariantType(BaseModel):
-    name: Optional[str] = Field(default=None, description="Variant name.")
-    sku: Optional[str] = Field(
+    name: str | None = Field(default=None, description="Variant name.")
+    sku: str | None = Field(
         default=None,
         description="Variant stock number.",
     )
-    price: Optional[float] = Field(default=None, description="Variant price.")
-    offer: Optional[GoodsOffer] = None
-    inventory: Optional[GoodsInventory] = None
+    price: float | None = Field(default=None, description="Variant price.")
+    offer: GoodsOffer | None = None
+    inventory: GoodsInventory | None = None
 
 
 class GoodsCategoryType(BaseModel):
@@ -86,36 +85,38 @@ class GoodsCategoryType(BaseModel):
 
 class GoodsItemType(BaseModel):
     type: GoodsType = GoodsType.ITEM
-    sku: Optional[str] = Field(default=None, description="Item stock number.")
-    price: Optional[float] = Field(default=None, description="Item price.")
-    description: Optional[str] = Field(default=None, description="Item description.")
-    offer: Optional[GoodsOffer] = None
-    inventory: Optional[GoodsInventory] = None
-    photos: Optional[List[str]] = Field(
+    sku: str | None = Field(default=None, description="Item stock number.")
+    price: float | None = Field(default=None, description="Item price.")
+    description: str | None = Field(
+        default=None, description="Item description."
+    )
+    offer: GoodsOffer | None = None
+    inventory: GoodsInventory | None = None
+    photos: list[str] | None = Field(
         default=None,
         description="Array of image identifiers.",
     )
-    measurement: Optional[GoodsMeasurement] = Field(
+    measurement: GoodsMeasurement | None = Field(
         default=None,
         description="Goods measurement.",
     )
-    increment: Optional[float] = Field(
+    increment: float | None = Field(
         default=None,
         description="Amount of the item that the buyer can increase or decrease by 1 interval.",
     )
-    min_quantity: Optional[float] = Field(
+    min_quantity: float | None = Field(
         default=None,
         alias="minQuantity",
         validation_alias="minQuantity",
         description="Minimal quantity of item for order.",
     )
-    vat_code: Optional[VatCode] = Field(
+    vat_code: VatCode | None = Field(
         default=None,
         alias="vatCode",
         validation_alias="vatCode",
         description="VAT rate code.",
     )
-    payment_subject: Optional[PaymentSubject] = Field(
+    payment_subject: PaymentSubject | None = Field(
         default=None,
         alias="paymentSubject",
         validation_alias="paymentSubject",
@@ -125,22 +126,24 @@ class GoodsItemType(BaseModel):
 
 class GoodsVaryingItemType(BaseModel):
     type: GoodsType = GoodsType.VARYING_ITEM
-    variants: Optional[List[GoodsVariantType]] = Field(
+    variants: list[GoodsVariantType] | None = Field(
         default=None,
         description="Variants of item.",
     )
-    description: Optional[str] = Field(default=None, description="Variant description.")
-    photos: Optional[List[str]] = Field(
+    description: str | None = Field(
+        default=None, description="Variant description."
+    )
+    photos: list[str] | None = Field(
         default=None,
         description="Array of image identifiers.",
     )
-    vat_code: Optional[VatCode] = Field(
+    vat_code: VatCode | None = Field(
         default=None,
         alias="vatCode",
         validation_alias="vatCode",
         description="VAT rate code.",
     )
-    payment_subject: Optional[PaymentSubject] = Field(
+    payment_subject: PaymentSubject | None = Field(
         default=None,
         alias="paymentSubject",
         validation_alias="paymentSubject",
@@ -148,37 +151,39 @@ class GoodsVaryingItemType(BaseModel):
     )
 
 
-GoodsData = Union[GoodsCategoryType, GoodsItemType, GoodsVaryingItemType]
+GoodsData = GoodsCategoryType | GoodsItemType | GoodsVaryingItemType
 
 
 class GoodsInfoType(BaseModel):
-    id: Optional[int] = Field(default=None, description="Goods ID in the UDS.")
+    id: int | None = Field(default=None, description="Goods ID in the UDS.")
     name: str = Field(description="Goods name.")
     data: GoodsData
-    hidden: Optional[bool] = Field(default=None, description="Is the goods hidden.")
-    blocked: Optional[bool] = Field(
+    hidden: bool | None = Field(
+        default=None, description="Is the goods hidden."
+    )
+    blocked: bool | None = Field(
         default=None,
         description="Is the goods blocked.",
     )
-    node_id: Optional[int] = Field(
+    node_id: int | None = Field(
         default=None,
         alias="nodeId",
         validation_alias="nodeId",
         description="ID of the category in which the product is included.",
     )
-    image_urls: Optional[List[str]] = Field(
+    image_urls: list[str] | None = Field(
         default=None,
         alias="imageUrls",
         validation_alias="imageUrls",
         description="Array of links to item image.",
     )
-    external_id: Optional[str] = Field(
+    external_id: str | None = Field(
         default=None,
         alias="externalId",
         validation_alias="externalId",
         description="External goods identifier.",
     )
-    date_created: Optional[datetime] = Field(
+    date_created: datetime | None = Field(
         default=None,
         alias="dateCreated",
         validation_alias="dateCreated",
@@ -189,31 +194,33 @@ class GoodsInfoType(BaseModel):
 class GoodsDetailed(BaseModel):
     name: str = Field(description="Goods name.")
     data: GoodsData
-    id: Optional[int] = Field(default=None, description="Goods ID in the UDS.")
-    node_id: Optional[int] = Field(
+    id: int | None = Field(default=None, description="Goods ID in the UDS.")
+    node_id: int | None = Field(
         default=None,
         alias="nodeId",
         validation_alias="nodeId",
         description="ID of the category in which the item is included.",
     )
-    external_id: Optional[str] = Field(
+    external_id: str | None = Field(
         default=None,
         alias="externalId",
         validation_alias="externalId",
         description="External goods identifier.",
     )
-    date_created: Optional[datetime] = Field(
+    date_created: datetime | None = Field(
         default=None,
         alias="dateCreated",
         validation_alias="dateCreated",
         description="Date item created.",
     )
-    hidden: Optional[bool] = Field(default=None, description="Is the goods hidden.")
-    blocked: Optional[bool] = Field(
+    hidden: bool | None = Field(
+        default=None, description="Is the goods hidden."
+    )
+    blocked: bool | None = Field(
         default=None,
         description="Is the goods blocked.",
     )
-    image_urls: Optional[List[str]] = Field(
+    image_urls: list[str] | None = Field(
         default=None,
         alias="imageUrls",
         validation_alias="imageUrls",
@@ -222,7 +229,7 @@ class GoodsDetailed(BaseModel):
 
 
 class GoodsPage(BaseModel):
-    rows: List[GoodsInfoType] = Field(
+    rows: list[GoodsInfoType] = Field(
         default_factory=list,
         description="Goods information.",
     )

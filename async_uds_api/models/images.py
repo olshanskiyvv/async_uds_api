@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from typing import List, Optional
-
 from pydantic import BaseModel, Field
 
 
 class ImageUploadUrlHeaders(BaseModel):
-    content_type: List[str] = Field(
+    content_type: list[str] = Field(
         alias="Content-Type",
         validation_alias="Content-Type",
         description="Array of allowed content-types.",
@@ -21,8 +19,8 @@ class ImageUploadUrl(BaseModel):
     )
     url: str = Field(description="Presigned upload url.")
     method: str = Field(description="Http method name.")
-    headers: Optional[ImageUploadUrlHeaders] = None
-    expires: Optional[int] = Field(
+    headers: ImageUploadUrlHeaders | None = None
+    expires: int | None = Field(
         default=None,
         description="Expiration time in epoch milliseconds.",
     )

@@ -1,6 +1,12 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+import builtins
+from typing import TYPE_CHECKING, Any
 
-from async_uds_api.models import CustomerDetail, CustomersPage, PurchaseCalcResponse, TagsPage
+from async_uds_api.models import (
+    CustomerDetail,
+    CustomersPage,
+    PurchaseCalcResponse,
+    TagsPage,
+)
 
 if TYPE_CHECKING:
     from async_uds_api.client import UDSClient
@@ -13,11 +19,11 @@ class CustomersAPI:
     async def list(
         self,
         *,
-        max: Optional[int] = None,
-        offset: Optional[int] = None,
-        cursor: Optional[str] = None,
+        max: int | None = None,
+        offset: int | None = None,
+        cursor: str | None = None,
     ) -> CustomersPage:
-        params: Dict[str, Any] = {}
+        params: dict[str, Any] = {}
         if max is not None:
             params["max"] = max
         if offset is not None:
@@ -33,15 +39,15 @@ class CustomersAPI:
     async def find(
         self,
         *,
-        code: Optional[str] = None,
-        phone: Optional[str] = None,
-        uid: Optional[str] = None,
-        exchange_code: Optional[bool] = None,
-        total: Optional[float] = None,
-        skip_loyalty_total: Optional[float] = None,
-        unredeemable_total: Optional[float] = None,
+        code: str | None = None,
+        phone: str | None = None,
+        uid: str | None = None,
+        exchange_code: bool | None = None,
+        total: float | None = None,
+        skip_loyalty_total: float | None = None,
+        unredeemable_total: float | None = None,
     ) -> PurchaseCalcResponse:
-        params: Dict[str, Any] = {}
+        params: dict[str, Any] = {}
         if code is not None:
             params["code"] = code
         if phone is not None:
@@ -70,7 +76,9 @@ class CustomersAPI:
         data = await self._client._get_json(f"/customers/{customer_id}/tags")
         return TagsPage.model_validate(data)
 
-    async def set_tags(self, customer_id: int, tag_ids: List[int]) -> TagsPage:
+    async def set_tags(
+        self, customer_id: int, tag_ids: builtins.list[int]
+    ) -> TagsPage:
         body = {"ids": tag_ids}
         data = await self._client._post_json(
             f"/customers/{customer_id}/tags", body=body

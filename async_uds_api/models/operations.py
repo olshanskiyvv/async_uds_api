@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-from async_uds_api.models.orders import BranchInfo
 from async_uds_api.models.customers import OperationCustomer
+from async_uds_api.models.orders import BranchInfo
 
 
 class CashierInfo(BaseModel):
@@ -18,25 +17,27 @@ class CashierInfo(BaseModel):
 
 
 class Operation(BaseModel):
-    id: Optional[int] = Field(default=None, description="Transaction ID in the UDS.")
-    date_created: Optional[datetime] = Field(
+    id: int | None = Field(
+        default=None, description="Transaction ID in the UDS."
+    )
+    date_created: datetime | None = Field(
         default=None,
         alias="dateCreated",
         validation_alias="dateCreated",
         description="Transaction date.",
     )
-    action: Optional[str] = None
-    state: Optional[str] = None
-    customer: Optional[OperationCustomer] = None
-    cashier: Optional[CashierInfo] = None
-    branch: Optional[BranchInfo] = None
-    points: Optional[float] = None
-    certificate_points: Optional[float] = Field(
+    action: str | None = None
+    state: str | None = None
+    customer: OperationCustomer | None = None
+    cashier: CashierInfo | None = None
+    branch: BranchInfo | None = None
+    points: float | None = None
+    certificate_points: float | None = Field(
         default=None,
         alias="certificatePoints",
         validation_alias="certificatePoints",
     )
-    receipt_number: Optional[str] = Field(
+    receipt_number: str | None = Field(
         default=None,
         alias="receiptNumber",
         validation_alias="receiptNumber",
@@ -44,27 +45,27 @@ class Operation(BaseModel):
 
 
 class OperationsPage(BaseModel):
-    rows: List[Operation]
-    total: Optional[int] = None
-    cursor: Optional[str] = None
+    rows: list[Operation]
+    total: int | None = None
+    cursor: str | None = None
 
 
 class CreateOperationParticipant(BaseModel):
-    uid: Optional[str] = None
-    phone: Optional[str] = None
+    uid: str | None = None
+    phone: str | None = None
 
 
 class CreateOperationReceipt(BaseModel):
     total: float
     cash: float
     points: float
-    number: Optional[str] = None
-    skip_loyalty_total: Optional[float] = Field(
+    number: str | None = None
+    skip_loyalty_total: float | None = Field(
         default=None,
         alias="skipLoyaltyTotal",
         validation_alias="skipLoyaltyTotal",
     )
-    unredeemable_total: Optional[float] = Field(
+    unredeemable_total: float | None = Field(
         default=None,
         alias="unredeemableTotal",
         validation_alias="unredeemableTotal",
@@ -72,25 +73,25 @@ class CreateOperationReceipt(BaseModel):
 
 
 class CreateOperation(BaseModel):
-    code: Optional[str] = None
-    participant: Optional[CreateOperationParticipant] = None
-    nonce: Optional[str] = None
-    cashier_external_id: Optional[str] = Field(
+    code: str | None = None
+    participant: CreateOperationParticipant | None = None
+    nonce: str | None = None
+    cashier_external_id: str | None = Field(
         default=None,
         alias="cashierExternalId",
         description="External cashier identifier.",
     )
-    cashier_name: Optional[str] = Field(
+    cashier_name: str | None = Field(
         default=None,
         alias="cashierName",
         description="Cashier name.",
     )
     receipt: CreateOperationReceipt
-    tags: Optional[List[int]] = None
+    tags: list[int] | None = None
 
 
 class RefundOperationRequest(BaseModel):
-    partial_amount: Optional[float] = Field(
+    partial_amount: float | None = Field(
         default=None,
         alias="partialAmount",
         validation_alias="partialAmount",
@@ -99,32 +100,34 @@ class RefundOperationRequest(BaseModel):
 
 
 class RewardRequest(BaseModel):
-    comment: Optional[str] = None
+    comment: str | None = None
     points: float
-    participants: List[int]
+    participants: list[int]
     silent: bool = False
 
 
 class CreateVoucherCashier(BaseModel):
-    external_id: Optional[str] = Field(
+    external_id: str | None = Field(
         default=None,
         alias="externalId",
         validation_alias="externalId",
         description="External cashier identifier.",
     )
-    name: Optional[str] = Field(
+    name: str | None = Field(
         default=None,
         description="Cashier name.",
     )
 
 
 class CreateVoucherReceipt(BaseModel):
-    total: float = Field(description="Total receipt amount (in currency units).")
-    number: Optional[str] = Field(
+    total: float = Field(
+        description="Total receipt amount (in currency units)."
+    )
+    number: str | None = Field(
         default=None,
         description="Receipt number.",
     )
-    skip_loyalty_total: Optional[float] = Field(
+    skip_loyalty_total: float | None = Field(
         default=None,
         alias="skipLoyaltyTotal",
         validation_alias="skipLoyaltyTotal",
@@ -133,11 +136,11 @@ class CreateVoucherReceipt(BaseModel):
 
 
 class CreateVoucher(BaseModel):
-    nonce: Optional[str] = Field(
+    nonce: str | None = Field(
         default=None,
         description="Nonce for voucher (UUID).",
     )
-    cashier: Optional[CreateVoucherCashier] = None
+    cashier: CreateVoucherCashier | None = None
     receipt: CreateVoucherReceipt
 
 

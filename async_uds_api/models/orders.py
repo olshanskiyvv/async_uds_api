@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -64,11 +63,11 @@ class ParticipantShortInfo(BaseModel):
 
 
 class CustomerShortInfo(ParticipantShortInfo):
-    uid: Optional[str] = Field(
+    uid: str | None = Field(
         default=None,
         description="Customer UID in the UDS.",
     )
-    membership_tier: Optional[MembershipTier] = Field(
+    membership_tier: MembershipTier | None = Field(
         default=None,
         alias="membershipTier",
         validation_alias="membershipTier",
@@ -76,19 +75,19 @@ class CustomerShortInfo(ParticipantShortInfo):
 
 
 class ReceiverInfo(BaseModel):
-    receiver_name: Optional[str] = Field(
+    receiver_name: str | None = Field(
         default=None,
         alias="receiverName",
         validation_alias="receiverName",
         description="Name of the customer who will pick up the order.",
     )
-    receiver_phone: Optional[str] = Field(
+    receiver_phone: str | None = Field(
         default=None,
         alias="receiverPhone",
         validation_alias="receiverPhone",
         description="Phone number of the customer who will pick up the order.",
     )
-    user_comment: Optional[str] = Field(
+    user_comment: str | None = Field(
         default=None,
         alias="userComment",
         validation_alias="userComment",
@@ -97,68 +96,68 @@ class ReceiverInfo(BaseModel):
 
 
 class DeliveryCase(BaseModel):
-    name: Optional[str] = Field(
+    name: str | None = Field(
         default=None,
         description="Delivery name.",
     )
-    value: Optional[float] = Field(
+    value: float | None = Field(
         default=None,
         description="Cost of delivery.",
     )
 
 
 class Pickup(ReceiverInfo):
-    branch: Optional[BranchInfo] = None
+    branch: BranchInfo | None = None
     type: DeliveryTypes = DeliveryTypes.PICKUP
 
 
 class Delivery(ReceiverInfo):
-    delivery_case: Optional[DeliveryCase] = Field(
+    delivery_case: DeliveryCase | None = Field(
         default=None,
         alias="deliveryCase",
         validation_alias="deliveryCase",
     )
-    address: Optional[str] = Field(
+    address: str | None = Field(
         default=None,
         description="Delivery address.",
     )
     type: DeliveryTypes = DeliveryTypes.DELIVERY
 
 
-DeliveryType = Union[Pickup, Delivery]
+DeliveryType = Pickup | Delivery
 
 
 class OnlinePayment(BaseModel):
-    payment_provider: Optional[PaymentProvider] = Field(
+    payment_provider: PaymentProvider | None = Field(
         default=None,
         alias="paymentProvider",
         validation_alias="paymentProvider",
         description="Payment provider type.",
     )
-    id: Optional[str] = Field(
+    id: str | None = Field(
         default=None,
         description="Payment identifier in external payment system.",
     )
-    completed: Optional[bool] = Field(
+    completed: bool | None = Field(
         default=None,
         description="Payment status.",
     )
 
 
 class PaymentMethod(BaseModel):
-    type: Optional[PaymentType] = Field(
+    type: PaymentType | None = Field(
         default=None,
         description="Payment type.",
     )
-    name: Optional[str] = Field(
+    name: str | None = Field(
         default=None,
         description="Name for custom payment method with type MANUAL.",
     )
-    online: Optional[bool] = Field(
+    online: bool | None = Field(
         default=None,
         description="Is payment online.",
     )
-    provider_type: Optional[str] = Field(
+    provider_type: str | None = Field(
         default=None,
         alias="providerType",
         validation_alias="providerType",
@@ -167,43 +166,43 @@ class PaymentMethod(BaseModel):
 
 
 class GoodsOrderItem(BaseModel):
-    id: Optional[int] = Field(
+    id: int | None = Field(
         default=None,
         description="Item ID in the UDS.",
     )
-    external_id: Optional[str] = Field(
+    external_id: str | None = Field(
         default=None,
         alias="externalId",
         validation_alias="externalId",
         description="External item identifier.",
     )
-    name: Optional[str] = Field(
+    name: str | None = Field(
         default=None,
         description="Item name.",
     )
-    variant_name: Optional[str] = Field(
+    variant_name: str | None = Field(
         default=None,
         alias="variantName",
         validation_alias="variantName",
         description="Name of the item option, if the type of this item is VARYING_ITEM.",
     )
-    sku: Optional[str] = Field(
+    sku: str | None = Field(
         default=None,
         description="Item stock number.",
     )
-    type: Optional[str] = Field(
+    type: str | None = Field(
         default=None,
         description="Item type.",
     )
-    qty: Optional[int] = Field(
+    qty: int | None = Field(
         default=None,
         description="Quantity.",
     )
-    price: Optional[float] = Field(
+    price: float | None = Field(
         default=None,
         description="Item price.",
     )
-    offer_price: Optional[float] = Field(
+    offer_price: float | None = Field(
         default=None,
         alias="offerPrice",
         validation_alias="offerPrice",
@@ -215,69 +214,69 @@ class GoodsOrderItem(BaseModel):
         validation_alias="skipLoyalty",
         description="Don't apply loyalty program terms.",
     )
-    measurement: Optional[GoodsMeasurement] = Field(
+    measurement: GoodsMeasurement | None = Field(
         default=None,
         description="Goods measurement.",
     )
 
 
 class GoodsOrderDetailed(BaseModel):
-    id: Optional[int] = Field(
+    id: int | None = Field(
         default=None,
         description="Order ID in the UDS.",
     )
-    date_created: Optional[datetime] = Field(
+    date_created: datetime | None = Field(
         default=None,
         alias="dateCreated",
         validation_alias="dateCreated",
         description="Order date.",
     )
-    comment: Optional[str] = Field(
+    comment: str | None = Field(
         default=None,
         description="Comment on the order.",
     )
-    state: Optional[GoodsOrderState] = Field(
+    state: GoodsOrderState | None = Field(
         default=None,
         description="Order status.",
     )
-    order_status: Optional[GoodsOrderUpdateStatus] = Field(
+    order_status: GoodsOrderUpdateStatus | None = Field(
         default=None,
         alias="orderStatus",
         validation_alias="orderStatus",
         description="Order processing status.",
     )
-    cash: Optional[float] = Field(
+    cash: float | None = Field(
         default=None,
         description="Amount payable in currency units.",
     )
-    points: Optional[float] = Field(
+    points: float | None = Field(
         default=None,
         description="Number of deducted points.",
     )
-    total: Optional[float] = Field(
+    total: float | None = Field(
         default=None,
         description="Total order amount.",
     )
-    certificate_points: Optional[float] = Field(
+    certificate_points: float | None = Field(
         default=None,
         alias="certificatePoints",
         validation_alias="certificatePoints",
         description="Number of deducted certificate points.",
     )
-    customer: Optional[CustomerShortInfo] = None
-    delivery: Optional[DeliveryType] = None
-    online_payment: Optional[OnlinePayment] = Field(
+    customer: CustomerShortInfo | None = None
+    delivery: DeliveryType | None = None
+    online_payment: OnlinePayment | None = Field(
         default=None,
         alias="onlinePayment",
         validation_alias="onlinePayment",
     )
-    payment_method: Optional[PaymentMethod] = Field(
+    payment_method: PaymentMethod | None = Field(
         default=None,
         alias="paymentMethod",
         validation_alias="paymentMethod",
     )
-    items: Optional[List[GoodsOrderItem]] = Field(
+    items: list[GoodsOrderItem] | None = Field(
         default=None,
         description="Items information.",
     )
-    purchase: Optional[PurchaseCalc] = None
+    purchase: PurchaseCalc | None = None

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 
 class UDSClientError(Exception):
     """
@@ -19,7 +17,7 @@ class UDSAPIError(UDSClientError):
         message: str,
         *,
         status_code: int,
-        error_code: Optional[str] = None,
+        error_code: str | None = None,
     ) -> None:
         self.status_code = status_code
         self.error_code = error_code
@@ -72,6 +70,7 @@ class UDSImageReadError(UDSImageSourceError):
     """
     Ошибка чтения файла изображения.
     """
+
     pass
 
 
@@ -79,6 +78,7 @@ class UDSImageDownloadError(UDSImageSourceError):
     """
     Ошибка скачивания изображения по URL.
     """
+
     pass
 
 
@@ -86,6 +86,7 @@ class UDSImageUploadError(UDSImageError):
     """
     Ошибка загрузки изображения на сервер.
     """
+
     pass
 
 
@@ -93,4 +94,5 @@ class UDSImageUnsupportedSourceError(UDSImageError):
     """
     Неподдерживаемый источник или MIME-тип изображения.
     """
+
     pass

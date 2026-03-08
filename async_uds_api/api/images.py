@@ -1,7 +1,7 @@
 import mimetypes
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import aiofiles
@@ -10,8 +10,8 @@ import httpx
 from async_uds_api.errors import (
     UDSImageDownloadError,
     UDSImageReadError,
-    UDSImageUploadError,
     UDSImageUnsupportedSourceError,
+    UDSImageUploadError,
 )
 from async_uds_api.models import ImageUploadUrl
 
@@ -57,7 +57,7 @@ class ImagesAPI:
 
     async def upload(
         self,
-        source: Union[str, Path, bytes],
+        source: str | Path | bytes,
         content_type: str | None = None,
     ) -> str:
         """
@@ -116,7 +116,9 @@ class ImagesAPI:
         Raises:
             UDSImageUnsupportedSourceError: If content_type is not a valid MIME type
         """
-        mime_pattern = r'^[a-zA-Z0-9!#$%^&\*\_\-+{}|\.]+/[a-zA-Z0-9!#$%^&\*\_\-+{}|\.]+$'
+        mime_pattern = (
+            r"^[a-zA-Z0-9!#$%^&\*\_\-+{}|\.]+/[a-zA-Z0-9!#$%^&\*\_\-+{}|\.]+$"
+        )
 
         if not re.match(mime_pattern, content_type):
             raise UDSImageUnsupportedSourceError(
@@ -124,7 +126,7 @@ class ImagesAPI:
                 f"Expected format: 'type/subtype' (e.g., 'image/jpeg')"
             )
 
-    def _detect_content_type(self, source: Union[str, Path]) -> str:
+    def _detect_content_type(self, source: str | Path) -> str:
         """
         Detect content type from file path or URL.
 
@@ -142,7 +144,7 @@ class ImagesAPI:
 
         return mime_type
 
-    async def _read_image_data(self, source: Union[str, Path, bytes]) -> bytes:
+    async def _read_image_data(self, source: str | Path | bytes) -> bytes:
         """
         Read image data from file path, URL, or bytes.
 
@@ -209,7 +211,9 @@ class ImagesAPI:
             response.raise_for_status()
             return response.content
         except Exception as e:
-            raise UDSImageDownloadError(f"Failed to download image from {url}: {e}") from e
+            raise UDSImageDownloadError(
+                f"Failed to download image from {url}: {e}"
+            ) from e
 
     async def _upload_to_url(
         self,

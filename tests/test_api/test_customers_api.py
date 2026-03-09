@@ -35,6 +35,35 @@ class TestCustomersAPI:
 
         assert isinstance(result, CustomersPage)
 
+    async def test_list_customers_with_cursor(self, uds_client):
+        """Test customers list with cursor pagination."""
+        cursor_value = "eyJvZmZzZXQiOjIwfQ=="
+
+        respx.get(
+            "https://api.uds.app/partner/v2/customers",
+            params={"cursor": cursor_value},
+        ).mock(
+            return_value=Response(
+                200,
+                json={
+                    "rows": [
+                        {
+                            "uid": "xyz789",
+                            "displayName": "Cursor Customer",
+                            "phone": "+79009998877",
+                        }
+                    ],
+                    "cursor": "eyJvZmZzZXQiOjMwfQ==",
+                },
+            )
+        )
+
+        result = await uds_client.customers.list(cursor=cursor_value)
+
+        assert isinstance(result, CustomersPage)
+        assert len(result.rows) == 1
+        assert result.cursor == "eyJvZmZzZXQiOjMwfQ=="
+
     async def test_get_customer_success(self, uds_client):
         """Test successful customer retrieval by ID."""
         customer_id = 123

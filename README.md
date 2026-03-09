@@ -4,16 +4,8 @@
 
 ### Установка
 
-После публикации пакет можно будет установить через `pip`:
-
 ```bash
 pip install async-uds-api
-```
-
-А пока можно использовать библиотеку из исходников:
-
-```bash
-pip install -e .
 ```
 
 ### Быстрый старт
@@ -30,11 +22,13 @@ async def main() -> None:
     )
 
     async with client:
-        settings = await client.get_settings()
+        # Получение настроек компании
+        settings = await client.settings.get()
         print(settings.name, settings.currency)
 
-        customers_page = await client.list_customers(max=10, offset=0)
-        for customer in customers_page.rows:
+        # Список клиентов
+        customers = await client.customers.list(max=10, offset=0)
+        for customer in customers.rows:
             print(customer.display_name, customer.phone)
 
 
@@ -42,13 +36,177 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-### Возможности (первоначальная версия)
+### Возможности
 
-- **Асинхронный HTTP-клиент** на базе `httpx.AsyncClient`;
-- **Авторизация** через Basic Auth (`companyId:apiKey`);
-- **Автоматические заголовки** `X-Origin-Request-Id` и `X-Timestamp`;
-- **Pydantic-модели** для ключевых сущностей (`CompanySettings`, `Customer` и др.);
-- Первые методы:
-  - `get_settings` — `GET /settings`;
-  - `list_customers` — `GET /customers`.
+- **Асинхронный HTTP-клиент** на базе `httpx.AsyncClient`
+- **Авторизация** через Basic Auth (`companyId:apiKey`)
+- **Автоматические заголовки** `X-Origin-Request-Id` и `X-Timestamp`
+- **Pydantic-модели** для валидации данных
+- **Типизация** — полная поддержка статических анализаторов
+- **Обработка ошибок** — иерархия исключений с детальной информацией
 
+### API
+
+#### Settings
+
+```python
+settings = await client.settings.get()
+```
+
+#### Customers
+
+```python
+# Список клиентов
+customers = await client.customers.list(max=100, offset=0)
+
+# Поиск клиента по коду/телефону/UID
+result = await client.customers.find(code="ABC123", total=1000.0)
+
+# Получение клиента по ID
+customer = await client.customers.get(customer_id=12345)
+
+# Теги клиента
+tags = await client.customers.get_tags(customer_id=12345)
+await client.customers.set_tags(customer_id=12345, tag_ids=[1, 2, 3])
+```
+
+#### Operations
+
+```python
+from async_uds_api.models import CreateOperation
+
+# Список операций
+operations = await client.operations.list(max=100)
+
+# Создание операции (покупка/начисление)
+operation = await client.operations.create(CreateOperation(...))
+
+# Получение операции по ID
+operation = await client.operations.get(operation_id=12345)
+
+# Возврат операции
+refunded = await client.operations.refund(operation_id=12345)
+
+# Расчёт покупки
+calc_result = await client.operations.calc(calc_request)
+
+# Начисление бонусов
+await client.operations.reward(reward_request)
+
+# Создание ваучера
+voucher = await client.operations.create_voucher(voucher)
+```
+
+#### Tags
+
+```python
+# Список тегов компании
+tags = await client.tags.list()
+```
+
+#### Goods
+
+```python
+from async_uds_api.models import GoodsDetailed
+
+# Список товаров
+goods = await client.goods.list(max=100)
+
+# Создание товара
+new_goods = await client.goods.create(GoodsDetailed(name="Товар", ...))
+
+# Получение по ID
+item = await client.goods.get(goods_id=123)
+
+# Обновление
+updated = await client.goods.update(goods_id=123, goods=GoodsDetailed(...))
+
+# Удаление
+await client.goods.delete(goods_id=123)
+
+# Работа с externalId
+item = await client.goods.external.get(external_id="ext-123")
+updated = await client.goods.external.update(external_id="ext-123", goods=...)
+await client.goods.external.delete(external_id="ext-123")
+```
+
+#### Images
+
+```python
+# Загрузка изображения из файла
+image_id = await client.images.upload("/path/to/image.jpg")
+
+# Загрузка из URL
+image_id = await client.images.upload("https://example.com/image.png")
+
+# Загрузка из байтов
+image_id = await client.images.upload(image_bytes, content_type="image/png")
+
+# Получение URL для загрузки
+upload_url = await client.images.get_upload_url("image/jpeg")
+```
+
+### Webhooks
+
+```python
+from async_uds_api import verify_webhook_signature
+
+is_valid = verify_webhook_signature(
+    request_id=request.headers.get("X-RequestId"),
+    timestamp=request.headers.get("X-Timestamp"),
+    company_id=123456,
+    api_key="your-api-key",
+    signature=request.headers.get("X-Signature"),
+)
+```
+
+### Обработка ошибок
+
+```python
+from async_uds_api import (
+    UDSClientError,
+    UDSAPIError,
+    UDSBadRequestError,
+    UDSUnauthorizedError,
+    UDSForbiddenError,
+    UDSNotFoundError,
+    UDSUnexpectedError,
+    UDSImageError,
+)
+
+try:
+    customer = await client.customers.get(999999)
+except UDSNotFoundError as e:
+    print(f"Не найдено: {e.message}")
+except UDSAPIError as e:
+    print(f"API ошибка: {e.status_code}, {e.error_code}")
+except UDSClientError as e:
+    print(f"Ошибка клиента: {e}")
+```
+
+### Требования
+
+- Python >= 3.10
+- httpx >= 0.27.0
+- pydantic >= 2.0.0
+- aiofiles >= 23.0.0
+
+### Разработка
+
+```bash
+# Установка зависимостей для разработки
+pip install -e ".[dev]"
+
+# Запуск тестов
+pytest tests/
+
+# Линтинг
+ruff check async_uds_api/ tests/
+
+# Проверка типов
+ty check async_uds_api/ tests/
+```
+
+### Лицензия
+
+MIT

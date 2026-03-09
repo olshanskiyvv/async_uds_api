@@ -4,7 +4,7 @@ import hashlib
 def verify_webhook_signature(
     request_id: str,
     timestamp: str,
-    company_id: int,
+    company_id: str,
     api_key: str,
     signature: str,
 ) -> bool:

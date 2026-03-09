@@ -45,13 +45,18 @@ class UDSClient:
 
     def __init__(
         self,
-        company_id: int,
+        company_id: str,
         api_key: str,
         *,
         base_url: str = DEFAULT_BASE_URL,
         timeout: float = 10.0,
         client: httpx.AsyncClient | None = None,
     ) -> None:
+        if not company_id or not company_id.strip():
+            raise ValueError("company_id cannot be empty")
+        if not api_key or not api_key.strip():
+            raise ValueError("api_key cannot be empty")
+
         self._company_id = company_id
         self._api_key = api_key
         self._base_url = base_url.rstrip("/")
@@ -92,7 +97,7 @@ class UDSClient:
         }
 
     def _build_auth(self) -> httpx.BasicAuth:
-        return httpx.BasicAuth(str(self._company_id), self._api_key)
+        return httpx.BasicAuth(self._company_id, self._api_key)
 
     async def _request(
         self,

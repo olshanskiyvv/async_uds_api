@@ -17,7 +17,7 @@ from async_uds_api import UDSClient
 
 async def main() -> None:
     client = UDSClient(
-        company_id=123456,
+        company_id="123456",
         api_key="your-api-key",
     )
 

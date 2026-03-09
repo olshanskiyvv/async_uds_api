@@ -46,6 +46,7 @@ class Customer(BaseModel):
 
 class CustomersPage(BaseModel):
     rows: list[Customer]
+    cursor: str | None = None
 
 
 class CustomerDetail(Customer):

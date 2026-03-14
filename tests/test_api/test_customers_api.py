@@ -2,11 +2,17 @@ import pytest
 import respx
 from httpx import Response
 
-from async_uds_api.models import CustomerDetail, CustomersPage, TagsPage
+from async_uds_api.models import (
+    CustomerDetail,
+    CustomersPage,
+    FindCustomerResponse,
+    TagsPage,
+)
 from tests.fixtures.api_responses import (
     CUSTOMER_DETAIL_RESPONSE,
     CUSTOMER_TAGS_RESPONSE,
     CUSTOMERS_LIST_RESPONSE,
+    FIND_CUSTOMER_RESPONSE,
 )
 
 
@@ -107,24 +113,15 @@ class TestCustomersAPI:
 
     async def test_find_customer_by_phone(self, uds_client):
         """Test finding customer by phone."""
-        from async_uds_api.models import PurchaseCalcResponse
-
         respx.get(
             "https://api.uds.app/partner/v2/customers/find",
             params={"phone": "+79001234567"},
-        ).mock(
-            return_value=Response(
-                200,
-                json={
-                    "user": CUSTOMER_DETAIL_RESPONSE,
-                    "purchase": {},
-                },
-            )
-        )
+        ).mock(return_value=Response(200, json=FIND_CUSTOMER_RESPONSE))
 
         result = await uds_client.customers.find(phone="+79001234567")
 
-        assert isinstance(result, PurchaseCalcResponse)
+        assert isinstance(result, FindCustomerResponse)
+        assert result.code == "123456"
 
     async def test_customer_not_found(self, uds_client):
         """Test customer not found error."""

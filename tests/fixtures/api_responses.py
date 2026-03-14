@@ -7,7 +7,7 @@ COMPANY_SETTINGS_RESPONSE = {
     "name": "Test Company",
     "promoCode": "TESTCOMPANY",
     "currency": "RUB",
-    "baseDiscountPolicy": "POINTS",
+    "baseDiscountPolicy": "CHARGE_SCORES",
     "purchaseByPhone": True,
     "usePointsByPhone": True,
     "writeInvoice": False,
@@ -72,7 +72,7 @@ OPERATIONS_LIST_RESPONSE = {
             "id": 123,
             "dateCreated": "2024-01-01T12:00:00Z",
             "action": "PURCHASE",
-            "state": "COMPLETED",
+            "state": "NORMAL",
             "points": 50.0,
             "total": 1000.0,
             "cash": 950.0,
@@ -85,7 +85,7 @@ OPERATION_RESPONSE = {
     "id": 123,
     "dateCreated": "2024-01-01T12:00:00Z",
     "action": "PURCHASE",
-    "state": "COMPLETED",
+    "state": "NORMAL",
     "points": 50.0,
     "total": 1000.0,
     "cash": 950.0,
@@ -123,6 +123,21 @@ PARTICIPANT_RESPONSE = {
 }
 
 PURCHASE_CALC_RESPONSE = {
+    "user": {
+        "uid": "abc123",
+        "displayName": "John Doe",
+        "phone": "+79001234567",
+        "tags": [],
+    },
+    "purchase": {
+        "maxPoints": 100.0,
+        "total": 1000.0,
+        "cash": 900.0,
+        "points": 100.0,
+    },
+}
+
+FIND_CUSTOMER_RESPONSE = {
     "user": {
         "uid": "abc123",
         "displayName": "John Doe",

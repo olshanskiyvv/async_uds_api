@@ -1,23 +1,94 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import date
+from datetime import date, datetime
+from enum import Enum
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
 from async_uds_api.models.tags import TagModel
 
+if TYPE_CHECKING:
+    from async_uds_api.models.settings import MembershipTier
+
+
+class PurchaseTokenAction(str, Enum):
+    PURCHASE = "PURCHASE"
+    BONUS_ITEMS_PURCHASE = "BONUS_ITEMS_PURCHASE"
+    GOODS_ORDER_COMPLETE = "GOODS_ORDER_COMPLETE"
+    CERTIFICATE = "CERTIFICATE"
+
 
 class Participant(BaseModel):
-    uid: str | None = None
-    code: str | None = None
-    membership_tier_name: str | None = Field(
+    id: int | None = None
+    inviter_id: int | None = Field(
         default=None,
-        alias="membershipTierName",
-        validation_alias="membershipTierName",
+        alias="inviterId",
+        validation_alias="inviterId",
     )
-    scores: float | None = None
-    cash: float | None = None
+    points: float | None = None
+    discount_rate: float | None = Field(
+        default=None,
+        alias="discountRate",
+        validation_alias="discountRate",
+    )
+    cashback_rate: float | None = Field(
+        default=None,
+        alias="cashbackRate",
+        validation_alias="cashbackRate",
+    )
+    cash_spent: float | None = Field(
+        default=None,
+        alias="cashSpent",
+        validation_alias="cashSpent",
+    )
+    saved_funds: float | None = Field(
+        default=None,
+        alias="savedFunds",
+        validation_alias="savedFunds",
+    )
+    invited_count: int | None = Field(
+        default=None,
+        alias="invitedCount",
+        validation_alias="invitedCount",
+    )
+    effective_invited_count: int | None = Field(
+        default=None,
+        alias="effectiveInvitedCount",
+        validation_alias="effectiveInvitedCount",
+    )
+    operations_count: int | None = Field(
+        default=None,
+        alias="operationsCount",
+        validation_alias="operationsCount",
+    )
+    full_refunds_count: int | None = Field(
+        default=None,
+        alias="fullRefundsCount",
+        validation_alias="fullRefundsCount",
+    )
+    note: str | None = None
+    membership_tier: MembershipTier | None = Field(
+        default=None,
+        alias="membershipTier",
+        validation_alias="membershipTier",
+    )
+    date_created: datetime | None = Field(
+        default=None,
+        alias="dateCreated",
+        validation_alias="dateCreated",
+    )
+    last_transaction_time: datetime | None = Field(
+        default=None,
+        alias="lastTransactionTime",
+        validation_alias="lastTransactionTime",
+    )
+    points_expire_in: datetime | None = Field(
+        default=None,
+        alias="pointsExpireIn",
+        validation_alias="pointsExpireIn",
+    )
 
 
 class Customer(BaseModel):
@@ -182,7 +253,9 @@ class PurchaseCalcRequest(BaseModel):
 
 class PurchaseCalcResponse(BaseModel):
     user: CustomerDetail
-    purchase: PurchaseCalc
+    purchase: PurchaseCalc | None = None
+    code: str | None = None
+    type: PurchaseTokenAction | None = None
 
 
 class OperationCustomerShortInfo(BaseModel):

@@ -14,6 +14,8 @@ class MembershipTierConditionsEffectiveInvitedCount(BaseModel):
 class MembershipTierConditions(BaseModel):
     total_cash_spent: MembershipTierConditionsTotalCashSpent | None = Field(
         default=None,
+        alias="totalCashSpent",
+        validation_alias="totalCashSpent",
         description=(
             "Upgrade status when customer reaches that amount of cash spent."
         ),
@@ -22,6 +24,8 @@ class MembershipTierConditions(BaseModel):
         MembershipTierConditionsEffectiveInvitedCount | None
     ) = Field(
         default=None,
+        alias="effectiveInvitedCount",
+        validation_alias="effectiveInvitedCount",
         description=(
             "Upgrade to tier when customer reaches target "
             "effectiveInvitedCount."
@@ -38,6 +42,8 @@ class MembershipTier(BaseModel):
     rate: float = Field(description="Status rate.")
     max_scores_discount: float | None = Field(
         default=None,
+        alias="maxScoresDiscount",
+        validation_alias="maxScoresDiscount",
         description=(
             "Maximum discount (as a percentage) allowed for redeeming points."
         ),
@@ -75,6 +81,12 @@ class LoyaltyProgramSettings(BaseModel):
         validation_alias="referralReward",
         description="Customer's reward for an effective recommendation.",
     )
+    discount_vip: float | None = Field(
+        default=None,
+        alias="discountVip",
+        validation_alias="discountVip",
+        description="VIP discount rate.",
+    )
     receipt_limit: float | None = Field(
         default=None,
         alias="receiptLimit",
@@ -83,7 +95,7 @@ class LoyaltyProgramSettings(BaseModel):
             "Maximum transaction amount that can be made through UDS Cashier."
         ),
     )
-    defer_points_for_days: float | None = Field(
+    defer_points_for_days: int | None = Field(
         default=None,
         alias="deferPointsForDays",
         validation_alias="deferPointsForDays",

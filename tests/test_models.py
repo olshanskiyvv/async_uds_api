@@ -2,6 +2,9 @@ from datetime import date
 
 from async_uds_api.models import (
     BranchInfo,
+    CashierInput,
+    CreateOperation,
+    CreateOperationReceipt,
     Customer,
     CustomerDetail,
     CustomersPage,
@@ -15,7 +18,9 @@ from async_uds_api.models import (
     ImageUploadUrl,
     ImageUploadUrlHeaders,
     Operation,
+    OperationOrigin,
     Participant,
+    PurchaseTokenAction,
     TagModel,
     TagsPage,
 )
@@ -50,17 +55,20 @@ class TestCustomerModel:
 
     def test_customer_with_participant(self):
         """Test Customer with nested Participant."""
-        customer = Customer(
-            uid="abc123",
-            participant=Participant(
-                uid="participant123",
-                scores=100.0,
-                cash=500.0,
-            ),
+        customer = Customer.model_validate(
+            {
+                "uid": "abc123",
+                "participant": {
+                    "id": 123,
+                    "points": 100.0,
+                    "discountRate": 5.0,
+                },
+            }
         )
 
         assert customer.participant is not None
-        assert customer.participant.scores == 100.0
+        assert customer.participant.points == 100.0
+        assert customer.participant.discount_rate == 5.0
 
     def test_customer_detail_with_tags(self):
         """Test CustomerDetail with tags."""
@@ -85,6 +93,79 @@ class TestCustomerModel:
         )
 
         assert len(page.rows) == 2
+
+
+class TestParticipantModel:
+    def test_participant_model_creation(self):
+        """Test Participant model creation."""
+        participant = Participant.model_validate(
+            {
+                "id": 123,
+                "points": 100.0,
+                "discountRate": 5.0,
+                "cashbackRate": 3.0,
+            }
+        )
+
+        assert participant.id == 123
+        assert participant.points == 100.0
+        assert participant.discount_rate == 5.0
+        assert participant.cashback_rate == 3.0
+
+    def test_participant_with_membership_tier(self):
+        """Test Participant with MembershipTier."""
+        participant = Participant.model_validate(
+            {
+                "id": 123,
+                "points": 100.0,
+                "membershipTier": {
+                    "name": "VIP",
+                    "rate": 10.0,
+                },
+            }
+        )
+
+        assert participant.membership_tier is not None
+        assert participant.membership_tier.name == "VIP"
+        assert participant.membership_tier.rate == 10.0
+
+    def test_participant_with_aliases(self):
+        """Test Participant field aliases."""
+        participant = Participant.model_validate(
+            {
+                "inviterId": 456,
+                "cashSpent": 10000.0,
+                "savedFunds": 500.0,
+                "invitedCount": 10,
+                "effectiveInvitedCount": 5,
+                "operationsCount": 20,
+                "fullRefundsCount": 1,
+                "dateCreated": "2023-01-01T00:00:00Z",
+                "lastTransactionTime": "2024-01-01T12:00:00Z",
+                "pointsExpireIn": "2025-01-01T00:00:00Z",
+            }
+        )
+
+        assert participant.inviter_id == 456
+        assert participant.cash_spent == 10000.0
+        assert participant.saved_funds == 500.0
+        assert participant.invited_count == 10
+        assert participant.effective_invited_count == 5
+        assert participant.operations_count == 20
+        assert participant.full_refunds_count == 1
+
+
+class TestPurchaseTokenAction:
+    def test_purchase_token_action_enum(self):
+        """Test PurchaseTokenAction enum."""
+        assert PurchaseTokenAction.PURCHASE == "PURCHASE"
+        assert (
+            PurchaseTokenAction.BONUS_ITEMS_PURCHASE == "BONUS_ITEMS_PURCHASE"
+        )
+        assert (
+            PurchaseTokenAction.GOODS_ORDER_COMPLETE == "GOODS_ORDER_COMPLETE"
+        )
+        assert PurchaseTokenAction.CERTIFICATE == "CERTIFICATE"
 
 
 class TestGoodsModels:
@@ -151,6 +232,17 @@ class TestGoodsModels:
         )
 
         assert goods.external_id == "external-123"
+
+    def test_goods_image_urls_not_optional(self):
+        """Test that image_urls is not optional."""
+        goods = GoodsDetailed.model_validate(
+            {
+                "name": "Test Item",
+                "data": {"type": "ITEM"},
+            }
+        )
+
+        assert goods.image_urls == []
 
 
 class TestImageModels:
@@ -219,22 +311,70 @@ class TestOperationModels:
             action="PURCHASE",
             state="COMPLETED",
             points=50.0,
+            total=1000.0,
+            cash=950.0,
         )
 
         assert operation.id == 123
         assert operation.action == "PURCHASE"
         assert operation.state == "COMPLETED"
+        assert operation.total == 1000.0
+        assert operation.cash == 950.0
 
     def test_operation_with_branch(self):
         """Test Operation with BranchInfo."""
         operation = Operation(
             id=123,
+            action="PURCHASE",
             branch=BranchInfo(id=1, displayName="Main Branch"),
         )
 
         assert operation.branch is not None
         assert operation.branch.id == 1
         assert operation.branch.display_name == "Main Branch"
+
+    def test_operation_with_origin(self):
+        """Test Operation with origin."""
+        operation = Operation(
+            id=123,
+            action="REFUND",
+            state="REVERSAL",
+            origin=OperationOrigin(id=100),
+        )
+
+        assert operation.origin is not None
+        assert operation.origin.id == 100
+
+    def test_cashier_input(self):
+        """Test CashierInput model."""
+        cashier = CashierInput.model_validate(
+            {
+                "externalId": "ext-123",
+                "name": "John",
+            }
+        )
+
+        assert cashier.external_id == "ext-123"
+        assert cashier.name == "John"
+
+    def test_create_operation_with_cashier(self):
+        """Test CreateOperation with CashierInput."""
+        operation = CreateOperation(
+            receipt=CreateOperationReceipt(
+                total=1000.0,
+                cash=900.0,
+                points=100.0,
+            ),
+            cashier=CashierInput.model_validate(
+                {
+                    "externalId": "ext-123",
+                    "name": "John",
+                }
+            ),
+        )
+
+        assert operation.cashier is not None
+        assert operation.cashier.external_id == "ext-123"
 
 
 class TestBranchInfo:

@@ -16,6 +16,10 @@ class CashierInfo(BaseModel):
     )
 
 
+class OperationOrigin(BaseModel):
+    id: int | None = None
+
+
 class Operation(BaseModel):
     id: int | None = Field(
         default=None, description="Transaction ID in the UDS."
@@ -26,7 +30,7 @@ class Operation(BaseModel):
         validation_alias="dateCreated",
         description="Transaction date.",
     )
-    action: str | None = None
+    action: str
     state: str | None = None
     customer: OperationCustomer | None = None
     cashier: CashierInfo | None = None
@@ -42,6 +46,9 @@ class Operation(BaseModel):
         alias="receiptNumber",
         validation_alias="receiptNumber",
     )
+    origin: OperationOrigin | None = None
+    total: float | None = None
+    cash: float | None = None
 
 
 class OperationsPage(BaseModel):
@@ -53,6 +60,14 @@ class OperationsPage(BaseModel):
 class CreateOperationParticipant(BaseModel):
     uid: str | None = None
     phone: str | None = None
+
+
+class CashierInput(BaseModel):
+    external_id: str = Field(
+        alias="externalId",
+        validation_alias="externalId",
+    )
+    name: str | None = None
 
 
 class CreateOperationReceipt(BaseModel):
@@ -76,16 +91,7 @@ class CreateOperation(BaseModel):
     code: str | None = None
     participant: CreateOperationParticipant | None = None
     nonce: str | None = None
-    cashier_external_id: str | None = Field(
-        default=None,
-        alias="cashierExternalId",
-        description="External cashier identifier.",
-    )
-    cashier_name: str | None = Field(
-        default=None,
-        alias="cashierName",
-        description="Cashier name.",
-    )
+    cashier: CashierInput | None = None
     receipt: CreateOperationReceipt
     tags: list[int] | None = None
 

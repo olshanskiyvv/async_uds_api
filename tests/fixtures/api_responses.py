@@ -17,9 +17,15 @@ COMPANY_SETTINGS_RESPONSE = {
             "uid": "base",
             "name": "Base",
             "rate": 0.05,
+            "maxScoresDiscount": 50.0,
         },
         "membershipTiers": [],
         "referralCashbackRates": [0.05, 0.03, 0.01],
+        "cashierAward": 0.01,
+        "referralReward": 100.0,
+        "discountVip": 10.0,
+        "receiptLimit": 100000.0,
+        "deferPointsForDays": 7,
     },
 }
 
@@ -30,9 +36,10 @@ CUSTOMERS_LIST_RESPONSE = {
             "displayName": "John Doe",
             "phone": "+79001234567",
             "participant": {
-                "uid": "participant123",
-                "scores": 100.0,
-                "cash": 500.0,
+                "id": 123,
+                "points": 100.0,
+                "discountRate": 5.0,
+                "cashbackRate": 3.0,
             },
         },
         {
@@ -48,9 +55,10 @@ CUSTOMER_DETAIL_RESPONSE = {
     "displayName": "John Doe",
     "phone": "+79001234567",
     "participant": {
-        "uid": "participant123",
-        "scores": 100.0,
-        "cash": 500.0,
+        "id": 123,
+        "points": 100.0,
+        "discountRate": 5.0,
+        "cashbackRate": 3.0,
     },
     "tags": [
         {"id": 1, "name": "VIP"},
@@ -66,6 +74,8 @@ OPERATIONS_LIST_RESPONSE = {
             "action": "PURCHASE",
             "state": "COMPLETED",
             "points": 50.0,
+            "total": 1000.0,
+            "cash": 950.0,
         }
     ],
     "total": 1,
@@ -77,10 +87,56 @@ OPERATION_RESPONSE = {
     "action": "PURCHASE",
     "state": "COMPLETED",
     "points": 50.0,
+    "total": 1000.0,
+    "cash": 950.0,
     "customer": {
         "id": 456,
         "displayName": "John Doe",
     },
+    "origin": {
+        "id": 100,
+    },
+}
+
+PARTICIPANT_RESPONSE = {
+    "id": 123,
+    "inviterId": 456,
+    "points": 100.0,
+    "discountRate": 5.0,
+    "cashbackRate": 3.0,
+    "cashSpent": 10000.0,
+    "savedFunds": 500.0,
+    "invitedCount": 10,
+    "effectiveInvitedCount": 5,
+    "operationsCount": 20,
+    "fullRefundsCount": 1,
+    "note": "Test note",
+    "membershipTier": {
+        "uid": "vip",
+        "name": "VIP",
+        "rate": 10.0,
+        "maxScoresDiscount": 50.0,
+    },
+    "dateCreated": "2023-01-01T00:00:00Z",
+    "lastTransactionTime": "2024-01-01T12:00:00Z",
+    "pointsExpireIn": "2025-01-01T00:00:00Z",
+}
+
+PURCHASE_CALC_RESPONSE = {
+    "user": {
+        "uid": "abc123",
+        "displayName": "John Doe",
+        "phone": "+79001234567",
+        "tags": [],
+    },
+    "purchase": {
+        "maxPoints": 100.0,
+        "total": 1000.0,
+        "cash": 900.0,
+        "points": 100.0,
+    },
+    "code": "123456",
+    "type": "PURCHASE",
 }
 
 TAGS_LIST_RESPONSE = {
@@ -100,6 +156,7 @@ GOODS_LIST_RESPONSE = {
                 "type": "ITEM",
                 "price": 100.0,
             },
+            "imageUrls": ["https://example.com/image.jpg"],
         }
     ],
     "total": 1,
@@ -113,6 +170,7 @@ GOODS_DETAIL_RESPONSE = {
         "price": 100.0,
         "description": "Test description",
     },
+    "imageUrls": ["https://example.com/image.jpg"],
 }
 
 IMAGE_UPLOAD_URL_RESPONSE = {

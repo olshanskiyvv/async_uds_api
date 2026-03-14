@@ -180,8 +180,8 @@ class GoodsInfoType(BaseModel):
         validation_alias="nodeId",
         description="ID of the category in which the product is included.",
     )
-    image_urls: list[str] | None = Field(
-        default=None,
+    image_urls: list[str] = Field(
+        default_factory=list,
         alias="imageUrls",
         validation_alias="imageUrls",
         description="Array of links to item image.",
@@ -229,8 +229,8 @@ class GoodsDetailed(BaseModel):
         default=None,
         description="Is the goods blocked.",
     )
-    image_urls: list[str] | None = Field(
-        default=None,
+    image_urls: list[str] = Field(
+        default_factory=list,
         alias="imageUrls",
         validation_alias="imageUrls",
         description="Array of links to item image.",

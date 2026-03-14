@@ -10,6 +10,7 @@ from async_uds_api.models.customers import (
     PurchaseCalcRequestParticipant,
     PurchaseCalcRequestReceipt,
     PurchaseCalcResponse,
+    PurchaseTokenAction,
 )
 from async_uds_api.models.goods import (
     GoodsCategoryType,
@@ -30,6 +31,7 @@ from async_uds_api.models.goods import (
 from async_uds_api.models.images import ImageUploadUrl, ImageUploadUrlHeaders
 from async_uds_api.models.operations import (
     CashierInfo,
+    CashierInput,
     CreateOperation,
     CreateOperationParticipant,
     CreateOperationReceipt,
@@ -37,6 +39,7 @@ from async_uds_api.models.operations import (
     CreateVoucherCashier,
     CreateVoucherReceipt,
     Operation,
+    OperationOrigin,
     OperationsPage,
     RefundOperationRequest,
     RewardRequest,
@@ -71,14 +74,20 @@ from async_uds_api.models.settings import (
 )
 from async_uds_api.models.tags import TagModel, TagsPage
 
+Participant.model_rebuild()
+Customer.model_rebuild()
+CustomerDetail.model_rebuild()
+
 __all__ = [
     "BranchInfo",
+    "CashierInput",
     "Customer",
     "CustomerDetail",
     "CustomersPage",
     "CustomerShortInfo",
     "OperationCustomer",
     "OperationCustomerShortInfo",
+    "OperationOrigin",
     "Participant",
     "ParticipantShortInfo",
     "PurchaseCalc",
@@ -86,6 +95,7 @@ __all__ = [
     "PurchaseCalcRequestParticipant",
     "PurchaseCalcRequestReceipt",
     "PurchaseCalcResponse",
+    "PurchaseTokenAction",
     "GoodsCategoryType",
     "GoodsData",
     "GoodsDetailed",

@@ -1,14 +1,25 @@
 from __future__ import annotations
 
+from enum import Enum
+
 from pydantic import BaseModel, Field
 
 
+class BaseDiscountPolicy(str, Enum):
+    APPLY_DISCOUNT = "APPLY_DISCOUNT"
+    CHARGE_SCORES = "CHARGE_SCORES"
+
+
 class MembershipTierConditionsTotalCashSpent(BaseModel):
-    target: float = Field(description="Amount of cash spent.")
+    target: float | None = Field(
+        default=None, description="Amount of cash spent."
+    )
 
 
 class MembershipTierConditionsEffectiveInvitedCount(BaseModel):
-    target: int = Field(description="Amount of invited count.")
+    target: int | None = Field(
+        default=None, description="Amount of invited count."
+    )
 
 
 class MembershipTierConditions(BaseModel):
@@ -121,7 +132,7 @@ class CompanySettings(BaseModel):
         default=None,
         description="Currency in ISO-4217 format.",
     )
-    base_discount_policy: str = Field(
+    base_discount_policy: BaseDiscountPolicy = Field(
         alias="baseDiscountPolicy",
         validation_alias="baseDiscountPolicy",
         description="Defines loyalty program type.",

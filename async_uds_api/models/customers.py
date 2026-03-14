@@ -13,6 +13,12 @@ if TYPE_CHECKING:
     from async_uds_api.models.settings import MembershipTier
 
 
+class Gender(str, Enum):
+    MALE = "MALE"
+    FEMALE = "FEMALE"
+    NOT_SPECIFIED = "NOT_SPECIFIED"
+
+
 class PurchaseTokenAction(str, Enum):
     PURCHASE = "PURCHASE"
     BONUS_ITEMS_PURCHASE = "BONUS_ITEMS_PURCHASE"
@@ -99,7 +105,7 @@ class Customer(BaseModel):
         alias="displayName",
         validation_alias="displayName",
     )
-    gender: str | None = None
+    gender: Gender | None = None
     phone: str | None = None
     birth_date: date | None = Field(
         default=None,
@@ -124,6 +130,13 @@ class CustomerDetail(Customer):
     tags: Sequence[TagModel] = Field(
         default_factory=list,
         description="Customer tags list.",
+    )
+
+
+class PurchaseCalcExtras(BaseModel):
+    delivery: float | None = Field(
+        default=None,
+        description="Delivery cost (in currency units).",
     )
 
 
@@ -209,11 +222,12 @@ class PurchaseCalc(BaseModel):
             "(in points)."
         ),
     )
-    extras_delivery: float | None = Field(
+    extras: PurchaseCalcExtras | None = Field(
         default=None,
-        alias="extras",
-        validation_alias="extras",
-        description="Delivery cost (in currency units).",
+        description=(
+            "Additional payments will not be taken into account by the "
+            "loyalty program."
+        ),
     )
     max_scores_discount: float | None = Field(
         default=None,
@@ -254,8 +268,21 @@ class PurchaseCalcRequest(BaseModel):
 class PurchaseCalcResponse(BaseModel):
     user: CustomerDetail
     purchase: PurchaseCalc | None = None
-    code: str | None = None
-    type: PurchaseTokenAction | None = None
+
+
+class FindCustomerResponse(PurchaseCalcResponse):
+    code: str | None = Field(
+        default=None,
+        description=(
+            "New long-term payment promo code, if exchangeCode queried."
+        ),
+    )
+    token_type: PurchaseTokenAction | None = Field(
+        default=None,
+        alias="type",
+        validation_alias="type",
+        description="Purchase token type.",
+    )
 
 
 class OperationCustomerShortInfo(BaseModel):

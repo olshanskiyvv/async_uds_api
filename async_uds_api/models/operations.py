@@ -1,11 +1,22 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 
 from pydantic import BaseModel, Field
 
 from async_uds_api.models.customers import OperationCustomer
 from async_uds_api.models.orders import BranchInfo
+
+
+class Action(str, Enum):
+    PURCHASE = "PURCHASE"
+
+
+class ActionState(str, Enum):
+    NORMAL = "NORMAL"
+    CANCELED = "CANCELED"
+    REVERSAL = "REVERSAL"
 
 
 class CashierInfo(BaseModel):
@@ -30,8 +41,8 @@ class Operation(BaseModel):
         validation_alias="dateCreated",
         description="Transaction date.",
     )
-    action: str
-    state: str | None = None
+    action: Action
+    state: ActionState | None = None
     customer: OperationCustomer | None = None
     cashier: CashierInfo | None = None
     branch: BranchInfo | None = None
@@ -112,19 +123,6 @@ class RewardRequest(BaseModel):
     silent: bool = False
 
 
-class CreateVoucherCashier(BaseModel):
-    external_id: str | None = Field(
-        default=None,
-        alias="externalId",
-        validation_alias="externalId",
-        description="External cashier identifier.",
-    )
-    name: str | None = Field(
-        default=None,
-        description="Cashier name.",
-    )
-
-
 class CreateVoucherReceipt(BaseModel):
     total: float = Field(
         description="Total receipt amount (in currency units)."
@@ -146,7 +144,7 @@ class CreateVoucher(BaseModel):
         default=None,
         description="Nonce for voucher (UUID).",
     )
-    cashier: CreateVoucherCashier | None = None
+    cashier: CashierInput | None = None
     receipt: CreateVoucherReceipt
 
 

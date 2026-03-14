@@ -53,6 +53,11 @@ class PaymentType(str, Enum):
     CUSTOM = "CUSTOM"
 
 
+class GoodsOrderItemType(str, Enum):
+    ITEM = "ITEM"
+    VARYING_ITEM = "VARYING_ITEM"
+
+
 class ParticipantShortInfo(BaseModel):
     id: int = Field(description="Customer ID in the company.")
     display_name: str = Field(
@@ -176,10 +181,7 @@ class GoodsOrderItem(BaseModel):
         validation_alias="externalId",
         description="External item identifier.",
     )
-    name: str | None = Field(
-        default=None,
-        description="Item name.",
-    )
+    name: str = Field(description="Item name.")
     variant_name: str | None = Field(
         default=None,
         alias="variantName",
@@ -193,18 +195,9 @@ class GoodsOrderItem(BaseModel):
         default=None,
         description="Item stock number.",
     )
-    type: str | None = Field(
-        default=None,
-        description="Item type.",
-    )
-    qty: int | None = Field(
-        default=None,
-        description="Quantity.",
-    )
-    price: float | None = Field(
-        default=None,
-        description="Item price.",
-    )
+    type: GoodsOrderItemType = Field(description="Item type.")
+    qty: int = Field(description="Quantity.")
+    price: float = Field(description="Item price.")
     offer_price: float | None = Field(
         default=None,
         alias="offerPrice",
@@ -282,4 +275,4 @@ class GoodsOrderDetailed(BaseModel):
         default=None,
         description="Items information.",
     )
-    purchase: PurchaseCalc | None = None
+    purchase: PurchaseCalc

@@ -51,8 +51,8 @@ class GoodsOffer(BaseModel):
         validation_alias="offerPrice",
         description="Discount price.",
     )
-    skip_loyalty: bool | None = Field(
-        default=None,
+    skip_loyalty: bool = Field(
+        default=False,
         alias="skipLoyalty",
         validation_alias="skipLoyalty",
         description=(
@@ -75,12 +75,12 @@ class GoodsInventory(BaseModel):
 
 
 class GoodsVariantType(BaseModel):
-    name: str | None = Field(default=None, description="Variant name.")
+    name: str = Field(description="Variant name.")
     sku: str | None = Field(
         default=None,
         description="Variant stock number.",
     )
-    price: float | None = Field(default=None, description="Variant price.")
+    price: float = Field(description="Variant price.")
     offer: GoodsOffer | None = None
     inventory: GoodsInventory | None = None
 
@@ -92,14 +92,14 @@ class GoodsCategoryType(BaseModel):
 class GoodsItemType(BaseModel):
     type: GoodsType = GoodsType.ITEM
     sku: str | None = Field(default=None, description="Item stock number.")
-    price: float | None = Field(default=None, description="Item price.")
+    price: float = Field(description="Item price.")
     description: str | None = Field(
         default=None, description="Item description."
     )
     offer: GoodsOffer | None = None
     inventory: GoodsInventory | None = None
-    photos: list[str] | None = Field(
-        default=None,
+    photos: list[str] = Field(
+        default_factory=list,
         description="Array of image identifiers.",
     )
     measurement: GoodsMeasurement | None = Field(
@@ -142,8 +142,8 @@ class GoodsVaryingItemType(BaseModel):
     description: str | None = Field(
         default=None, description="Variant description."
     )
-    photos: list[str] | None = Field(
-        default=None,
+    photos: list[str] = Field(
+        default_factory=list,
         description="Array of image identifiers.",
     )
     vat_code: VatCode | None = Field(

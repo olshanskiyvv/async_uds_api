@@ -1,13 +1,23 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from async_uds_api.models.customers import PurchaseCalc
+from async_uds_api.models.enums import (
+    DeliveryTypes,
+    GoodsOrderItemType,
+    GoodsOrderState,
+    GoodsOrderUpdateStatus,
+    PaymentProvider,
+    PaymentType,
+)
 from async_uds_api.models.goods import GoodsMeasurement
 from async_uds_api.models.settings import MembershipTier
+
+if TYPE_CHECKING:
+    from async_uds_api.models.operations import PurchaseCalc
 
 
 class BranchInfo(BaseModel):
@@ -17,45 +27,6 @@ class BranchInfo(BaseModel):
         validation_alias="displayName",
         description="Branch name.",
     )
-
-
-class GoodsOrderState(str, Enum):
-    NEW = "NEW"
-    COMPLETED = "COMPLETED"
-    DELETED = "DELETED"
-    WAITING_PAYMENT = "WAITING_PAYMENT"
-    NEED_ACK = "NEED_ACK"
-
-
-class GoodsOrderUpdateStatus(str, Enum):
-    ACCEPTED = "ACCEPTED"
-    READY = "READY"
-
-
-class DeliveryTypes(str, Enum):
-    PICKUP = "PICKUP"
-    DELIVERY = "DELIVERY"
-
-
-class PaymentProvider(str, Enum):
-    B2P = "B2P"
-    CLOUD_PAYMENTS = "CLOUD_PAYMENTS"
-    YOOKASSA = "YOOKASSA"
-    PAYTURE = "PAYTURE"
-    CUSTOM = "CUSTOM"
-
-
-class PaymentType(str, Enum):
-    BEST_TO_PAY = "BEST_TO_PAY"
-    CLOUD_PAYMENTS = "CLOUD_PAYMENTS"
-    CASH = "CASH"
-    MANUAL = "MANUAL"
-    CUSTOM = "CUSTOM"
-
-
-class GoodsOrderItemType(str, Enum):
-    ITEM = "ITEM"
-    VARYING_ITEM = "VARYING_ITEM"
 
 
 class ParticipantShortInfo(BaseModel):

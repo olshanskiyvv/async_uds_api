@@ -1,47 +1,15 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
 
 from pydantic import BaseModel, Field
 
-
-class GoodsType(str, Enum):
-    CATEGORY = "CATEGORY"
-    ITEM = "ITEM"
-    VARYING_ITEM = "VARYING_ITEM"
-
-
-class GoodsMeasurement(str, Enum):
-    PIECE = "PIECE"
-    CENTIMETRE = "CENTIMETRE"
-    METRE = "METRE"
-    MILLILITRE = "MILLILITRE"
-    LITRE = "LITRE"
-    GRAM = "GRAM"
-    KILOGRAM = "KILOGRAM"
-    TON = "TON"
-    SQUARE_METRE = "SQUARE_METRE"
-    CUBIC_METRE = "CUBIC_METRE"
-    DAY = "DAY"
-    HOUR = "HOUR"
-    MINUTE = "MINUTE"
-    KILOMETRE = "KILOMETRE"
-
-
-class VatCode(str, Enum):
-    NO_NDS = "NO_NDS"
-    NDS_0 = "NDS_0"
-    NDS_10 = "NDS_10"
-    NDS_20 = "NDS_20"
-    NDS_10_110 = "NDS_10_110"
-    NDS_20_120 = "NDS_20_120"
-
-
-class PaymentSubject(str, Enum):
-    COMMODITY = "COMMODITY"
-    EXCISE = "EXCISE"
-    SERVICE = "SERVICE"
+from async_uds_api.models.enums import (
+    GoodsMeasurement,
+    GoodsType,
+    PaymentSubject,
+    VatCode,
+)
 
 
 class GoodsOffer(BaseModel):

@@ -1,22 +1,27 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from async_uds_api.models.customers import OperationCustomer
+from async_uds_api.models.enums import Action, ActionState
 from async_uds_api.models.orders import BranchInfo
 
+if TYPE_CHECKING:
+    from async_uds_api.models.customers import CustomerDetail
 
-class Action(str, Enum):
-    PURCHASE = "PURCHASE"
+
+class OperationCustomerShortInfo(BaseModel):
+    id: int
+    display_name: str = Field(
+        alias="displayName",
+        validation_alias="displayName",
+    )
 
 
-class ActionState(str, Enum):
-    NORMAL = "NORMAL"
-    CANCELED = "CANCELED"
-    REVERSAL = "REVERSAL"
+class OperationCustomer(OperationCustomerShortInfo):
+    uid: str | None = None
 
 
 class CashierInfo(BaseModel):
@@ -171,3 +176,140 @@ class VoucherInfo(BaseModel):
         description="Voucher code expires in (UTC time-zone).",
     )
     points: float = Field(description="Minimum points for withdrawal.")
+
+
+class PurchaseCalcExtras(BaseModel):
+    delivery: float | None = Field(
+        default=None,
+        description="Delivery cost (in currency units).",
+    )
+
+
+class PurchaseCalc(BaseModel):
+    max_points: float | None = Field(
+        default=None,
+        alias="maxPoints",
+        validation_alias="maxPoints",
+        description="Maximum number of points available.",
+    )
+    total: float | None = Field(
+        default=None,
+        description="Total bill (in currency units).",
+    )
+    skip_loyalty_total: float | None = Field(
+        default=None,
+        alias="skipLoyaltyTotal",
+        validation_alias="skipLoyaltyTotal",
+        description="Part of bill amount without cashback/discount.",
+    )
+    unredeemable_total: float | None = Field(
+        default=None,
+        alias="unredeemableTotal",
+        validation_alias="unredeemableTotal",
+        description="Part of total that cannot be redeemed with points.",
+    )
+    discount_amount: float | None = Field(
+        default=None,
+        alias="discountAmount",
+        validation_alias="discountAmount",
+        description="Discount amount (in currency units).",
+    )
+    discount_percent: float | None = Field(
+        default=None,
+        alias="discountPercent",
+        validation_alias="discountPercent",
+        description="Discount rate (as a percentage).",
+    )
+    points: float | None = Field(
+        default=None,
+        description="Payable points.",
+    )
+    points_percent: float | None = Field(
+        default=None,
+        alias="pointsPercent",
+        validation_alias="pointsPercent",
+        description="Discount rate due to points (as a percentage).",
+    )
+    net_discount: float | None = Field(
+        default=None,
+        alias="netDiscount",
+        validation_alias="netDiscount",
+        description="Total discount amount (in currency units).",
+    )
+    net_discount_percent: float | None = Field(
+        default=None,
+        alias="netDiscountPercent",
+        validation_alias="netDiscountPercent",
+        description="Total discount rate (as a percentage of the total bill).",
+    )
+    certificate_points: float | None = Field(
+        default=None,
+        alias="certificatePoints",
+        validation_alias="certificatePoints",
+        description="Number of deducted certificate points.",
+    )
+    cash: float | None = Field(
+        default=None,
+        description="Payable amount (in currency units).",
+    )
+    cash_total: float | None = Field(
+        default=None,
+        alias="cashTotal",
+        validation_alias="cashTotal",
+        description="Total amount to be paid including extras.",
+    )
+    cashback: float | None = Field(
+        default=None,
+        alias="cashBack",
+        validation_alias="cashBack",
+        description=(
+            "Reward (cashback) to be accrued after transaction completion "
+            "(in points)."
+        ),
+    )
+    extras: PurchaseCalcExtras | None = Field(
+        default=None,
+        description=(
+            "Additional payments will not be taken into account by the "
+            "loyalty program."
+        ),
+    )
+    max_scores_discount: float | None = Field(
+        default=None,
+        alias="maxScoresDiscount",
+        validation_alias="maxScoresDiscount",
+        description=(
+            "Maximum discount (as a percentage) allowed for redeeming points."
+        ),
+    )
+
+
+class PurchaseCalcRequestParticipant(BaseModel):
+    uid: str | None = None
+    phone: str | None = None
+
+
+class PurchaseCalcRequestReceipt(BaseModel):
+    total: float
+    skip_loyalty_total: float | None = Field(
+        default=None,
+        alias="skipLoyaltyTotal",
+        validation_alias="skipLoyaltyTotal",
+    )
+    unredeemable_total: float | None = Field(
+        default=None,
+        alias="unredeemableTotal",
+        validation_alias="unredeemableTotal",
+    )
+    points: float | None = None
+
+
+class PurchaseCalcRequest(BaseModel):
+    code: str | None = None
+    participant: PurchaseCalcRequestParticipant | None = None
+    receipt: PurchaseCalcRequestReceipt
+
+
+class PurchaseCalcResponse(BaseModel):
+    user: CustomerDetail
+    purchase: PurchaseCalc | None = None

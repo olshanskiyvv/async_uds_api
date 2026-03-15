@@ -1,13 +1,8 @@
 from __future__ import annotations
 
-from enum import Enum
-
 from pydantic import BaseModel, Field
 
-
-class BaseDiscountPolicy(str, Enum):
-    APPLY_DISCOUNT = "APPLY_DISCOUNT"
-    CHARGE_SCORES = "CHARGE_SCORES"
+from async_uds_api.models.enums import BaseDiscountPolicy
 
 
 class MembershipTierConditionsTotalCashSpent(BaseModel):

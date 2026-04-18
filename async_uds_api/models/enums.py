@@ -104,3 +104,12 @@ class PaymentType(str, Enum):
 class BaseDiscountPolicy(str, Enum):
     APPLY_DISCOUNT = "APPLY_DISCOUNT"
     CHARGE_SCORES = "CHARGE_SCORES"
+
+
+class TaxSystemCode(str, Enum):
+    OSN = "OSN"
+    USN_INCOME = "USN_INCOME"
+    USN_INCOME_EXPENSES = "USN_INCOME_EXPENSES"
+    ENVD = "ENVD"
+    ESN = "ESN"
+    PSN = "PSN"

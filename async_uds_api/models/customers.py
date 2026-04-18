@@ -2,17 +2,14 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import date, datetime
-from typing import TYPE_CHECKING
 
 from pydantic import Field
 
 from async_uds_api.models.base import APIModel
 from async_uds_api.models.enums import Gender, PurchaseTokenAction
-from async_uds_api.models.operations import PurchaseCalcResponse
+from async_uds_api.models.operations import PurchaseCalc
+from async_uds_api.models.settings import MembershipTier
 from async_uds_api.models.tags import TagModel
-
-if TYPE_CHECKING:
-    from async_uds_api.models.settings import MembershipTier
 
 
 class Participant(APIModel):
@@ -120,6 +117,11 @@ class CustomerDetail(Customer):
         default_factory=list,
         description="Customer tags list.",
     )
+
+
+class PurchaseCalcResponse(APIModel):
+    user: CustomerDetail
+    purchase: PurchaseCalc | None = None
 
 
 class FindCustomerResponse(PurchaseCalcResponse):

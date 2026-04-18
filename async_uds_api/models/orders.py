@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import Field
 
@@ -85,7 +85,7 @@ class DeliveryCase(APIModel):
 
 class Pickup(ReceiverInfo):
     branch: BranchInfo | None = None
-    type: DeliveryTypes = DeliveryTypes.PICKUP
+    type: Literal[DeliveryTypes.PICKUP] = DeliveryTypes.PICKUP
 
 
 class Delivery(ReceiverInfo):
@@ -98,7 +98,7 @@ class Delivery(ReceiverInfo):
         default=None,
         description="Delivery address.",
     )
-    type: DeliveryTypes = DeliveryTypes.DELIVERY
+    type: Literal[DeliveryTypes.DELIVERY] = DeliveryTypes.DELIVERY
 
 
 DeliveryType = Annotated[Pickup | Delivery, Field(discriminator="type")]

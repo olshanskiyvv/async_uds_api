@@ -89,6 +89,7 @@ from async_uds_api.models.tags import TagModel, TagsPage
 Participant.model_rebuild()
 Customer.model_rebuild()
 CustomerDetail.model_rebuild()
+GoodsOrderDetailed.model_rebuild()
 PurchaseCalcResponse.model_rebuild()
 FindCustomerResponse.model_rebuild()
 

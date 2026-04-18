@@ -79,16 +79,14 @@ class UDSClient:
         self.operations = OperationsAPI(self)
         self.tags = TagsAPI(self)
         self.goods = GoodsAPI(self)
-        self.images = ImagesAPI(self)
+        self.images = ImagesAPI(self, timeout=self._timeout)
         self.goods_orders = GoodsOrdersAPI(self)
 
     async def aclose(self) -> None:
         if not self._external_client:
             await self._client.aclose()
 
-        close_upload = getattr(self.images, "_close_upload_client", None)
-        if close_upload:
-            await close_upload()
+        await self.images._close_upload_client()
 
     async def __aenter__(self) -> UDSClient:
         return self

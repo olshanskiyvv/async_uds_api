@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
 from pydantic import Field
 
@@ -101,7 +101,7 @@ class Delivery(ReceiverInfo):
     type: DeliveryTypes = DeliveryTypes.DELIVERY
 
 
-DeliveryType = Pickup | Delivery
+DeliveryType = Annotated[Pickup | Delivery, Field(discriminator="type")]
 
 
 class OnlinePayment(APIModel):
@@ -185,6 +185,53 @@ class GoodsOrderItem(APIModel):
     measurement: GoodsMeasurement | None = Field(
         default=None,
         description="Goods measurement.",
+    )
+
+
+class GoodsOrderItemUpdate(APIModel):
+    id: int | None = Field(default=None, description="Item ID in the UDS.")
+    variant_name: str | None = Field(
+        default=None,
+        alias="variantName",
+        validation_alias="variantName",
+        description="Name of the item option, if the type of this item is VARYING_ITEM.",
+    )
+    qty: int | None = Field(default=None, description="Quantity.")
+
+
+class GoodsOrderItemNew(APIModel):
+    external_id: str | None = Field(
+        default=None,
+        alias="externalId",
+        validation_alias="externalId",
+        description="External item identifier.",
+    )
+    name: str | None = Field(default=None, description="Item name.")
+    variant_name: str | None = Field(
+        default=None,
+        alias="variantName",
+        validation_alias="variantName",
+        description="Name of the item option, if the type of this item is VARYING_ITEM.",
+    )
+    qty: int | None = Field(default=None, description="Quantity.")
+    price: float | None = Field(default=None, description="Item price.")
+    skip_loyalty: bool = Field(
+        default=False,
+        alias="skipLoyalty",
+        validation_alias="skipLoyalty",
+        description="Don't apply loyalty program terms.",
+    )
+
+
+class GoodsOrderUpdate(APIModel):
+    delivery_case: DeliveryCase | None = Field(
+        default=None,
+        alias="deliveryCase",
+        validation_alias="deliveryCase",
+    )
+    items: list[GoodsOrderItemUpdate | GoodsOrderItemNew] | None = Field(
+        default=None,
+        description="Items information.",
     )
 
 

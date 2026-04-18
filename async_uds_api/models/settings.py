@@ -46,7 +46,7 @@ class MembershipTier(APIModel):
         description="Status UID.",
     )
     name: str = Field(description="Status name.")
-    rate: float = Field(description="Status rate.")
+    rate: float = Field(description="Status rate.", ge=0, le=100)
     max_scores_discount: float | None = Field(
         default=None,
         alias="maxScoresDiscount",
@@ -102,7 +102,7 @@ class LoyaltyProgramSettings(APIModel):
             "Maximum transaction amount that can be made through UDS Cashier."
         ),
     )
-    defer_points_for_days: int | None = Field(
+    defer_points_for_days: float | None = Field(
         default=None,
         alias="deferPointsForDays",
         validation_alias="deferPointsForDays",
@@ -113,6 +113,7 @@ class LoyaltyProgramSettings(APIModel):
         alias="firstPurchasePoints",
         validation_alias="firstPurchasePoints",
         description="Number of points for the first purchase.",
+        ge=0.01,
     )
 
 

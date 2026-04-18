@@ -1,9 +1,11 @@
+from async_uds_api.models.common import BranchInfo, ParticipantShortInfo
 from async_uds_api.models.customers import (
     Customer,
     CustomerDetail,
     CustomersPage,
     FindCustomerResponse,
     Participant,
+    PurchaseCalcResponse,
 )
 from async_uds_api.models.enums import (
     Action,
@@ -20,6 +22,7 @@ from async_uds_api.models.enums import (
     PaymentSubject,
     PaymentType,
     PurchaseTokenAction,
+    TaxSystemCode,
     VatCode,
 )
 from async_uds_api.models.goods import (
@@ -45,7 +48,6 @@ from async_uds_api.models.operations import (
     CreateVoucherReceipt,
     Operation,
     OperationCustomer,
-    OperationCustomerShortInfo,
     OperationOrigin,
     OperationsPage,
     PurchaseCalc,
@@ -53,21 +55,21 @@ from async_uds_api.models.operations import (
     PurchaseCalcRequest,
     PurchaseCalcRequestParticipant,
     PurchaseCalcRequestReceipt,
-    PurchaseCalcResponse,
     RefundOperationRequest,
     RewardRequest,
     VoucherInfo,
 )
 from async_uds_api.models.orders import (
-    BranchInfo,
     CustomerShortInfo,
     Delivery,
     DeliveryCase,
     DeliveryType,
     GoodsOrderDetailed,
     GoodsOrderItem,
+    GoodsOrderItemNew,
+    GoodsOrderItemUpdate,
+    GoodsOrderUpdate,
     OnlinePayment,
-    ParticipantShortInfo,
     PaymentMethod,
     Pickup,
     ReceiverInfo,
@@ -81,12 +83,6 @@ from async_uds_api.models.settings import (
     MembershipTierConditionsTotalCashSpent,
 )
 from async_uds_api.models.tags import TagModel, TagsPage
-
-Participant.model_rebuild()
-Customer.model_rebuild()
-CustomerDetail.model_rebuild()
-PurchaseCalcResponse.model_rebuild()
-FindCustomerResponse.model_rebuild()
 
 __all__ = [
     "Action",
@@ -121,8 +117,11 @@ __all__ = [
     "GoodsOffer",
     "GoodsOrderDetailed",
     "GoodsOrderItem",
+    "GoodsOrderItemNew",
     "GoodsOrderItemType",
+    "GoodsOrderItemUpdate",
     "GoodsOrderState",
+    "GoodsOrderUpdate",
     "GoodsOrderUpdateStatus",
     "GoodsPage",
     "GoodsType",
@@ -138,7 +137,6 @@ __all__ = [
     "OnlinePayment",
     "Operation",
     "OperationCustomer",
-    "OperationCustomerShortInfo",
     "OperationOrigin",
     "OperationsPage",
     "Participant",
@@ -160,6 +158,7 @@ __all__ = [
     "RewardRequest",
     "TagModel",
     "TagsPage",
+    "TaxSystemCode",
     "VatCode",
     "VoucherInfo",
 ]

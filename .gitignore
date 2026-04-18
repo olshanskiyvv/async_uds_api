@@ -12,3 +12,6 @@ dist/
 
 *.md
 !README.md
+.worktrees/
+
+.worktrees/

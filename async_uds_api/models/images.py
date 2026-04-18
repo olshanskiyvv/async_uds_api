@@ -10,6 +10,7 @@ class ImageUploadUrlHeaders(APIModel):
         alias="Content-Type",
         validation_alias="Content-Type",
         description="Array of allowed content-types.",
+        min_length=1,
     )
 
 

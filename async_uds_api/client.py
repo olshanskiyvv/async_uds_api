@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -9,6 +11,7 @@ import httpx
 from async_uds_api.api import (
     CustomersAPI,
     GoodsAPI,
+    GoodsOrdersAPI,
     ImagesAPI,
     OperationsAPI,
     SettingsAPI,
@@ -17,11 +20,14 @@ from async_uds_api.api import (
 from async_uds_api.errors import (
     UDSAPIError,
     UDSBadRequestError,
+    UDSClientError,
     UDSForbiddenError,
     UDSNotFoundError,
     UDSUnauthorizedError,
     UDSUnexpectedError,
 )
+
+_logger = logging.getLogger("async_uds_api")
 
 DEFAULT_BASE_URL = "https://api.uds.app/partner/v2"
 
@@ -66,6 +72,7 @@ class UDSClient:
             base_url=self._base_url,
             timeout=self._timeout,
         )
+        self._auth = httpx.BasicAuth(company_id, api_key)
 
         self.settings = SettingsAPI(self)
         self.customers = CustomersAPI(self)
@@ -73,13 +80,15 @@ class UDSClient:
         self.tags = TagsAPI(self)
         self.goods = GoodsAPI(self)
         self.images = ImagesAPI(self)
+        self.goods_orders = GoodsOrdersAPI(self)
 
     async def aclose(self) -> None:
         if not self._external_client:
             await self._client.aclose()
 
-        if hasattr(self.images, "_close_upload_client"):
-            await self.images._close_upload_client()
+        close_upload = getattr(self.images, "_close_upload_client", None)
+        if close_upload:
+            await close_upload()
 
     async def __aenter__(self) -> UDSClient:
         return self
@@ -97,7 +106,7 @@ class UDSClient:
         }
 
     def _build_auth(self) -> httpx.BasicAuth:
-        return httpx.BasicAuth(self._company_id, self._api_key)
+        return self._auth
 
     async def _request(
         self,
@@ -107,18 +116,41 @@ class UDSClient:
         params: dict[str, Any] | None = None,
         json: dict[str, Any] | None = None,
     ) -> httpx.Response:
+        headers = self._build_headers()
+        request_id = headers["X-Origin-Request-Id"]
+        timestamp = headers["X-Timestamp"]
+
+        _logger.info(
+            "%s %s [X-Origin-Request-Id=%s] [X-Timestamp=%s]",
+            method,
+            path,
+            request_id,
+            timestamp,
+        )
+
+        start_time = time.monotonic()
         try:
             response = await self._client.request(
                 method=method,
                 url=path,
                 params=params,
                 json=json,
-                headers=self._build_headers(),
+                headers=headers,
                 auth=self._build_auth(),
             )
             response.raise_for_status()
+
+            elapsed = time.monotonic() - start_time
+            _logger.info(
+                "%s %s -> %d OK in %.3fs",
+                method,
+                path,
+                response.status_code,
+                elapsed,
+            )
             return response
         except httpx.HTTPStatusError as exc:
+            elapsed = time.monotonic() - start_time
             res = exc.response
             status = res.status_code
             error_code: str | None = None
@@ -131,6 +163,16 @@ class UDSClient:
                     message = payload.get("message") or message
             except Exception:
                 pass
+
+            _logger.error(
+                "%s %s -> %d Error in %.3fs: %s%s",
+                method,
+                path,
+                status,
+                elapsed,
+                message,
+                f" [errorCode={error_code}]" if error_code else "",
+            )
 
             exc_cls: type[UDSAPIError]
             if status == 400:
@@ -156,7 +198,10 @@ class UDSClient:
     ) -> dict[str, Any]:
         response = await self._request("GET", path, params=params)
         data = response.json()
-        assert isinstance(data, dict)
+        if not isinstance(data, dict):
+            raise UDSClientError(
+                "Unexpected API response shape: expected dict"
+            )
         return data
 
     async def _post_json(
@@ -169,7 +214,10 @@ class UDSClient:
         response = await self._request("POST", path, params=params, json=body)
         if response.content:
             data = response.json()
-            assert isinstance(data, dict)
+            if not isinstance(data, dict):
+                raise UDSClientError(
+                    "Unexpected API response shape: expected dict"
+                )
             return data
         return {}
 
@@ -183,7 +231,10 @@ class UDSClient:
         response = await self._request("PUT", path, params=params, json=body)
         if response.content:
             data = response.json()
-            assert isinstance(data, dict)
+            if not isinstance(data, dict):
+                raise UDSClientError(
+                    "Unexpected API response shape: expected dict"
+                )
             return data
         return {}
 

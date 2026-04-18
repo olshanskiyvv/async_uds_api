@@ -1,16 +1,27 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from async_uds_api.models.customers import PurchaseCalc
+from async_uds_api.models.base import APIModel
+from async_uds_api.models.enums import (
+    DeliveryTypes,
+    GoodsOrderItemType,
+    GoodsOrderState,
+    GoodsOrderUpdateStatus,
+    PaymentProvider,
+    PaymentType,
+)
 from async_uds_api.models.goods import GoodsMeasurement
 from async_uds_api.models.settings import MembershipTier
 
+if TYPE_CHECKING:
+    from async_uds_api.models.operations import PurchaseCalc
 
-class BranchInfo(BaseModel):
+
+class BranchInfo(APIModel):
     id: int = Field(description="Branch ID in the UDS.")
     display_name: str = Field(
         alias="displayName",
@@ -19,41 +30,7 @@ class BranchInfo(BaseModel):
     )
 
 
-class GoodsOrderState(str, Enum):
-    NEW = "NEW"
-    COMPLETED = "COMPLETED"
-    DELETED = "DELETED"
-    WAITING_PAYMENT = "WAITING_PAYMENT"
-    NEED_ACK = "NEED_ACK"
-
-
-class GoodsOrderUpdateStatus(str, Enum):
-    ACCEPTED = "ACCEPTED"
-    READY = "READY"
-
-
-class DeliveryTypes(str, Enum):
-    PICKUP = "PICKUP"
-    DELIVERY = "DELIVERY"
-
-
-class PaymentProvider(str, Enum):
-    B2P = "B2P"
-    CLOUD_PAYMENTS = "CLOUD_PAYMENTS"
-    YOOKASSA = "YOOKASSA"
-    PAYTURE = "PAYTURE"
-    CUSTOM = "CUSTOM"
-
-
-class PaymentType(str, Enum):
-    BEST_TO_PAY = "BEST_TO_PAY"
-    CLOUD_PAYMENTS = "CLOUD_PAYMENTS"
-    CASH = "CASH"
-    MANUAL = "MANUAL"
-    CUSTOM = "CUSTOM"
-
-
-class ParticipantShortInfo(BaseModel):
+class ParticipantShortInfo(APIModel):
     id: int = Field(description="Customer ID in the company.")
     display_name: str = Field(
         alias="displayName",
@@ -74,7 +51,7 @@ class CustomerShortInfo(ParticipantShortInfo):
     )
 
 
-class ReceiverInfo(BaseModel):
+class ReceiverInfo(APIModel):
     receiver_name: str | None = Field(
         default=None,
         alias="receiverName",
@@ -95,7 +72,7 @@ class ReceiverInfo(BaseModel):
     )
 
 
-class DeliveryCase(BaseModel):
+class DeliveryCase(APIModel):
     name: str | None = Field(
         default=None,
         description="Delivery name.",
@@ -127,7 +104,7 @@ class Delivery(ReceiverInfo):
 DeliveryType = Pickup | Delivery
 
 
-class OnlinePayment(BaseModel):
+class OnlinePayment(APIModel):
     payment_provider: PaymentProvider | None = Field(
         default=None,
         alias="paymentProvider",
@@ -144,7 +121,7 @@ class OnlinePayment(BaseModel):
     )
 
 
-class PaymentMethod(BaseModel):
+class PaymentMethod(APIModel):
     type: PaymentType | None = Field(
         default=None,
         description="Payment type.",
@@ -165,7 +142,7 @@ class PaymentMethod(BaseModel):
     )
 
 
-class GoodsOrderItem(BaseModel):
+class GoodsOrderItem(APIModel):
     id: int | None = Field(
         default=None,
         description="Item ID in the UDS.",
@@ -176,10 +153,7 @@ class GoodsOrderItem(BaseModel):
         validation_alias="externalId",
         description="External item identifier.",
     )
-    name: str | None = Field(
-        default=None,
-        description="Item name.",
-    )
+    name: str = Field(description="Item name.")
     variant_name: str | None = Field(
         default=None,
         alias="variantName",
@@ -193,18 +167,9 @@ class GoodsOrderItem(BaseModel):
         default=None,
         description="Item stock number.",
     )
-    type: str | None = Field(
-        default=None,
-        description="Item type.",
-    )
-    qty: int | None = Field(
-        default=None,
-        description="Quantity.",
-    )
-    price: float | None = Field(
-        default=None,
-        description="Item price.",
-    )
+    type: GoodsOrderItemType = Field(description="Item type.")
+    qty: int = Field(description="Quantity.")
+    price: float = Field(description="Item price.")
     offer_price: float | None = Field(
         default=None,
         alias="offerPrice",
@@ -223,7 +188,7 @@ class GoodsOrderItem(BaseModel):
     )
 
 
-class GoodsOrderDetailed(BaseModel):
+class GoodsOrderDetailed(APIModel):
     id: int | None = Field(
         default=None,
         description="Order ID in the UDS.",
@@ -282,4 +247,4 @@ class GoodsOrderDetailed(BaseModel):
         default=None,
         description="Items information.",
     )
-    purchase: PurchaseCalc | None = None
+    purchase: PurchaseCalc

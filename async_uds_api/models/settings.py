@@ -1,19 +1,28 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from async_uds_api.models.base import APIModel
+from async_uds_api.models.enums import BaseDiscountPolicy
 
 
-class MembershipTierConditionsTotalCashSpent(BaseModel):
-    target: float = Field(description="Amount of cash spent.")
+class MembershipTierConditionsTotalCashSpent(APIModel):
+    target: float | None = Field(
+        default=None, description="Amount of cash spent."
+    )
 
 
-class MembershipTierConditionsEffectiveInvitedCount(BaseModel):
-    target: int = Field(description="Amount of invited count.")
+class MembershipTierConditionsEffectiveInvitedCount(APIModel):
+    target: int | None = Field(
+        default=None, description="Amount of invited count."
+    )
 
 
-class MembershipTierConditions(BaseModel):
+class MembershipTierConditions(APIModel):
     total_cash_spent: MembershipTierConditionsTotalCashSpent | None = Field(
         default=None,
+        alias="totalCashSpent",
+        validation_alias="totalCashSpent",
         description=(
             "Upgrade status when customer reaches that amount of cash spent."
         ),
@@ -22,6 +31,8 @@ class MembershipTierConditions(BaseModel):
         MembershipTierConditionsEffectiveInvitedCount | None
     ) = Field(
         default=None,
+        alias="effectiveInvitedCount",
+        validation_alias="effectiveInvitedCount",
         description=(
             "Upgrade to tier when customer reaches target "
             "effectiveInvitedCount."
@@ -29,7 +40,7 @@ class MembershipTierConditions(BaseModel):
     )
 
 
-class MembershipTier(BaseModel):
+class MembershipTier(APIModel):
     uid: str | None = Field(
         default=None,
         description="Status UID.",
@@ -38,6 +49,8 @@ class MembershipTier(BaseModel):
     rate: float = Field(description="Status rate.")
     max_scores_discount: float | None = Field(
         default=None,
+        alias="maxScoresDiscount",
+        validation_alias="maxScoresDiscount",
         description=(
             "Maximum discount (as a percentage) allowed for redeeming points."
         ),
@@ -48,7 +61,7 @@ class MembershipTier(BaseModel):
     )
 
 
-class LoyaltyProgramSettings(BaseModel):
+class LoyaltyProgramSettings(APIModel):
     base_membership_tier: MembershipTier = Field(
         alias="baseMembershipTier",
         validation_alias="baseMembershipTier",
@@ -75,6 +88,12 @@ class LoyaltyProgramSettings(BaseModel):
         validation_alias="referralReward",
         description="Customer's reward for an effective recommendation.",
     )
+    discount_vip: float | None = Field(
+        default=None,
+        alias="discountVip",
+        validation_alias="discountVip",
+        description="VIP discount rate.",
+    )
     receipt_limit: float | None = Field(
         default=None,
         alias="receiptLimit",
@@ -83,7 +102,7 @@ class LoyaltyProgramSettings(BaseModel):
             "Maximum transaction amount that can be made through UDS Cashier."
         ),
     )
-    defer_points_for_days: float | None = Field(
+    defer_points_for_days: int | None = Field(
         default=None,
         alias="deferPointsForDays",
         validation_alias="deferPointsForDays",
@@ -97,7 +116,7 @@ class LoyaltyProgramSettings(BaseModel):
     )
 
 
-class CompanySettings(BaseModel):
+class CompanySettings(APIModel):
     id: int = Field(description="Company ID.")
     name: str = Field(description="Company name.")
     promo_code: str = Field(
@@ -109,7 +128,7 @@ class CompanySettings(BaseModel):
         default=None,
         description="Currency in ISO-4217 format.",
     )
-    base_discount_policy: str = Field(
+    base_discount_policy: BaseDiscountPolicy = Field(
         alias="baseDiscountPolicy",
         validation_alias="baseDiscountPolicy",
         description="Defines loyalty program type.",

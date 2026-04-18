@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 from async_uds_api.models import (
     CustomerDetail,
     CustomersPage,
-    PurchaseCalcResponse,
+    FindCustomerResponse,
     TagsPage,
 )
 
@@ -46,7 +46,7 @@ class CustomersAPI:
         total: float | None = None,
         skip_loyalty_total: float | None = None,
         unredeemable_total: float | None = None,
-    ) -> PurchaseCalcResponse:
+    ) -> FindCustomerResponse:
         params: dict[str, Any] = {}
         if code is not None:
             params["code"] = code
@@ -66,7 +66,7 @@ class CustomersAPI:
         data = await self._client._get_json(
             "/customers/find", params=params or None
         )
-        return PurchaseCalcResponse.model_validate(data)
+        return FindCustomerResponse.model_validate(data)
 
     async def get(self, customer_id: int) -> CustomerDetail:
         data = await self._client._get_json(f"/customers/{customer_id}")

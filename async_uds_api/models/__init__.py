@@ -20,7 +20,6 @@ from async_uds_api.models.enums import (
     PaymentSubject,
     PaymentType,
     PurchaseTokenAction,
-    TaxSystemCode,
     VatCode,
 )
 from async_uds_api.models.goods import (
@@ -161,7 +160,6 @@ __all__ = [
     "RewardRequest",
     "TagModel",
     "TagsPage",
-    "TaxSystemCode",
     "VatCode",
     "VoucherInfo",
 ]

@@ -201,10 +201,13 @@ pip install -e ".[dev]"
 pytest tests/
 
 # Линтинг
-ruff check async_uds_api/ tests/
+uv run ruff check async_uds_api/ tests/
+
+# Форматирование
+uv run ruff format async_uds_api/ tests/
 
 # Проверка типов
-ty check async_uds_api/ tests/
+uv run ty check async_uds_api/ tests/
 ```
 
 ### Лицензия

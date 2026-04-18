@@ -1,3 +1,4 @@
+from async_uds_api.models.common import BranchInfo, ParticipantShortInfo
 from async_uds_api.models.customers import (
     Customer,
     CustomerDetail,
@@ -46,7 +47,6 @@ from async_uds_api.models.operations import (
     CreateVoucherReceipt,
     Operation,
     OperationCustomer,
-    OperationCustomerShortInfo,
     OperationOrigin,
     OperationsPage,
     PurchaseCalc,
@@ -60,7 +60,6 @@ from async_uds_api.models.operations import (
     VoucherInfo,
 )
 from async_uds_api.models.orders import (
-    BranchInfo,
     CustomerShortInfo,
     Delivery,
     DeliveryCase,
@@ -71,7 +70,6 @@ from async_uds_api.models.orders import (
     GoodsOrderItemUpdate,
     GoodsOrderUpdate,
     OnlinePayment,
-    ParticipantShortInfo,
     PaymentMethod,
     Pickup,
     ReceiverInfo,
@@ -89,7 +87,6 @@ from async_uds_api.models.tags import TagModel, TagsPage
 Participant.model_rebuild()
 Customer.model_rebuild()
 CustomerDetail.model_rebuild()
-GoodsOrderDetailed.model_rebuild()
 PurchaseCalcResponse.model_rebuild()
 FindCustomerResponse.model_rebuild()
 
@@ -146,7 +143,6 @@ __all__ = [
     "OnlinePayment",
     "Operation",
     "OperationCustomer",
-    "OperationCustomerShortInfo",
     "OperationOrigin",
     "OperationsPage",
     "Participant",

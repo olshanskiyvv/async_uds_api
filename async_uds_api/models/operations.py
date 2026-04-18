@@ -6,22 +6,14 @@ from typing import TYPE_CHECKING
 from pydantic import Field
 
 from async_uds_api.models.base import APIModel
+from async_uds_api.models.common import BranchInfo, ParticipantShortInfo
 from async_uds_api.models.enums import Action, ActionState
-from async_uds_api.models.orders import BranchInfo
 
 if TYPE_CHECKING:
     from async_uds_api.models.customers import CustomerDetail
 
 
-class OperationCustomerShortInfo(APIModel):
-    id: int
-    display_name: str = Field(
-        alias="displayName",
-        validation_alias="displayName",
-    )
-
-
-class OperationCustomer(OperationCustomerShortInfo):
+class OperationCustomer(ParticipantShortInfo):
     uid: str | None = None
 
 

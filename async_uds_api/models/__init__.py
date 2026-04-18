@@ -5,6 +5,7 @@ from async_uds_api.models.customers import (
     CustomersPage,
     FindCustomerResponse,
     Participant,
+    PurchaseCalcResponse,
 )
 from async_uds_api.models.enums import (
     Action,
@@ -54,7 +55,6 @@ from async_uds_api.models.operations import (
     PurchaseCalcRequest,
     PurchaseCalcRequestParticipant,
     PurchaseCalcRequestReceipt,
-    PurchaseCalcResponse,
     RefundOperationRequest,
     RewardRequest,
     VoucherInfo,
@@ -83,12 +83,6 @@ from async_uds_api.models.settings import (
     MembershipTierConditionsTotalCashSpent,
 )
 from async_uds_api.models.tags import TagModel, TagsPage
-
-Participant.model_rebuild()
-Customer.model_rebuild()
-CustomerDetail.model_rebuild()
-PurchaseCalcResponse.model_rebuild()
-FindCustomerResponse.model_rebuild()
 
 __all__ = [
     "Action",

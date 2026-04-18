@@ -1,16 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from pydantic import Field
 
 from async_uds_api.models.base import APIModel
 from async_uds_api.models.common import BranchInfo, ParticipantShortInfo
 from async_uds_api.models.enums import Action, ActionState
-
-if TYPE_CHECKING:
-    from async_uds_api.models.customers import CustomerDetail
 
 
 class OperationCustomer(ParticipantShortInfo):
@@ -301,8 +297,3 @@ class PurchaseCalcRequest(APIModel):
     code: str | None = None
     participant: PurchaseCalcRequestParticipant | None = None
     receipt: PurchaseCalcRequestReceipt
-
-
-class PurchaseCalcResponse(APIModel):
-    user: CustomerDetail
-    purchase: PurchaseCalc | None = None

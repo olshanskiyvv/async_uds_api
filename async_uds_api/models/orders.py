@@ -175,7 +175,10 @@ class GoodsOrderItemUpdate(APIModel):
         default=None,
         alias="variantName",
         validation_alias="variantName",
-        description="Name of the item option, if the type of this item is VARYING_ITEM.",
+        description=(
+            "Name of the item option, if the type of this item is "
+            "VARYING_ITEM."
+        ),
     )
     qty: int | None = Field(default=None, description="Quantity.")
 
@@ -192,7 +195,10 @@ class GoodsOrderItemNew(APIModel):
         default=None,
         alias="variantName",
         validation_alias="variantName",
-        description="Name of the item option, if the type of this item is VARYING_ITEM.",
+        description=(
+            "Name of the item option, if the type of this item is "
+            "VARYING_ITEM."
+        ),
     )
     qty: int | None = Field(default=None, description="Quantity.")
     price: float | None = Field(default=None, description="Item price.")

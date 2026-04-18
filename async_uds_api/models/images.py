@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from async_uds_api.models.base import APIModel
 
 
-class ImageUploadUrlHeaders(BaseModel):
+class ImageUploadUrlHeaders(APIModel):
     content_type: list[str] = Field(
         alias="Content-Type",
         validation_alias="Content-Type",
@@ -11,7 +13,7 @@ class ImageUploadUrlHeaders(BaseModel):
     )
 
 
-class ImageUploadUrl(BaseModel):
+class ImageUploadUrl(APIModel):
     image_id: str = Field(
         alias="imageId",
         validation_alias="imageId",

@@ -1,18 +1,19 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from async_uds_api.models.base import APIModel
 from async_uds_api.models.enums import (
     GoodsMeasurement,
-    GoodsType,
     PaymentSubject,
     VatCode,
 )
 
 
-class GoodsOffer(BaseModel):
+class GoodsOffer(APIModel):
     offer_price: float | None = Field(
         default=None,
         alias="offerPrice",
@@ -30,7 +31,7 @@ class GoodsOffer(BaseModel):
     )
 
 
-class GoodsInventory(BaseModel):
+class GoodsInventory(APIModel):
     in_stock: int | None = Field(
         default=None,
         alias="inStock",
@@ -42,7 +43,7 @@ class GoodsInventory(BaseModel):
     )
 
 
-class GoodsVariantType(BaseModel):
+class GoodsVariantType(APIModel):
     name: str = Field(description="Variant name.")
     sku: str | None = Field(
         default=None,
@@ -53,12 +54,12 @@ class GoodsVariantType(BaseModel):
     inventory: GoodsInventory | None = None
 
 
-class GoodsCategoryType(BaseModel):
-    type: GoodsType = GoodsType.CATEGORY
+class GoodsCategoryType(APIModel):
+    type: Literal["CATEGORY"] = "CATEGORY"
 
 
-class GoodsItemType(BaseModel):
-    type: GoodsType = GoodsType.ITEM
+class GoodsItemType(APIModel):
+    type: Literal["ITEM"] = "ITEM"
     sku: str | None = Field(default=None, description="Item stock number.")
     price: float = Field(description="Item price.")
     description: str | None = Field(
@@ -101,8 +102,8 @@ class GoodsItemType(BaseModel):
     )
 
 
-class GoodsVaryingItemType(BaseModel):
-    type: GoodsType = GoodsType.VARYING_ITEM
+class GoodsVaryingItemType(APIModel):
+    type: Literal["VARYING_ITEM"] = "VARYING_ITEM"
     variants: list[GoodsVariantType] | None = Field(
         default=None,
         description="Variants of item.",
@@ -128,10 +129,13 @@ class GoodsVaryingItemType(BaseModel):
     )
 
 
-GoodsData = GoodsCategoryType | GoodsItemType | GoodsVaryingItemType
+GoodsData = Annotated[
+    GoodsCategoryType | GoodsItemType | GoodsVaryingItemType,
+    Field(discriminator="type"),
+]
 
 
-class GoodsInfoType(BaseModel):
+class GoodsInfoType(APIModel):
     id: int | None = Field(default=None, description="Goods ID in the UDS.")
     name: str = Field(description="Goods name.")
     data: GoodsData
@@ -168,44 +172,13 @@ class GoodsInfoType(BaseModel):
     )
 
 
-class GoodsDetailed(BaseModel):
-    name: str = Field(description="Goods name.")
-    data: GoodsData
-    id: int | None = Field(default=None, description="Goods ID in the UDS.")
-    node_id: int | None = Field(
-        default=None,
-        alias="nodeId",
-        validation_alias="nodeId",
-        description="ID of the category in which the item is included.",
-    )
-    external_id: str | None = Field(
-        default=None,
-        alias="externalId",
-        validation_alias="externalId",
-        description="External goods identifier.",
-    )
-    date_created: datetime | None = Field(
-        default=None,
-        alias="dateCreated",
-        validation_alias="dateCreated",
-        description="Date item created.",
-    )
-    hidden: bool | None = Field(
-        default=None, description="Is the goods hidden."
-    )
-    blocked: bool | None = Field(
-        default=None,
-        description="Is the goods blocked.",
-    )
-    image_urls: list[str] = Field(
-        default_factory=list,
-        alias="imageUrls",
-        validation_alias="imageUrls",
-        description="Array of links to item image.",
-    )
+class GoodsDetailed(GoodsInfoType):
+    """Extended goods info with purchase calculation data."""
+
+    pass
 
 
-class GoodsPage(BaseModel):
+class GoodsPage(APIModel):
     rows: list[GoodsInfoType] = Field(
         default_factory=list,
         description="Goods information.",

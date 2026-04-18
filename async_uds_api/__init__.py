@@ -1,3 +1,5 @@
+import logging
+
 from async_uds_api.client import UDSClient
 from async_uds_api.errors import (
     UDSAPIError,
@@ -14,7 +16,40 @@ from async_uds_api.errors import (
     UDSUnauthorizedError,
     UDSUnexpectedError,
 )
+from async_uds_api.models import (
+    CompanySettings,
+    Customer,
+    CustomerDetail,
+    CustomersPage,
+    FindCustomerResponse,
+    GoodsCategoryType,
+    GoodsData,
+    GoodsDetailed,
+    GoodsInfoType,
+    GoodsOrderDetailed,
+    GoodsOrderItem,
+    GoodsPage,
+    ImageUploadUrl,
+    MembershipTier,
+    Operation,
+    OperationsPage,
+    Participant,
+    PurchaseCalc,
+    PurchaseCalcRequest,
+    PurchaseCalcResponse,
+    TagModel,
+    TagsPage,
+    VoucherInfo,
+)
 from async_uds_api.webhooks import verify_webhook_signature
+
+_logger = logging.getLogger("async_uds_api")
+_logger.addHandler(logging.NullHandler())
+
+
+def get_logger() -> logging.Logger:
+    return _logger
+
 
 __all__ = [
     "UDSClient",
@@ -32,4 +67,29 @@ __all__ = [
     "UDSImageDownloadError",
     "UDSImageUploadError",
     "UDSImageUnsupportedSourceError",
+    "get_logger",
+    # Models
+    "CompanySettings",
+    "Customer",
+    "CustomerDetail",
+    "CustomersPage",
+    "FindCustomerResponse",
+    "GoodsCategoryType",
+    "GoodsData",
+    "GoodsDetailed",
+    "GoodsInfoType",
+    "GoodsOrderDetailed",
+    "GoodsOrderItem",
+    "GoodsPage",
+    "ImageUploadUrl",
+    "MembershipTier",
+    "Operation",
+    "OperationsPage",
+    "Participant",
+    "PurchaseCalc",
+    "PurchaseCalcRequest",
+    "PurchaseCalcResponse",
+    "TagModel",
+    "TagsPage",
+    "VoucherInfo",
 ]

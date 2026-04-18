@@ -3,8 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from async_uds_api.models.base import APIModel
 from async_uds_api.models.enums import Action, ActionState
 from async_uds_api.models.orders import BranchInfo
 
@@ -12,7 +13,7 @@ if TYPE_CHECKING:
     from async_uds_api.models.customers import CustomerDetail
 
 
-class OperationCustomerShortInfo(BaseModel):
+class OperationCustomerShortInfo(APIModel):
     id: int
     display_name: str = Field(
         alias="displayName",
@@ -24,7 +25,7 @@ class OperationCustomer(OperationCustomerShortInfo):
     uid: str | None = None
 
 
-class CashierInfo(BaseModel):
+class CashierInfo(APIModel):
     id: int
     display_name: str = Field(
         alias="displayName",
@@ -32,11 +33,11 @@ class CashierInfo(BaseModel):
     )
 
 
-class OperationOrigin(BaseModel):
+class OperationOrigin(APIModel):
     id: int | None = None
 
 
-class Operation(BaseModel):
+class Operation(APIModel):
     id: int | None = Field(
         default=None, description="Transaction ID in the UDS."
     )
@@ -67,18 +68,18 @@ class Operation(BaseModel):
     cash: float | None = None
 
 
-class OperationsPage(BaseModel):
+class OperationsPage(APIModel):
     rows: list[Operation]
     total: int | None = None
     cursor: str | None = None
 
 
-class CreateOperationParticipant(BaseModel):
+class CreateOperationParticipant(APIModel):
     uid: str | None = None
     phone: str | None = None
 
 
-class CashierInput(BaseModel):
+class CashierInput(APIModel):
     external_id: str = Field(
         alias="externalId",
         validation_alias="externalId",
@@ -86,7 +87,7 @@ class CashierInput(BaseModel):
     name: str | None = None
 
 
-class CreateOperationReceipt(BaseModel):
+class CreateOperationReceipt(APIModel):
     total: float
     cash: float
     points: float
@@ -103,7 +104,7 @@ class CreateOperationReceipt(BaseModel):
     )
 
 
-class CreateOperation(BaseModel):
+class CreateOperation(APIModel):
     code: str | None = None
     participant: CreateOperationParticipant | None = None
     nonce: str | None = None
@@ -112,7 +113,7 @@ class CreateOperation(BaseModel):
     tags: list[int] | None = None
 
 
-class RefundOperationRequest(BaseModel):
+class RefundOperationRequest(APIModel):
     partial_amount: float | None = Field(
         default=None,
         alias="partialAmount",
@@ -121,14 +122,14 @@ class RefundOperationRequest(BaseModel):
     )
 
 
-class RewardRequest(BaseModel):
+class RewardRequest(APIModel):
     comment: str | None = None
     points: float
     participants: list[int]
     silent: bool = False
 
 
-class CreateVoucherReceipt(BaseModel):
+class CreateVoucherReceipt(APIModel):
     total: float = Field(
         description="Total receipt amount (in currency units)."
     )
@@ -144,7 +145,7 @@ class CreateVoucherReceipt(BaseModel):
     )
 
 
-class CreateVoucher(BaseModel):
+class CreateVoucher(APIModel):
     nonce: str | None = Field(
         default=None,
         description="Nonce for voucher (UUID).",
@@ -153,7 +154,7 @@ class CreateVoucher(BaseModel):
     receipt: CreateVoucherReceipt
 
 
-class VoucherInfo(BaseModel):
+class VoucherInfo(APIModel):
     code: str = Field(description="UDS voucher code.")
     qr_code_text: str = Field(
         alias="qrCodeText",
@@ -178,14 +179,14 @@ class VoucherInfo(BaseModel):
     points: float = Field(description="Minimum points for withdrawal.")
 
 
-class PurchaseCalcExtras(BaseModel):
+class PurchaseCalcExtras(APIModel):
     delivery: float | None = Field(
         default=None,
         description="Delivery cost (in currency units).",
     )
 
 
-class PurchaseCalc(BaseModel):
+class PurchaseCalc(APIModel):
     max_points: float | None = Field(
         default=None,
         alias="maxPoints",
@@ -284,12 +285,12 @@ class PurchaseCalc(BaseModel):
     )
 
 
-class PurchaseCalcRequestParticipant(BaseModel):
+class PurchaseCalcRequestParticipant(APIModel):
     uid: str | None = None
     phone: str | None = None
 
 
-class PurchaseCalcRequestReceipt(BaseModel):
+class PurchaseCalcRequestReceipt(APIModel):
     total: float
     skip_loyalty_total: float | None = Field(
         default=None,
@@ -304,12 +305,12 @@ class PurchaseCalcRequestReceipt(BaseModel):
     points: float | None = None
 
 
-class PurchaseCalcRequest(BaseModel):
+class PurchaseCalcRequest(APIModel):
     code: str | None = None
     participant: PurchaseCalcRequestParticipant | None = None
     receipt: PurchaseCalcRequestReceipt
 
 
-class PurchaseCalcResponse(BaseModel):
+class PurchaseCalcResponse(APIModel):
     user: CustomerDetail
     purchase: PurchaseCalc | None = None

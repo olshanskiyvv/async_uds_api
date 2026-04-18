@@ -1,23 +1,24 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from async_uds_api.models.base import APIModel
 from async_uds_api.models.enums import BaseDiscountPolicy
 
 
-class MembershipTierConditionsTotalCashSpent(BaseModel):
+class MembershipTierConditionsTotalCashSpent(APIModel):
     target: float | None = Field(
         default=None, description="Amount of cash spent."
     )
 
 
-class MembershipTierConditionsEffectiveInvitedCount(BaseModel):
+class MembershipTierConditionsEffectiveInvitedCount(APIModel):
     target: int | None = Field(
         default=None, description="Amount of invited count."
     )
 
 
-class MembershipTierConditions(BaseModel):
+class MembershipTierConditions(APIModel):
     total_cash_spent: MembershipTierConditionsTotalCashSpent | None = Field(
         default=None,
         alias="totalCashSpent",
@@ -39,7 +40,7 @@ class MembershipTierConditions(BaseModel):
     )
 
 
-class MembershipTier(BaseModel):
+class MembershipTier(APIModel):
     uid: str | None = Field(
         default=None,
         description="Status UID.",
@@ -60,7 +61,7 @@ class MembershipTier(BaseModel):
     )
 
 
-class LoyaltyProgramSettings(BaseModel):
+class LoyaltyProgramSettings(APIModel):
     base_membership_tier: MembershipTier = Field(
         alias="baseMembershipTier",
         validation_alias="baseMembershipTier",
@@ -115,7 +116,7 @@ class LoyaltyProgramSettings(BaseModel):
     )
 
 
-class CompanySettings(BaseModel):
+class CompanySettings(APIModel):
     id: int = Field(description="Company ID.")
     name: str = Field(description="Company name.")
     promo_code: str = Field(

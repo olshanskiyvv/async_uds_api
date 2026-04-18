@@ -4,8 +4,9 @@ from collections.abc import Sequence
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from async_uds_api.models.base import APIModel
 from async_uds_api.models.enums import Gender, PurchaseTokenAction
 from async_uds_api.models.operations import PurchaseCalcResponse
 from async_uds_api.models.tags import TagModel
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
     from async_uds_api.models.settings import MembershipTier
 
 
-class Participant(BaseModel):
+class Participant(APIModel):
     id: int | None = None
     inviter_id: int | None = Field(
         default=None,
@@ -85,7 +86,7 @@ class Participant(BaseModel):
     )
 
 
-class Customer(BaseModel):
+class Customer(APIModel):
     uid: str | None = None
     avatar: str | None = None
     display_name: str | None = Field(
@@ -109,7 +110,7 @@ class Customer(BaseModel):
     email: str | None = None
 
 
-class CustomersPage(BaseModel):
+class CustomersPage(APIModel):
     rows: list[Customer]
     cursor: str | None = None
 

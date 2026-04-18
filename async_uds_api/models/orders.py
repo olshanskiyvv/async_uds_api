@@ -3,8 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from async_uds_api.models.base import APIModel
 from async_uds_api.models.enums import (
     DeliveryTypes,
     GoodsOrderItemType,
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
     from async_uds_api.models.operations import PurchaseCalc
 
 
-class BranchInfo(BaseModel):
+class BranchInfo(APIModel):
     id: int = Field(description="Branch ID in the UDS.")
     display_name: str = Field(
         alias="displayName",
@@ -29,7 +30,7 @@ class BranchInfo(BaseModel):
     )
 
 
-class ParticipantShortInfo(BaseModel):
+class ParticipantShortInfo(APIModel):
     id: int = Field(description="Customer ID in the company.")
     display_name: str = Field(
         alias="displayName",
@@ -50,7 +51,7 @@ class CustomerShortInfo(ParticipantShortInfo):
     )
 
 
-class ReceiverInfo(BaseModel):
+class ReceiverInfo(APIModel):
     receiver_name: str | None = Field(
         default=None,
         alias="receiverName",
@@ -71,7 +72,7 @@ class ReceiverInfo(BaseModel):
     )
 
 
-class DeliveryCase(BaseModel):
+class DeliveryCase(APIModel):
     name: str | None = Field(
         default=None,
         description="Delivery name.",
@@ -103,7 +104,7 @@ class Delivery(ReceiverInfo):
 DeliveryType = Pickup | Delivery
 
 
-class OnlinePayment(BaseModel):
+class OnlinePayment(APIModel):
     payment_provider: PaymentProvider | None = Field(
         default=None,
         alias="paymentProvider",
@@ -120,7 +121,7 @@ class OnlinePayment(BaseModel):
     )
 
 
-class PaymentMethod(BaseModel):
+class PaymentMethod(APIModel):
     type: PaymentType | None = Field(
         default=None,
         description="Payment type.",
@@ -141,7 +142,7 @@ class PaymentMethod(BaseModel):
     )
 
 
-class GoodsOrderItem(BaseModel):
+class GoodsOrderItem(APIModel):
     id: int | None = Field(
         default=None,
         description="Item ID in the UDS.",
@@ -187,7 +188,7 @@ class GoodsOrderItem(BaseModel):
     )
 
 
-class GoodsOrderDetailed(BaseModel):
+class GoodsOrderDetailed(APIModel):
     id: int | None = Field(
         default=None,
         description="Order ID in the UDS.",

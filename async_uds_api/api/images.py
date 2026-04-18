@@ -1,3 +1,4 @@
+import logging
 import mimetypes
 import re
 from pathlib import Path
@@ -17,6 +18,8 @@ from async_uds_api.models import ImageUploadUrl
 
 if TYPE_CHECKING:
     from async_uds_api.client import UDSClient
+
+_logger = logging.getLogger("async_uds_api")
 
 
 class ImagesAPI:
@@ -52,9 +55,14 @@ class ImagesAPI:
         """
         self._validate_content_type(content_type)
 
+        _logger.debug(
+            "Requesting upload URL for content_type=%s", content_type
+        )
         body = {"contentType": content_type}
         data = await self._client._post_json("/image-upload-url", body=body)
-        return ImageUploadUrl.model_validate(data)
+        result = ImageUploadUrl.model_validate(data)
+        _logger.info("Got upload URL: image_id=%s", result.image_id)
+        return result
 
     async def upload(
         self,
@@ -94,18 +102,30 @@ class ImagesAPI:
                     "content_type is required when source is bytes"
                 )
             self._validate_content_type(content_type)
+            _logger.debug(
+                "Uploading %d bytes with content_type=%s",
+                len(source),
+                content_type,
+            )
         else:
             if content_type is not None:
                 self._validate_content_type(content_type)
             else:
                 content_type = self._detect_content_type(source)
+            _logger.debug(
+                "Uploading from %s with content_type=%s", source, content_type
+            )
 
         image_data = await self._read_image_data(source)
+        _logger.debug("Read %d bytes", len(image_data))
 
         upload_info = await self.get_upload_url(content_type)
 
         await self._upload_to_url(upload_info, image_data)
 
+        _logger.info(
+            "Image uploaded successfully: image_id=%s", upload_info.image_id
+        )
         return upload_info.image_id
 
     def _validate_content_type(self, content_type: str) -> None:
@@ -186,12 +206,17 @@ class ImagesAPI:
             UDSImageReadError: If file cannot be read
         """
         if not path.exists():
+            _logger.error("File not found: %s", path)
             raise UDSImageReadError(f"File not found: {path}")
 
+        _logger.debug("Reading image from file: %s", path)
         try:
             async with aiofiles.open(path, "rb") as f:
-                return await f.read()
+                data = await f.read()
+            _logger.debug("Read %d bytes from %s", len(data), path)
+            return data
         except Exception as e:
+            _logger.error("Failed to read file %s: %s", path, e)
             raise UDSImageReadError(f"Failed to read file {path}: {e}") from e
 
     async def _download_from_url(self, url: str) -> bytes:
@@ -209,11 +234,16 @@ class ImagesAPI:
         """
         client = await self._get_upload_client()
 
+        _logger.debug("Downloading image from URL: %s", url)
         try:
             response = await client.get(url)
             response.raise_for_status()
+            _logger.debug(
+                "Downloaded %d bytes from %s", len(response.content), url
+            )
             return response.content
         except Exception as e:
+            _logger.error("Failed to download image from %s: %s", url, e)
             raise UDSImageDownloadError(
                 f"Failed to download image from {url}: {e}"
             ) from e
@@ -239,6 +269,11 @@ class ImagesAPI:
         if upload_info.headers and upload_info.headers.content_type:
             headers["Content-Type"] = upload_info.headers.content_type[0]
 
+        _logger.debug(
+            "Uploading %d bytes to presigned URL (method=%s)",
+            len(image_data),
+            upload_info.method,
+        )
         try:
             if upload_info.method.upper() == "PUT":
                 response = await client.put(
@@ -258,5 +293,9 @@ class ImagesAPI:
                 )
 
             response.raise_for_status()
+            _logger.debug(
+                "Upload completed with status %d", response.status_code
+            )
         except Exception as e:
+            _logger.error("Failed to upload image: %s", e)
             raise UDSImageUploadError(f"Failed to upload image: {e}") from e

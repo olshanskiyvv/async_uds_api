@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from async_uds_api.models.base import APIModel
 
 
-class TagModel(BaseModel):
+class TagModel(APIModel):
     id: int = Field(description="Tag identifier.")
     name: str = Field(description="Tag name.")
 
 
-class TagsPage(BaseModel):
+class TagsPage(APIModel):
     rows: list[TagModel] = Field(
         default_factory=list, description="List of tags."
     )

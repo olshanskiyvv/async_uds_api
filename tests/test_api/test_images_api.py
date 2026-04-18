@@ -123,7 +123,9 @@ class TestImagesAPI:
             "https://storage.googleapis.com/test-bucket/test-image"
         ).mock(return_value=Response(200))
 
-        result = await uds_client.images.upload(b"fake image data", "image/jpeg")
+        result = await uds_client.images.upload(
+            b"fake image data", "image/jpeg"
+        )
 
         assert result == IMAGE_UPLOAD_URL_RESPONSE["imageId"]
 
@@ -135,7 +137,9 @@ class TestImagesAPI:
             "https://storage.googleapis.com/test-bucket/test-image"
         ).mock(return_value=Response(200))
 
-        result = await uds_client.images.upload(b"fake image data", "image/jpeg")
+        result = await uds_client.images.upload(
+            b"fake image data", "image/jpeg"
+        )
 
         assert result == IMAGE_UPLOAD_URL_POST_RESPONSE["imageId"]
 
@@ -145,7 +149,9 @@ class TestImagesAPI:
             return_value=Response(200, json=bad_response)
         )
 
-        with pytest.raises(UDSImageUploadError, match="Unsupported upload method"):
+        with pytest.raises(
+            UDSImageUploadError, match="Unsupported upload method"
+        ):
             await uds_client.images.upload(b"fake image data", "image/jpeg")
 
     async def test_upload_to_presigned_url_error(self, uds_client):

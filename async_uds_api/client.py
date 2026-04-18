@@ -20,6 +20,7 @@ from async_uds_api.api import (
 from async_uds_api.errors import (
     UDSAPIError,
     UDSBadRequestError,
+    UDSClientError,
     UDSForbiddenError,
     UDSNotFoundError,
     UDSUnauthorizedError,
@@ -198,7 +199,7 @@ class UDSClient:
         response = await self._request("GET", path, params=params)
         data = response.json()
         if not isinstance(data, dict):
-            raise UDSUnexpectedError(
+            raise UDSClientError(
                 "Unexpected API response shape: expected dict"
             )
         return data
@@ -214,7 +215,7 @@ class UDSClient:
         if response.content:
             data = response.json()
             if not isinstance(data, dict):
-                raise UDSUnexpectedError(
+                raise UDSClientError(
                     "Unexpected API response shape: expected dict"
                 )
             return data
@@ -231,7 +232,7 @@ class UDSClient:
         if response.content:
             data = response.json()
             if not isinstance(data, dict):
-                raise UDSUnexpectedError(
+                raise UDSClientError(
                     "Unexpected API response shape: expected dict"
                 )
             return data

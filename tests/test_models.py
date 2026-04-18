@@ -21,7 +21,6 @@ from async_uds_api.models import (
     GoodsOffer,
     GoodsOrderItem,
     GoodsOrderItemType,
-    GoodsType,
     GoodsVariantType,
     GoodsVaryingItemType,
     ImageUploadUrl,
@@ -269,25 +268,25 @@ class TestGoodsModels:
         """Test GoodsDetailed with CATEGORY type."""
         goods = GoodsDetailed(
             name="Test Category",
-            data=GoodsCategoryType(type=GoodsType.CATEGORY),
+            data=GoodsCategoryType(type="CATEGORY"),
         )
 
         assert goods.name == "Test Category"
-        assert goods.data.type == GoodsType.CATEGORY
+        assert goods.data.type == "CATEGORY"
 
     def test_goods_item_type(self):
         """Test GoodsDetailed with ITEM type."""
         goods = GoodsDetailed(
             name="Test Item",
             data=GoodsItemType(
-                type=GoodsType.ITEM,
+                type="ITEM",
                 price=100.0,
                 description="Test description",
             ),
         )
 
         assert goods.name == "Test Item"
-        assert goods.data.type == GoodsType.ITEM
+        assert goods.data.type == "ITEM"
         if isinstance(goods.data, GoodsItemType):
             assert goods.data.price == 100.0
             assert goods.data.description == "Test description"
@@ -297,7 +296,7 @@ class TestGoodsModels:
         goods = GoodsDetailed(
             name="Test Varying Item",
             data=GoodsVaryingItemType(
-                type=GoodsType.VARYING_ITEM,
+                type="VARYING_ITEM",
                 variants=[
                     GoodsVariantType(name="Red", price=100.0),
                     GoodsVariantType(name="Blue", price=120.0),
@@ -306,7 +305,7 @@ class TestGoodsModels:
         )
 
         assert goods.name == "Test Varying Item"
-        assert goods.data.type == GoodsType.VARYING_ITEM
+        assert goods.data.type == "VARYING_ITEM"
         if isinstance(goods.data, GoodsVaryingItemType):
             assert goods.data.variants is not None
             assert len(goods.data.variants) == 2

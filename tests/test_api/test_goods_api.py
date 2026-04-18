@@ -6,7 +6,6 @@ from async_uds_api.models import (
     GoodsDetailed,
     GoodsItemType,
     GoodsPage,
-    GoodsType,
 )
 from tests.fixtures.api_responses import (
     GOODS_DETAIL_RESPONSE,
@@ -44,7 +43,7 @@ class TestGoodsAPI:
         goods = GoodsDetailed(
             name="Test Item",
             data=GoodsItemType(
-                type=GoodsType.ITEM,
+                type="ITEM",
                 price=100.0,
             ),
         )
@@ -76,7 +75,7 @@ class TestGoodsAPI:
         goods = GoodsDetailed(
             name="Updated Item",
             data=GoodsItemType(
-                type=GoodsType.ITEM,
+                type="ITEM",
                 price=150.0,
             ),
         )
@@ -117,7 +116,7 @@ class TestGoodsAPI:
         goods = GoodsDetailed(
             name="Updated Item",
             data=GoodsItemType(
-                type=GoodsType.ITEM,
+                type="ITEM",
                 price=150.0,
             ),
         )

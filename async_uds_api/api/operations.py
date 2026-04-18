@@ -63,11 +63,7 @@ class OperationsAPI:
             f"/operations/{operation_id}/refund",
             body=body,
         )
-        return (
-            Operation.model_validate(data)
-            if data
-            else Operation(action="REFUND")
-        )
+        return Operation.model_validate(data)
 
     async def calc(
         self,

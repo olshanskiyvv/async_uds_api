@@ -149,7 +149,7 @@ upload_url = await client.images.get_upload_url("image/jpeg")
 #### Goods Orders
 
 ```python
-from async_uds_api.models import GoodsOrderUpdate, GoodsOrderUpdateStatus
+from async_uds_api import GoodsOrderUpdate, GoodsOrderUpdateStatus
 
 # Получение заказа
 order = await client.goods_orders.get(order_id=123)

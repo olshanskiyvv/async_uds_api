@@ -282,3 +282,7 @@ class GoodsOrderDetailed(APIModel):
         description="Items information.",
     )
     purchase: PurchaseCalc
+
+
+class GoodsOrderCode(APIModel):
+    code: str = Field(description="Payment code to complete the order.")

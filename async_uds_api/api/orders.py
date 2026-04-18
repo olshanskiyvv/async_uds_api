@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Any
 
 from async_uds_api.models import (
+    GoodsOrderCode,
     GoodsOrderDetailed,
     GoodsOrderItem,
     GoodsOrderUpdateStatus,
@@ -50,12 +51,12 @@ class GoodsOrdersAPI:
         )
         return GoodsOrderDetailed.model_validate(data)
 
-    async def generate_code(self, order_id: int) -> dict[str, Any]:
+    async def generate_code(self, order_id: int) -> GoodsOrderCode:
         data = await self._client._post_json(
             f"/goods-orders/{order_id}/code",
             body=None,
         )
-        return data
+        return GoodsOrderCode.model_validate(data)
 
     async def change_status(
         self,

@@ -9,13 +9,13 @@ from async_uds_api.models.base import APIModel
 from async_uds_api.models.common import BranchInfo, ParticipantShortInfo
 from async_uds_api.models.enums import (
     DeliveryTypes,
+    GoodsMeasurement,
     GoodsOrderItemType,
     GoodsOrderState,
     GoodsOrderUpdateStatus,
     PaymentProvider,
     PaymentType,
 )
-from async_uds_api.models.enums import GoodsMeasurement
 from async_uds_api.models.operations import PurchaseCalc
 from async_uds_api.models.settings import MembershipTier
 

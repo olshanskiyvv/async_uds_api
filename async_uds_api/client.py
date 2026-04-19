@@ -145,7 +145,9 @@ class UDSClient:
                         method,
                         path,
                     )
-                return await self._do_request(method, path, params=params, json=json)
+                return await self._do_request(
+                    method, path, params=params, json=json
+                )
         raise UDSClientError("Retry loop exited unexpectedly")
 
     async def _do_request(

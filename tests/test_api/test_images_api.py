@@ -9,7 +9,7 @@ from async_uds_api import (
     UDSImageUnsupportedSourceError,
     UDSImageUploadError,
 )
-from tests.fixtures.api_responses import IMAGE_UPLOAD_URL_RESPONSE
+from tests.fixtures.images import IMAGE_UPLOAD_URL_RESPONSE
 
 IMAGE_UPLOAD_URL_POST_RESPONSE = {
     **IMAGE_UPLOAD_URL_RESPONSE,

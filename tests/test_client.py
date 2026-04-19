@@ -46,7 +46,6 @@ class TestUDSClient:
 
         assert client._timeout == 30.0
 
-    @pytest.mark.asyncio
     async def test_client_context_manager(self):
         """Test UDSClient as async context manager."""
         async with UDSClient(
@@ -95,7 +94,6 @@ class TestUDSClient:
         assert hasattr(client, "goods")
         assert hasattr(client, "images")
 
-    @pytest.mark.asyncio
     async def test_client_close(self):
         """Test UDSClient close method."""
         client = UDSClient(
@@ -105,7 +103,6 @@ class TestUDSClient:
 
         await client.aclose()
 
-    @pytest.mark.asyncio
     async def test_client_with_external_httpx_client(self):
         """Test UDSClient with external httpx.AsyncClient."""
         external_client = httpx.AsyncClient(

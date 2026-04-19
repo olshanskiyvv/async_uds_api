@@ -9,14 +9,13 @@ from async_uds_api.models import (
     Operation,
     OperationsPage,
 )
-from tests.fixtures.api_responses import (
-    IMAGE_UPLOAD_URL_RESPONSE,
+from tests.fixtures.images import IMAGE_UPLOAD_URL_RESPONSE
+from tests.fixtures.operations import (
     OPERATION_RESPONSE,
     OPERATIONS_LIST_RESPONSE,
 )
 
 
-@pytest.mark.asyncio
 class TestOperationsAPI:
     async def test_list_operations_success(self, uds_client):
         """Test successful operations list retrieval."""

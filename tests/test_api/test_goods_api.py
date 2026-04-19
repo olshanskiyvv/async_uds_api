@@ -7,13 +7,9 @@ from async_uds_api.models import (
     GoodsItemType,
     GoodsPage,
 )
-from tests.fixtures.api_responses import (
-    GOODS_DETAIL_RESPONSE,
-    GOODS_LIST_RESPONSE,
-)
+from tests.fixtures.goods import GOODS_DETAIL_RESPONSE, GOODS_LIST_RESPONSE
 
 
-@pytest.mark.asyncio
 class TestGoodsAPI:
     async def test_list_goods_success(self, uds_client):
         """Test successful goods list retrieval."""

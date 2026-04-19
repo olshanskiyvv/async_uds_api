@@ -32,10 +32,12 @@ class ImagesAPI:
         self._timeout = timeout
         self._upload_client = httpx.AsyncClient(timeout=timeout)
 
-    async def _close_upload_client(self) -> None:
+    async def aclose(self) -> None:
+        """Close the underlying HTTP client used for presigned-URL uploads."""
         await self._upload_client.aclose()
 
     async def get_upload_url(self, content_type: str) -> ImageUploadUrl:
+        """Request a presigned upload URL for the given MIME type."""
         self._validate_content_type(content_type)
         _logger.debug(
             "Requesting upload URL for content_type=%s", content_type
@@ -51,6 +53,7 @@ class ImagesAPI:
         source: str | Path | bytes,
         content_type: str | None = None,
     ) -> str:
+        """Upload an image from a path, URL, or bytes; return the image ID."""
         if isinstance(source, bytes):
             if content_type is None:
                 raise UDSImageUnsupportedSourceError(

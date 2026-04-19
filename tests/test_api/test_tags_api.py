@@ -3,10 +3,9 @@ import respx
 from httpx import Response
 
 from async_uds_api.models import TagsPage
-from tests.fixtures.api_responses import TAGS_LIST_RESPONSE
+from tests.fixtures.tags import TAGS_LIST_RESPONSE
 
 
-@pytest.mark.asyncio
 class TestTagsAPI:
     async def test_list_tags_success(self, uds_client):
         """Test successful tags list retrieval."""

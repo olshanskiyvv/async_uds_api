@@ -16,6 +16,7 @@ class GoodsOrdersAPI:
         self._client = client
 
     async def get(self, order_id: int) -> GoodsOrderDetailed:
+        """Return a goods order by its ID."""
         data = await self._client._get_json(f"/goods-orders/{order_id}")
         return GoodsOrderDetailed.model_validate(data)
 
@@ -27,6 +28,7 @@ class GoodsOrdersAPI:
         items: list[GoodsOrderItem] | None = None,
         comment: str | None = None,
     ) -> GoodsOrderDetailed:
+        """Update order status, line items, or comment."""
         body: dict[str, Any] = {}
         if order_status is not None:
             body["orderStatus"] = order_status.value
@@ -45,6 +47,7 @@ class GoodsOrdersAPI:
         return GoodsOrderDetailed.model_validate(data)
 
     async def complete(self, order_id: int) -> GoodsOrderDetailed:
+        """Mark an order as completed (goods handed to the customer)."""
         data = await self._client._post_json(
             f"/goods-orders/{order_id}/complete",
             body=None,
@@ -52,6 +55,7 @@ class GoodsOrdersAPI:
         return GoodsOrderDetailed.model_validate(data)
 
     async def generate_code(self, order_id: int) -> GoodsOrderCode:
+        """Generate a one-time verification code for order pick-up."""
         data = await self._client._post_json(
             f"/goods-orders/{order_id}/code",
             body=None,
@@ -63,6 +67,7 @@ class GoodsOrdersAPI:
         order_id: int,
         status: GoodsOrderUpdateStatus,
     ) -> GoodsOrderDetailed:
+        """Transition an order to the given status."""
         body = {"orderStatus": status.value}
         data = await self._client._post_json(
             f"/goods-orders/{order_id}/change-status",
@@ -71,6 +76,7 @@ class GoodsOrdersAPI:
         return GoodsOrderDetailed.model_validate(data)
 
     async def cancel(self, order_id: int) -> GoodsOrderDetailed:
+        """Cancel an order."""
         data = await self._client._post_json(
             f"/goods-orders/{order_id}/cancel",
             body=None,

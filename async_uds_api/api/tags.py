@@ -11,5 +11,6 @@ class TagsAPI:
         self._client = client
 
     async def list(self) -> TagsPage:
+        """Return all tags defined for the company."""
         data = await self._client._get_json("/tags")
         return TagsPage.model_validate(data)

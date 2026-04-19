@@ -25,6 +25,7 @@ class CustomersAPI:
         offset: int | None = None,
         cursor: str | None = None,
     ) -> CustomersPage:
+        """Return a page of customers, filtered by cursor or offset."""
         params: dict[str, Any] = {}
         if max is not None:
             params["max"] = max
@@ -41,6 +42,7 @@ class CustomersAPI:
     async def iter_all(
         self, *, page_size: int = 50
     ) -> AsyncIterator[Customer]:
+        """Yield every customer, fetching pages transparently via cursor."""
         cursor: str | None = None
         while True:
             page = await self.list(max=page_size, cursor=cursor)
@@ -61,6 +63,7 @@ class CustomersAPI:
         skip_loyalty_total: float | None = None,
         unredeemable_total: float | None = None,
     ) -> FindCustomerResponse:
+        """Find a customer by code, phone, or uid."""
         params: dict[str, Any] = {}
         if code is not None:
             params["code"] = code
@@ -83,16 +86,19 @@ class CustomersAPI:
         return FindCustomerResponse.model_validate(data)
 
     async def get(self, customer_id: int) -> CustomerDetail:
+        """Return customer details including participant stats and tags."""
         data = await self._client._get_json(f"/customers/{customer_id}")
         return CustomerDetail.model_validate(data)
 
     async def get_tags(self, customer_id: int) -> TagsPage:
+        """Return tags currently assigned to a customer."""
         data = await self._client._get_json(f"/customers/{customer_id}/tags")
         return TagsPage.model_validate(data)
 
     async def set_tags(
         self, customer_id: int, tag_ids: builtins.list[int]
     ) -> TagsPage:
+        """Replace all tags for a customer with the given list of tag IDs."""
         body = {"ids": tag_ids}
         data = await self._client._post_json(
             f"/customers/{customer_id}/tags", body=body

@@ -9,13 +9,12 @@ from async_uds_api.models import (
     GoodsOrderItem,
     GoodsOrderUpdateStatus,
 )
-from tests.fixtures.api_responses import (
+from tests.fixtures.orders import (
     GOODS_ORDER_CODE_RESPONSE,
     GOODS_ORDER_RESPONSE,
 )
 
 
-@pytest.mark.asyncio
 class TestGoodsOrdersAPI:
     async def test_get_order_success(self, uds_client):
         respx.get("https://api.uds.app/partner/v2/goods-orders/42").mock(

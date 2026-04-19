@@ -65,6 +65,8 @@ class UDSClient:
         base_url: str = DEFAULT_BASE_URL,
         timeout: float = 10.0,
         retries: int = 3,
+        limits: httpx.Limits | None = None,
+        settings_ttl: float = 60.0,
         client: httpx.AsyncClient | None = None,
     ) -> None:
         if not company_id or not company_id.strip():
@@ -81,10 +83,15 @@ class UDSClient:
         self._client: httpx.AsyncClient = client or httpx.AsyncClient(
             base_url=self._base_url,
             timeout=self._timeout,
+            limits=limits
+            or httpx.Limits(
+                max_connections=100,
+                max_keepalive_connections=20,
+            ),
         )
         self._auth = httpx.BasicAuth(company_id, api_key)
 
-        self.settings = SettingsAPI(self)
+        self.settings = SettingsAPI(self, ttl=settings_ttl)
         self.customers = CustomersAPI(self)
         self.operations = OperationsAPI(self)
         self.tags = TagsAPI(self)
@@ -102,7 +109,7 @@ class UDSClient:
         if not self._external_client:
             await self._client.aclose()
 
-        await self.images._close_upload_client()
+        await self.images.aclose()
 
     async def __aenter__(self) -> UDSClient:
         return self

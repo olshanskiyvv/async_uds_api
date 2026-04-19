@@ -8,7 +8,7 @@ from async_uds_api.models import (
     FindCustomerResponse,
     TagsPage,
 )
-from tests.fixtures.api_responses import (
+from tests.fixtures.customers import (
     CUSTOMER_DETAIL_RESPONSE,
     CUSTOMER_TAGS_RESPONSE,
     CUSTOMERS_LIST_RESPONSE,
@@ -16,7 +16,6 @@ from tests.fixtures.api_responses import (
 )
 
 
-@pytest.mark.asyncio
 class TestCustomersAPI:
     async def test_list_customers_success(self, uds_client):
         """Test successful customers list retrieval."""

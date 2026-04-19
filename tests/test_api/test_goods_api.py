@@ -139,6 +139,55 @@ class TestGoodsAPI:
 
         await uds_client.goods.external.delete(external_id)
 
+    async def test_iter_all_goods_single_page(self, uds_client):
+        respx.get(
+            "https://api.uds.app/partner/v2/goods",
+            params={"max": "50", "offset": "0"},
+        ).mock(return_value=Response(200, json=GOODS_LIST_RESPONSE))
+
+        result = [g async for g in uds_client.goods.iter_all()]
+
+        assert len(result) == 1
+
+    async def test_iter_all_goods_multiple_pages(self, uds_client):
+        row = GOODS_LIST_RESPONSE["rows"][0]
+        responses = [
+            Response(200, json={"rows": [row], "total": 3}),
+            Response(200, json={"rows": [row], "total": 3}),
+            Response(200, json={"rows": [], "total": 3}),
+        ]
+
+        def handler(request):  # type: ignore[no-untyped-def]
+            return responses.pop(0)
+
+        respx.get("https://api.uds.app/partner/v2/goods").mock(
+            side_effect=handler
+        )
+
+        result = [g async for g in uds_client.goods.iter_all(page_size=1)]
+
+        assert len(result) == 2
+
+    async def test_iter_all_goods_with_node_id(self, uds_client):
+        respx.get(
+            "https://api.uds.app/partner/v2/goods",
+            params={"max": "50", "offset": "0", "nodeId": "5"},
+        ).mock(return_value=Response(200, json=GOODS_LIST_RESPONSE))
+
+        result = [g async for g in uds_client.goods.iter_all(node_id=5)]
+
+        assert len(result) == 1
+
+    async def test_iter_all_goods_empty(self, uds_client):
+        respx.get(
+            "https://api.uds.app/partner/v2/goods",
+            params={"max": "50", "offset": "0"},
+        ).mock(return_value=Response(200, json={"rows": [], "total": 0}))
+
+        result = [g async for g in uds_client.goods.iter_all()]
+
+        assert result == []
+
     async def test_goods_not_found(self, uds_client):
         """Test goods not found error."""
         from async_uds_api import UDSNotFoundError

@@ -1,6 +1,7 @@
+from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING, Any
 
-from async_uds_api.models import GoodsDetailed, GoodsPage
+from async_uds_api.models import GoodsDetailed, GoodsInfoType, GoodsPage
 
 if TYPE_CHECKING:
     from async_uds_api.client import UDSClient
@@ -51,6 +52,20 @@ class GoodsAPI:
 
         data = await self._client._get_json("/goods", params=params or None)
         return GoodsPage.model_validate(data)
+
+    async def iter_all(
+        self, *, page_size: int = 50, node_id: int | None = None
+    ) -> AsyncIterator[GoodsInfoType]:
+        offset = 0
+        while True:
+            page = await self.list(
+                max=page_size, offset=offset, node_id=node_id
+            )
+            for row in page.rows:
+                yield row
+            if len(page.rows) < page_size:
+                break
+            offset += len(page.rows)
 
     async def create(self, goods: GoodsDetailed) -> GoodsDetailed:
         body = goods.model_dump(by_alias=True, exclude_none=True)

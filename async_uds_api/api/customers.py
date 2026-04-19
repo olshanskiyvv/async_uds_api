@@ -1,7 +1,9 @@
 import builtins
+from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING, Any
 
 from async_uds_api.models import (
+    Customer,
     CustomerDetail,
     CustomersPage,
     FindCustomerResponse,
@@ -35,6 +37,18 @@ class CustomersAPI:
             "/customers", params=params or None
         )
         return CustomersPage.model_validate(data)
+
+    async def iter_all(
+        self, *, page_size: int = 50
+    ) -> AsyncIterator[Customer]:
+        cursor: str | None = None
+        while True:
+            page = await self.list(max=page_size, cursor=cursor)
+            for row in page.rows:
+                yield row
+            if not page.rows or page.cursor is None:
+                break
+            cursor = page.cursor
 
     async def find(
         self,

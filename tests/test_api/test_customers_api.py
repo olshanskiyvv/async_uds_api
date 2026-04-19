@@ -123,6 +123,58 @@ class TestCustomersAPI:
         assert isinstance(result, FindCustomerResponse)
         assert result.code == "123456"
 
+    async def test_iter_all_customers_single_page(self, uds_client):
+        respx.get(
+            "https://api.uds.app/partner/v2/customers",
+            params={"max": "2"},
+        ).mock(
+            return_value=Response(
+                200, json={"rows": CUSTOMERS_LIST_RESPONSE["rows"]}
+            )
+        )
+
+        result = [c async for c in uds_client.customers.iter_all(page_size=2)]
+
+        assert len(result) == 2
+        assert result[0].uid == "abc123"
+
+    async def test_iter_all_customers_multiple_pages(self, uds_client):
+        page1 = {
+            "rows": [
+                {"uid": "p1", "displayName": "A", "phone": "+70000000001"}
+            ],
+            "cursor": "cursor1",
+        }
+        page2 = {
+            "rows": [
+                {"uid": "p2", "displayName": "B", "phone": "+70000000002"}
+            ],
+        }
+        responses = [Response(200, json=page1), Response(200, json=page2)]
+
+        def handler(request):  # type: ignore[no-untyped-def]
+            return responses.pop(0)
+
+        respx.get("https://api.uds.app/partner/v2/customers").mock(
+            side_effect=handler
+        )
+
+        result = [c async for c in uds_client.customers.iter_all(page_size=1)]
+
+        assert len(result) == 2
+        assert result[0].uid == "p1"
+        assert result[1].uid == "p2"
+
+    async def test_iter_all_customers_empty(self, uds_client):
+        respx.get(
+            "https://api.uds.app/partner/v2/customers",
+            params={"max": "50"},
+        ).mock(return_value=Response(200, json={"rows": []}))
+
+        result = [c async for c in uds_client.customers.iter_all()]
+
+        assert result == []
+
     async def test_customer_not_found(self, uds_client):
         """Test customer not found error."""
         from async_uds_api import UDSNotFoundError

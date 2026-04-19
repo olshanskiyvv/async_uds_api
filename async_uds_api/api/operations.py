@@ -1,3 +1,4 @@
+from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING, Any
 
 from async_uds_api.models import (
@@ -39,6 +40,18 @@ class OperationsAPI:
             "/operations", params=params or None
         )
         return OperationsPage.model_validate(data)
+
+    async def iter_all(
+        self, *, page_size: int = 50
+    ) -> AsyncIterator[Operation]:
+        cursor: str | None = None
+        while True:
+            page = await self.list(max=page_size, cursor=cursor)
+            for row in page.rows:
+                yield row
+            if not page.rows or page.cursor is None:
+                break
+            cursor = page.cursor
 
     async def create(self, operation: CreateOperation) -> Operation:
         body = operation.model_dump(by_alias=True, exclude_none=True)

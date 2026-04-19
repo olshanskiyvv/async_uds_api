@@ -15,7 +15,7 @@ from async_uds_api.models.enums import (
     PaymentProvider,
     PaymentType,
 )
-from async_uds_api.models.goods import GoodsMeasurement
+from async_uds_api.models.enums import GoodsMeasurement
 from async_uds_api.models.operations import PurchaseCalc
 from async_uds_api.models.settings import MembershipTier
 

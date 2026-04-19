@@ -233,7 +233,7 @@ uv run ruff check async_uds_api/ tests/
 uv run ruff format async_uds_api/ tests/
 
 # Проверка типов
-uv run ty check async_uds_api/ tests/
+uv run mypy
 ```
 
 ### Лицензия

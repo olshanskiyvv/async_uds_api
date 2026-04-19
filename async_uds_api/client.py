@@ -91,7 +91,12 @@ class UDSClient:
     async def __aenter__(self) -> UDSClient:
         return self
 
-    async def __aexit__(self, exc_type, exc, tb) -> None:
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: object,
+    ) -> None:
         await self.aclose()
 
     def _build_headers(self) -> dict[str, str]:

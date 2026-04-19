@@ -123,6 +123,18 @@ class TestUDSClient:
         await client.aclose()
         await external_client.aclose()
 
+    def test_client_repr_masks_api_key(self):
+        client = UDSClient(company_id="123456", api_key="secret-key-xyz")
+        r = repr(client)
+        assert "123456" in r
+        assert "secr***" in r
+        assert "secret-key-xyz" not in r
+
+    def test_client_repr_short_api_key(self):
+        client = UDSClient(company_id="123456", api_key="abc")
+        assert "***" in repr(client)
+        assert "abc" not in repr(client)
+
     def test_client_empty_company_id(self):
         """Test that empty company_id raises ValueError."""
         with pytest.raises(ValueError, match="company_id cannot be empty"):

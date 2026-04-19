@@ -92,6 +92,12 @@ class UDSClient:
         self.images = ImagesAPI(self, timeout=self._timeout)
         self.goods_orders = GoodsOrdersAPI(self)
 
+    def __repr__(self) -> str:
+        masked = self._api_key[:4] + "***" if len(self._api_key) > 4 else "***"
+        return (
+            f"UDSClient(company_id={self._company_id!r}, api_key='{masked}')"
+        )
+
     async def aclose(self) -> None:
         if not self._external_client:
             await self._client.aclose()

@@ -146,6 +146,32 @@ image_id = await client.images.upload(image_bytes, content_type="image/png")
 upload_url = await client.images.get_upload_url("image/jpeg")
 ```
 
+#### Goods Orders
+
+```python
+from async_uds_api import GoodsOrderUpdate, GoodsOrderUpdateStatus
+
+# Получение заказа
+order = await client.goods_orders.get(order_id=123)
+
+# Обновление заказа (позиции, доставка)
+await client.goods_orders.update(order_id=123, body=GoodsOrderUpdate(...))
+
+# Смена статуса заказа
+await client.goods_orders.change_status(
+    order_id=123, status=GoodsOrderUpdateStatus.READY
+)
+
+# Отмена заказа
+await client.goods_orders.cancel(order_id=123)
+
+# Завершение заказа (создаёт транзакцию)
+await client.goods_orders.complete(order_id=123)
+
+# Генерация кода оплаты
+code_info = await client.goods_orders.generate_code(order_id=123)
+```
+
 ### Webhooks
 
 ```python
@@ -195,10 +221,10 @@ except UDSClientError as e:
 
 ```bash
 # Установка зависимостей для разработки
-pip install -e ".[dev]"
+uv sync --dev
 
 # Запуск тестов
-pytest tests/
+uv run pytest tests/
 
 # Линтинг
 uv run ruff check async_uds_api/ tests/
@@ -207,7 +233,7 @@ uv run ruff check async_uds_api/ tests/
 uv run ruff format async_uds_api/ tests/
 
 # Проверка типов
-uv run ty check async_uds_api/ tests/
+uv run mypy
 ```
 
 ### Лицензия

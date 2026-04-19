@@ -17,5 +17,6 @@ async def uds_client(mock_httpx):
     async with UDSClient(
         company_id="123456",
         api_key="test-api-key",
+        retries=1,
     ) as client:
         yield client

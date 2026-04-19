@@ -9,13 +9,13 @@ from async_uds_api.models.base import APIModel
 from async_uds_api.models.common import BranchInfo, ParticipantShortInfo
 from async_uds_api.models.enums import (
     DeliveryTypes,
+    GoodsMeasurement,
     GoodsOrderItemType,
     GoodsOrderState,
     GoodsOrderUpdateStatus,
     PaymentProvider,
     PaymentType,
 )
-from async_uds_api.models.goods import GoodsMeasurement
 from async_uds_api.models.operations import PurchaseCalc
 from async_uds_api.models.settings import MembershipTier
 
@@ -25,30 +25,20 @@ class CustomerShortInfo(ParticipantShortInfo):
         default=None,
         description="Customer UID in the UDS.",
     )
-    membership_tier: MembershipTier | None = Field(
-        default=None,
-        alias="membershipTier",
-        validation_alias="membershipTier",
-    )
+    membership_tier: MembershipTier | None = None
 
 
 class ReceiverInfo(APIModel):
     receiver_name: str | None = Field(
         default=None,
-        alias="receiverName",
-        validation_alias="receiverName",
         description="Name of the customer who will pick up the order.",
     )
     receiver_phone: str | None = Field(
         default=None,
-        alias="receiverPhone",
-        validation_alias="receiverPhone",
         description="Phone number of the customer who will pick up the order.",
     )
     user_comment: str | None = Field(
         default=None,
-        alias="userComment",
-        validation_alias="userComment",
         description="Customer comment on the order.",
     )
 
@@ -70,11 +60,7 @@ class Pickup(ReceiverInfo):
 
 
 class Delivery(ReceiverInfo):
-    delivery_case: DeliveryCase | None = Field(
-        default=None,
-        alias="deliveryCase",
-        validation_alias="deliveryCase",
-    )
+    delivery_case: DeliveryCase | None = None
     address: str | None = Field(
         default=None,
         description="Delivery address.",
@@ -88,8 +74,6 @@ DeliveryType = Annotated[Pickup | Delivery, Field(discriminator="type")]
 class OnlinePayment(APIModel):
     payment_provider: PaymentProvider | None = Field(
         default=None,
-        alias="paymentProvider",
-        validation_alias="paymentProvider",
         description="Payment provider type.",
     )
     id: str | None = Field(
@@ -117,8 +101,6 @@ class PaymentMethod(APIModel):
     )
     provider_type: str | None = Field(
         default=None,
-        alias="providerType",
-        validation_alias="providerType",
         description="Payment provider type.",
     )
 
@@ -130,15 +112,11 @@ class GoodsOrderItem(APIModel):
     )
     external_id: str | None = Field(
         default=None,
-        alias="externalId",
-        validation_alias="externalId",
         description="External item identifier.",
     )
     name: str = Field(description="Item name.")
     variant_name: str | None = Field(
         default=None,
-        alias="variantName",
-        validation_alias="variantName",
         description=(
             "Name of the item option, if the type of this item is "
             "VARYING_ITEM."
@@ -153,14 +131,10 @@ class GoodsOrderItem(APIModel):
     price: float = Field(description="Item price.")
     offer_price: float | None = Field(
         default=None,
-        alias="offerPrice",
-        validation_alias="offerPrice",
         description="Discount price.",
     )
     skip_loyalty: bool = Field(
         default=False,
-        alias="skipLoyalty",
-        validation_alias="skipLoyalty",
         description="Don't apply loyalty program terms.",
     )
     measurement: GoodsMeasurement | None = Field(
@@ -173,8 +147,6 @@ class GoodsOrderItemUpdate(APIModel):
     id: int | None = Field(default=None, description="Item ID in the UDS.")
     variant_name: str | None = Field(
         default=None,
-        alias="variantName",
-        validation_alias="variantName",
         description=(
             "Name of the item option, if the type of this item is "
             "VARYING_ITEM."
@@ -186,15 +158,11 @@ class GoodsOrderItemUpdate(APIModel):
 class GoodsOrderItemNew(APIModel):
     external_id: str | None = Field(
         default=None,
-        alias="externalId",
-        validation_alias="externalId",
         description="External item identifier.",
     )
     name: str | None = Field(default=None, description="Item name.")
     variant_name: str | None = Field(
         default=None,
-        alias="variantName",
-        validation_alias="variantName",
         description=(
             "Name of the item option, if the type of this item is "
             "VARYING_ITEM."
@@ -204,18 +172,12 @@ class GoodsOrderItemNew(APIModel):
     price: float | None = Field(default=None, description="Item price.")
     skip_loyalty: bool = Field(
         default=False,
-        alias="skipLoyalty",
-        validation_alias="skipLoyalty",
         description="Don't apply loyalty program terms.",
     )
 
 
 class GoodsOrderUpdate(APIModel):
-    delivery_case: DeliveryCase | None = Field(
-        default=None,
-        alias="deliveryCase",
-        validation_alias="deliveryCase",
-    )
+    delivery_case: DeliveryCase | None = None
     items: list[GoodsOrderItemUpdate | GoodsOrderItemNew] | None = Field(
         default=None,
         description="Items information.",
@@ -229,8 +191,6 @@ class GoodsOrderDetailed(APIModel):
     )
     date_created: datetime | None = Field(
         default=None,
-        alias="dateCreated",
-        validation_alias="dateCreated",
         description="Order date.",
     )
     comment: str | None = Field(
@@ -243,8 +203,6 @@ class GoodsOrderDetailed(APIModel):
     )
     order_status: GoodsOrderUpdateStatus | None = Field(
         default=None,
-        alias="orderStatus",
-        validation_alias="orderStatus",
         description="Order processing status.",
     )
     cash: float | None = Field(
@@ -261,24 +219,18 @@ class GoodsOrderDetailed(APIModel):
     )
     certificate_points: float | None = Field(
         default=None,
-        alias="certificatePoints",
-        validation_alias="certificatePoints",
         description="Number of deducted certificate points.",
     )
     customer: CustomerShortInfo | None = None
     delivery: DeliveryType | None = None
-    online_payment: OnlinePayment | None = Field(
-        default=None,
-        alias="onlinePayment",
-        validation_alias="onlinePayment",
-    )
-    payment_method: PaymentMethod | None = Field(
-        default=None,
-        alias="paymentMethod",
-        validation_alias="paymentMethod",
-    )
+    online_payment: OnlinePayment | None = None
+    payment_method: PaymentMethod | None = None
     items: list[GoodsOrderItem] | None = Field(
         default=None,
         description="Items information.",
     )
     purchase: PurchaseCalc
+
+
+class GoodsOrderCode(APIModel):
+    code: str = Field(description="Payment code to complete the order.")

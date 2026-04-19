@@ -1,3 +1,4 @@
+from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING, Any
 
 from async_uds_api.models import (
@@ -27,6 +28,7 @@ class OperationsAPI:
         offset: int | None = None,
         cursor: str | None = None,
     ) -> OperationsPage:
+        """Return a page of operations, filtered by cursor or offset."""
         params: dict[str, Any] = {}
         if max is not None:
             params["max"] = max
@@ -40,12 +42,27 @@ class OperationsAPI:
         )
         return OperationsPage.model_validate(data)
 
+    async def iter_all(
+        self, *, page_size: int = 50
+    ) -> AsyncIterator[Operation]:
+        """Yield every operation, fetching pages transparently via cursor."""
+        cursor: str | None = None
+        while True:
+            page = await self.list(max=page_size, cursor=cursor)
+            for row in page.rows:
+                yield row
+            if not page.rows or page.cursor is None:
+                break
+            cursor = page.cursor
+
     async def create(self, operation: CreateOperation) -> Operation:
+        """Create a new purchase or reward operation."""
         body = operation.model_dump(by_alias=True, exclude_none=True)
         data = await self._client._post_json("/operations", body=body)
         return Operation.model_validate(data)
 
     async def get(self, operation_id: int) -> Operation:
+        """Return an operation by its ID."""
         data = await self._client._get_json(f"/operations/{operation_id}")
         return Operation.model_validate(data)
 
@@ -54,6 +71,7 @@ class OperationsAPI:
         operation_id: int,
         refund: RefundOperationRequest | None = None,
     ) -> Operation:
+        """Refund an operation; pass RefundOperationRequest for partial."""
         body = (
             refund.model_dump(by_alias=True, exclude_none=True)
             if refund
@@ -69,6 +87,7 @@ class OperationsAPI:
         self,
         calc_request: PurchaseCalcRequest,
     ) -> PurchaseCalcResponse:
+        """Calculate applicable discounts and points for a purchase."""
         body = calc_request.model_dump(by_alias=True, exclude_none=True)
         data = await self._client._post_json("/operations/calc", body=body)
         return PurchaseCalcResponse.model_validate(data)
@@ -77,10 +96,12 @@ class OperationsAPI:
         self,
         reward_request: RewardRequest,
     ) -> None:
+        """Issue a non-purchase reward (e.g. referral bonus) to a customer."""
         body = reward_request.model_dump(by_alias=True, exclude_none=True)
         await self._client._post_json("/operations/reward", body=body)
 
     async def create_voucher(self, voucher: CreateVoucher) -> VoucherInfo:
+        """Create a new voucher and return its details."""
         body = voucher.model_dump(by_alias=True, exclude_none=True)
         data = await self._client._post_json("/operations/voucher", body=body)
         return VoucherInfo.model_validate(data)

@@ -1,0 +1,26 @@
+COMPANY_SETTINGS_RESPONSE = {
+    "id": 123456,
+    "name": "Test Company",
+    "promoCode": "TESTCOMPANY",
+    "currency": "RUB",
+    "baseDiscountPolicy": "CHARGE_SCORES",
+    "purchaseByPhone": True,
+    "usePointsByPhone": True,
+    "writeInvoice": False,
+    "slug": "test-company",
+    "loyaltyProgramSettings": {
+        "baseMembershipTier": {
+            "uid": "base",
+            "name": "Base",
+            "rate": 0.05,
+            "maxScoresDiscount": 50.0,
+        },
+        "membershipTiers": [],
+        "referralCashbackRates": [0.05, 0.03, 0.01],
+        "cashierAward": 0.01,
+        "referralReward": 100.0,
+        "discountVip": 10.0,
+        "receiptLimit": 100000.0,
+        "deferPointsForDays": 7,
+    },
+}

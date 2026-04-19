@@ -46,7 +46,6 @@ class TestUDSClient:
 
         assert client._timeout == 30.0
 
-    @pytest.mark.asyncio
     async def test_client_context_manager(self):
         """Test UDSClient as async context manager."""
         async with UDSClient(
@@ -95,7 +94,6 @@ class TestUDSClient:
         assert hasattr(client, "goods")
         assert hasattr(client, "images")
 
-    @pytest.mark.asyncio
     async def test_client_close(self):
         """Test UDSClient close method."""
         client = UDSClient(
@@ -105,7 +103,6 @@ class TestUDSClient:
 
         await client.aclose()
 
-    @pytest.mark.asyncio
     async def test_client_with_external_httpx_client(self):
         """Test UDSClient with external httpx.AsyncClient."""
         external_client = httpx.AsyncClient(
@@ -122,6 +119,18 @@ class TestUDSClient:
 
         await client.aclose()
         await external_client.aclose()
+
+    def test_client_repr_masks_api_key(self):
+        client = UDSClient(company_id="123456", api_key="secret-key-xyz")
+        r = repr(client)
+        assert "123456" in r
+        assert "secr***" in r
+        assert "secret-key-xyz" not in r
+
+    def test_client_repr_short_api_key(self):
+        client = UDSClient(company_id="123456", api_key="abc")
+        assert "***" in repr(client)
+        assert "abc" not in repr(client)
 
     def test_client_empty_company_id(self):
         """Test that empty company_id raises ValueError."""

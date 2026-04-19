@@ -16,14 +16,10 @@ from async_uds_api.models.enums import (
 class GoodsOffer(APIModel):
     offer_price: float | None = Field(
         default=None,
-        alias="offerPrice",
-        validation_alias="offerPrice",
         description="Discount price.",
     )
     skip_loyalty: bool = Field(
         default=False,
-        alias="skipLoyalty",
-        validation_alias="skipLoyalty",
         description=(
             "Flag of goods item price which cashback is not credited and "
             "to which the discount does not apply."
@@ -34,8 +30,6 @@ class GoodsOffer(APIModel):
 class GoodsInventory(APIModel):
     in_stock: int | None = Field(
         default=None,
-        alias="inStock",
-        validation_alias="inStock",
         description=(
             "Item quantity in stock. The 'null' value means unlimited "
             "quantity."
@@ -84,20 +78,14 @@ class GoodsItemType(APIModel):
     )
     min_quantity: float | None = Field(
         default=None,
-        alias="minQuantity",
-        validation_alias="minQuantity",
         description="Minimal quantity of item for order.",
     )
     vat_code: VatCode | None = Field(
         default=None,
-        alias="vatCode",
-        validation_alias="vatCode",
         description="VAT rate code.",
     )
     payment_subject: PaymentSubject | None = Field(
         default=None,
-        alias="paymentSubject",
-        validation_alias="paymentSubject",
         description="Payment item attribute.",
     )
 
@@ -117,14 +105,10 @@ class GoodsVaryingItemType(APIModel):
     )
     vat_code: VatCode | None = Field(
         default=None,
-        alias="vatCode",
-        validation_alias="vatCode",
         description="VAT rate code.",
     )
     payment_subject: PaymentSubject | None = Field(
         default=None,
-        alias="paymentSubject",
-        validation_alias="paymentSubject",
         description="Payment item attribute.",
     )
 
@@ -148,26 +132,18 @@ class GoodsInfoType(APIModel):
     )
     node_id: int | None = Field(
         default=None,
-        alias="nodeId",
-        validation_alias="nodeId",
         description="ID of the category in which the product is included.",
     )
     image_urls: list[str] = Field(
         default_factory=list,
-        alias="imageUrls",
-        validation_alias="imageUrls",
         description="Array of links to item image.",
     )
     external_id: str | None = Field(
         default=None,
-        alias="externalId",
-        validation_alias="externalId",
         description="External goods identifier.",
     )
     date_created: datetime | None = Field(
         default=None,
-        alias="dateCreated",
-        validation_alias="dateCreated",
         description="Date item created.",
     )
 

@@ -1,4 +1,5 @@
 import hashlib
+import hmac
 
 
 def verify_webhook_signature(
@@ -25,4 +26,4 @@ def verify_webhook_signature(
     """
     concatenated = f"{request_id}{timestamp}{company_id}{api_key}"
     expected_signature = hashlib.md5(concatenated.encode()).hexdigest()
-    return expected_signature == signature
+    return hmac.compare_digest(expected_signature, signature)

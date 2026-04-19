@@ -15,10 +15,7 @@ class OperationCustomer(ParticipantShortInfo):
 
 class CashierInfo(APIModel):
     id: int
-    display_name: str = Field(
-        alias="displayName",
-        validation_alias="displayName",
-    )
+    display_name: str
 
 
 class OperationOrigin(APIModel):
@@ -31,8 +28,6 @@ class Operation(APIModel):
     )
     date_created: datetime | None = Field(
         default=None,
-        alias="dateCreated",
-        validation_alias="dateCreated",
         description="Transaction date.",
     )
     action: Action
@@ -41,16 +36,8 @@ class Operation(APIModel):
     cashier: CashierInfo | None = None
     branch: BranchInfo | None = None
     points: float | None = None
-    certificate_points: float | None = Field(
-        default=None,
-        alias="certificatePoints",
-        validation_alias="certificatePoints",
-    )
-    receipt_number: str | None = Field(
-        default=None,
-        alias="receiptNumber",
-        validation_alias="receiptNumber",
-    )
+    certificate_points: float | None = None
+    receipt_number: str | None = None
     origin: OperationOrigin | None = None
     total: float | None = None
     cash: float | None = None
@@ -68,10 +55,7 @@ class CreateOperationParticipant(APIModel):
 
 
 class CashierInput(APIModel):
-    external_id: str = Field(
-        alias="externalId",
-        validation_alias="externalId",
-    )
+    external_id: str
     name: str | None = None
 
 
@@ -80,16 +64,8 @@ class CreateOperationReceipt(APIModel):
     cash: float
     points: float
     number: str | None = None
-    skip_loyalty_total: float | None = Field(
-        default=None,
-        alias="skipLoyaltyTotal",
-        validation_alias="skipLoyaltyTotal",
-    )
-    unredeemable_total: float | None = Field(
-        default=None,
-        alias="unredeemableTotal",
-        validation_alias="unredeemableTotal",
-    )
+    skip_loyalty_total: float | None = None
+    unredeemable_total: float | None = None
 
 
 class CreateOperation(APIModel):
@@ -104,8 +80,6 @@ class CreateOperation(APIModel):
 class RefundOperationRequest(APIModel):
     partial_amount: float | None = Field(
         default=None,
-        alias="partialAmount",
-        validation_alias="partialAmount",
         description="Refund amount.",
     )
 
@@ -127,8 +101,6 @@ class CreateVoucherReceipt(APIModel):
     )
     skip_loyalty_total: float | None = Field(
         default=None,
-        alias="skipLoyaltyTotal",
-        validation_alias="skipLoyaltyTotal",
         description="Part of bill amount without cashback/discount.",
     )
 
@@ -145,23 +117,15 @@ class CreateVoucher(APIModel):
 class VoucherInfo(APIModel):
     code: str = Field(description="UDS voucher code.")
     qr_code_text: str = Field(
-        alias="qrCodeText",
-        validation_alias="qrCodeText",
         description="UDS voucher info for qrcode.",
     )
     qr_code_128: str = Field(
-        alias="qrCode128",
-        validation_alias="qrCode128",
         description="Link for generate qrcode image (size 128).",
     )
     qr_code_256: str = Field(
-        alias="qrCode256",
-        validation_alias="qrCode256",
         description="Link for generate qrcode image (size 256).",
     )
     expires_in: datetime = Field(
-        alias="expiresIn",
-        validation_alias="expiresIn",
         description="Voucher code expires in (UTC time-zone).",
     )
     points: float = Field(description="Minimum points for withdrawal.")
@@ -177,8 +141,6 @@ class PurchaseCalcExtras(APIModel):
 class PurchaseCalc(APIModel):
     max_points: float | None = Field(
         default=None,
-        alias="maxPoints",
-        validation_alias="maxPoints",
         description="Maximum number of points available.",
     )
     total: float | None = Field(
@@ -187,26 +149,18 @@ class PurchaseCalc(APIModel):
     )
     skip_loyalty_total: float | None = Field(
         default=None,
-        alias="skipLoyaltyTotal",
-        validation_alias="skipLoyaltyTotal",
         description="Part of bill amount without cashback/discount.",
     )
     unredeemable_total: float | None = Field(
         default=None,
-        alias="unredeemableTotal",
-        validation_alias="unredeemableTotal",
         description="Part of total that cannot be redeemed with points.",
     )
     discount_amount: float | None = Field(
         default=None,
-        alias="discountAmount",
-        validation_alias="discountAmount",
         description="Discount amount (in currency units).",
     )
     discount_percent: float | None = Field(
         default=None,
-        alias="discountPercent",
-        validation_alias="discountPercent",
         description="Discount rate (as a percentage).",
     )
     points: float | None = Field(
@@ -215,26 +169,18 @@ class PurchaseCalc(APIModel):
     )
     points_percent: float | None = Field(
         default=None,
-        alias="pointsPercent",
-        validation_alias="pointsPercent",
         description="Discount rate due to points (as a percentage).",
     )
     net_discount: float | None = Field(
         default=None,
-        alias="netDiscount",
-        validation_alias="netDiscount",
         description="Total discount amount (in currency units).",
     )
     net_discount_percent: float | None = Field(
         default=None,
-        alias="netDiscountPercent",
-        validation_alias="netDiscountPercent",
         description="Total discount rate (as a percentage of the total bill).",
     )
     certificate_points: float | None = Field(
         default=None,
-        alias="certificatePoints",
-        validation_alias="certificatePoints",
         description="Number of deducted certificate points.",
     )
     cash: float | None = Field(
@@ -243,8 +189,6 @@ class PurchaseCalc(APIModel):
     )
     cash_total: float | None = Field(
         default=None,
-        alias="cashTotal",
-        validation_alias="cashTotal",
         description="Total amount to be paid including extras.",
     )
     cashback: float | None = Field(
@@ -265,8 +209,6 @@ class PurchaseCalc(APIModel):
     )
     max_scores_discount: float | None = Field(
         default=None,
-        alias="maxScoresDiscount",
-        validation_alias="maxScoresDiscount",
         description=(
             "Maximum discount (as a percentage) allowed for redeeming points."
         ),
@@ -280,16 +222,8 @@ class PurchaseCalcRequestParticipant(APIModel):
 
 class PurchaseCalcRequestReceipt(APIModel):
     total: float
-    skip_loyalty_total: float | None = Field(
-        default=None,
-        alias="skipLoyaltyTotal",
-        validation_alias="skipLoyaltyTotal",
-    )
-    unredeemable_total: float | None = Field(
-        default=None,
-        alias="unredeemableTotal",
-        validation_alias="unredeemableTotal",
-    )
+    skip_loyalty_total: float | None = None
+    unredeemable_total: float | None = None
     points: float | None = None
 
 

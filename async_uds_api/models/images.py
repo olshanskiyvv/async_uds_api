@@ -16,8 +16,6 @@ class ImageUploadUrlHeaders(APIModel):
 
 class ImageUploadUrl(APIModel):
     image_id: str = Field(
-        alias="imageId",
-        validation_alias="imageId",
         description=(
             "Image identifier. This value has to be attached to goods entity."
         ),

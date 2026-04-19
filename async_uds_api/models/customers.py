@@ -14,96 +14,32 @@ from async_uds_api.models.tags import TagModel
 
 class Participant(APIModel):
     id: int | None = None
-    inviter_id: int | None = Field(
-        default=None,
-        alias="inviterId",
-        validation_alias="inviterId",
-    )
+    inviter_id: int | None = None
     points: float | None = None
-    discount_rate: float | None = Field(
-        default=None,
-        alias="discountRate",
-        validation_alias="discountRate",
-    )
-    cashback_rate: float | None = Field(
-        default=None,
-        alias="cashbackRate",
-        validation_alias="cashbackRate",
-    )
-    cash_spent: float | None = Field(
-        default=None,
-        alias="cashSpent",
-        validation_alias="cashSpent",
-    )
-    saved_funds: float | None = Field(
-        default=None,
-        alias="savedFunds",
-        validation_alias="savedFunds",
-    )
-    invited_count: int | None = Field(
-        default=None,
-        alias="invitedCount",
-        validation_alias="invitedCount",
-    )
-    effective_invited_count: int | None = Field(
-        default=None,
-        alias="effectiveInvitedCount",
-        validation_alias="effectiveInvitedCount",
-    )
-    operations_count: int | None = Field(
-        default=None,
-        alias="operationsCount",
-        validation_alias="operationsCount",
-    )
-    full_refunds_count: int | None = Field(
-        default=None,
-        alias="fullRefundsCount",
-        validation_alias="fullRefundsCount",
-    )
+    discount_rate: float | None = None
+    cashback_rate: float | None = None
+    cash_spent: float | None = None
+    saved_funds: float | None = None
+    invited_count: int | None = None
+    effective_invited_count: int | None = None
+    operations_count: int | None = None
+    full_refunds_count: int | None = None
     note: str | None = None
-    membership_tier: MembershipTier | None = Field(
-        default=None,
-        alias="membershipTier",
-        validation_alias="membershipTier",
-    )
-    date_created: datetime | None = Field(
-        default=None,
-        alias="dateCreated",
-        validation_alias="dateCreated",
-    )
-    last_transaction_time: datetime | None = Field(
-        default=None,
-        alias="lastTransactionTime",
-        validation_alias="lastTransactionTime",
-    )
-    points_expire_in: datetime | None = Field(
-        default=None,
-        alias="pointsExpireIn",
-        validation_alias="pointsExpireIn",
-    )
+    membership_tier: MembershipTier | None = None
+    date_created: datetime | None = None
+    last_transaction_time: datetime | None = None
+    points_expire_in: datetime | None = None
 
 
 class Customer(APIModel):
     uid: str | None = None
     avatar: str | None = None
-    display_name: str | None = Field(
-        default=None,
-        alias="displayName",
-        validation_alias="displayName",
-    )
+    display_name: str | None = None
     gender: Gender | None = None
     phone: str | None = None
-    birth_date: date | None = Field(
-        default=None,
-        alias="birthDate",
-        validation_alias="birthDate",
-    )
+    birth_date: date | None = None
     participant: Participant | None = None
-    channel_name: str | None = Field(
-        default=None,
-        alias="channelName",
-        validation_alias="channelName",
-    )
+    channel_name: str | None = None
     email: str | None = None
 
 

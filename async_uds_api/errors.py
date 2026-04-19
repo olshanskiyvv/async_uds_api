@@ -48,6 +48,18 @@ class UDSNotFoundError(UDSAPIError):
     """
 
 
+class UDSRateLimitError(UDSAPIError):
+    """
+    Превышен лимит запросов (HTTP 429).
+    """
+
+
+class UDSServerError(UDSAPIError):
+    """
+    Серверная ошибка API (HTTP 5xx).
+    """
+
+
 class UDSUnexpectedError(UDSAPIError):
     """
     Любая другая ошибка от API.

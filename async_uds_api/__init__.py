@@ -13,6 +13,8 @@ from async_uds_api.errors import (
     UDSImageUnsupportedSourceError,
     UDSImageUploadError,
     UDSNotFoundError,
+    UDSRateLimitError,
+    UDSServerError,
     UDSUnauthorizedError,
     UDSUnexpectedError,
 )
@@ -63,6 +65,8 @@ __all__ = [
     "UDSUnauthorizedError",
     "UDSForbiddenError",
     "UDSNotFoundError",
+    "UDSRateLimitError",
+    "UDSServerError",
     "UDSUnexpectedError",
     "verify_webhook_signature",
     "UDSImageError",

@@ -7,6 +7,12 @@ from datetime import datetime, timezone
 from typing import Any
 
 import httpx
+from tenacity import (
+    AsyncRetrying,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from async_uds_api.api import (
     CustomersAPI,
@@ -23,6 +29,8 @@ from async_uds_api.errors import (
     UDSClientError,
     UDSForbiddenError,
     UDSNotFoundError,
+    UDSRateLimitError,
+    UDSServerError,
     UDSUnauthorizedError,
     UDSUnexpectedError,
 )
@@ -56,6 +64,7 @@ class UDSClient:
         *,
         base_url: str = DEFAULT_BASE_URL,
         timeout: float = 10.0,
+        retries: int = 3,
         client: httpx.AsyncClient | None = None,
     ) -> None:
         if not company_id or not company_id.strip():
@@ -67,6 +76,7 @@ class UDSClient:
         self._api_key = api_key
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout
+        self._retries = retries
         self._external_client = client is not None
         self._client: httpx.AsyncClient = client or httpx.AsyncClient(
             base_url=self._base_url,
@@ -112,6 +122,33 @@ class UDSClient:
         return self._auth
 
     async def _request(
+        self,
+        method: str,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
+    ) -> httpx.Response:
+        async for attempt in AsyncRetrying(
+            retry=retry_if_exception_type(
+                (UDSRateLimitError, UDSServerError, httpx.TransportError)
+            ),
+            stop=stop_after_attempt(self._retries),
+            wait=wait_exponential(multiplier=1, min=1, max=10),
+            reraise=True,
+        ):
+            with attempt:
+                if attempt.retry_state.attempt_number > 1:
+                    _logger.warning(
+                        "Retry attempt %d for %s %s",
+                        attempt.retry_state.attempt_number,
+                        method,
+                        path,
+                    )
+                return await self._do_request(method, path, params=params, json=json)
+        raise UDSClientError("Retry loop exited unexpectedly")
+
+    async def _do_request(
         self,
         method: str,
         path: str,
@@ -186,6 +223,10 @@ class UDSClient:
                 exc_cls = UDSForbiddenError
             elif status == 404:
                 exc_cls = UDSNotFoundError
+            elif status == 429:
+                exc_cls = UDSRateLimitError
+            elif status >= 500:
+                exc_cls = UDSServerError
             else:
                 exc_cls = UDSUnexpectedError
 

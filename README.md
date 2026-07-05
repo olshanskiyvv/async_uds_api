@@ -166,7 +166,9 @@ await client.goods_orders.change_status(
 await client.goods_orders.cancel(order_id=123)
 
 # Завершение заказа (создаёт транзакцию)
-await client.goods_orders.complete(order_id=123)
+result = await client.goods_orders.complete(order_id=123)
+result.transaction.id  # ID созданной транзакции
+result.order  # GoodsOrderDetailed
 
 # Генерация кода оплаты
 code_info = await client.goods_orders.generate_code(order_id=123)

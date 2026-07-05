@@ -234,3 +234,18 @@ class GoodsOrderDetailed(APIModel):
 
 class GoodsOrderCode(APIModel):
     code: str = Field(description="Payment code to complete the order.")
+
+
+class TransactionInfo(APIModel):
+    id: int | None = Field(
+        default=None,
+        description="Transaction ID.",
+    )
+
+
+class GoodsOrderCompleteResult(APIModel):
+    transaction: TransactionInfo | None = Field(
+        default=None,
+        description="Transaction information.",
+    )
+    order: GoodsOrderDetailed

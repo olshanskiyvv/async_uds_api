@@ -26,3 +26,10 @@ GOODS_ORDER_RESPONSE = {
 GOODS_ORDER_CODE_RESPONSE = {
     "code": "123456",
 }
+
+GOODS_ORDER_COMPLETE_RESPONSE = {
+    "transaction": {
+        "id": 777,
+    },
+    "order": GOODS_ORDER_RESPONSE,
+}

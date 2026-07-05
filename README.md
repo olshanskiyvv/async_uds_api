@@ -166,7 +166,9 @@ await client.goods_orders.change_status(
 await client.goods_orders.cancel(order_id=123)
 
 # Завершение заказа (создаёт транзакцию)
-await client.goods_orders.complete(order_id=123)
+result = await client.goods_orders.complete(order_id=123)
+result.transaction.id  # ID созданной транзакции
+result.order  # GoodsOrderDetailed
 
 # Генерация кода оплаты
 code_info = await client.goods_orders.generate_code(order_id=123)
@@ -175,13 +177,9 @@ code_info = await client.goods_orders.generate_code(order_id=123)
 ### Webhooks
 
 ```python
-from async_uds_api import verify_webhook_signature
-
-is_valid = verify_webhook_signature(
+is_valid = client.verify_webhook_signature(
     request_id=request.headers.get("X-RequestId"),
     timestamp=request.headers.get("X-Timestamp"),
-    company_id=123456,
-    api_key="your-api-key",
     signature=request.headers.get("X-Signature"),
 )
 ```

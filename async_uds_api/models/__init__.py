@@ -65,6 +65,7 @@ from async_uds_api.models.orders import (
     DeliveryCase,
     DeliveryType,
     GoodsOrderCode,
+    GoodsOrderCompleteResult,
     GoodsOrderDetailed,
     GoodsOrderItem,
     GoodsOrderItemNew,
@@ -74,6 +75,7 @@ from async_uds_api.models.orders import (
     PaymentMethod,
     Pickup,
     ReceiverInfo,
+    TransactionInfo,
 )
 from async_uds_api.models.settings import (
     CompanySettings,
@@ -117,6 +119,7 @@ __all__ = [
     "GoodsMeasurement",
     "GoodsOffer",
     "GoodsOrderCode",
+    "GoodsOrderCompleteResult",
     "GoodsOrderDetailed",
     "GoodsOrderItem",
     "GoodsOrderItemNew",
@@ -161,6 +164,7 @@ __all__ = [
     "TagModel",
     "TagsPage",
     "TaxSystemCode",
+    "TransactionInfo",
     "VatCode",
     "VoucherInfo",
 ]

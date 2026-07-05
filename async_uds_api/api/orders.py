@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Any
 
 from async_uds_api.models import (
     GoodsOrderCode,
+    GoodsOrderCompleteResult,
     GoodsOrderDetailed,
     GoodsOrderItem,
     GoodsOrderUpdateStatus,
@@ -46,13 +47,13 @@ class GoodsOrdersAPI:
         )
         return GoodsOrderDetailed.model_validate(data)
 
-    async def complete(self, order_id: int) -> GoodsOrderDetailed:
+    async def complete(self, order_id: int) -> GoodsOrderCompleteResult:
         """Mark an order as completed (goods handed to the customer)."""
         data = await self._client._post_json(
             f"/goods-orders/{order_id}/complete",
             body=None,
         )
-        return GoodsOrderDetailed.model_validate(data)
+        return GoodsOrderCompleteResult.model_validate(data)
 
     async def generate_code(self, order_id: int) -> GoodsOrderCode:
         """Generate a one-time verification code for order pick-up."""

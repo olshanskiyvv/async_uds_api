@@ -29,6 +29,7 @@ from async_uds_api.models import (
     GoodsDetailed,
     GoodsInfoType,
     GoodsOrderCode,
+    GoodsOrderCompleteResult,
     GoodsOrderDetailed,
     GoodsOrderItem,
     GoodsOrderItemNew,
@@ -45,9 +46,9 @@ from async_uds_api.models import (
     PurchaseCalcResponse,
     TagModel,
     TagsPage,
+    TransactionInfo,
     VoucherInfo,
 )
-from async_uds_api.webhooks import verify_webhook_signature
 
 _logger = logging.getLogger("async_uds_api")
 _logger.addHandler(logging.NullHandler())
@@ -68,7 +69,6 @@ __all__ = [
     "UDSRateLimitError",
     "UDSServerError",
     "UDSUnexpectedError",
-    "verify_webhook_signature",
     "UDSImageError",
     "UDSImageSourceError",
     "UDSImageReadError",
@@ -87,6 +87,7 @@ __all__ = [
     "GoodsDetailed",
     "GoodsInfoType",
     "GoodsOrderCode",
+    "GoodsOrderCompleteResult",
     "GoodsOrderDetailed",
     "GoodsOrderItem",
     "GoodsOrderItemNew",
@@ -103,5 +104,6 @@ __all__ = [
     "PurchaseCalcResponse",
     "TagModel",
     "TagsPage",
+    "TransactionInfo",
     "VoucherInfo",
 ]

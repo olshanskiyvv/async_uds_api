@@ -5,12 +5,14 @@ from httpx import Response
 from async_uds_api import UDSNotFoundError
 from async_uds_api.models import (
     GoodsOrderCode,
+    GoodsOrderCompleteResult,
     GoodsOrderDetailed,
     GoodsOrderItem,
     GoodsOrderUpdateStatus,
 )
 from tests.fixtures.orders import (
     GOODS_ORDER_CODE_RESPONSE,
+    GOODS_ORDER_COMPLETE_RESPONSE,
     GOODS_ORDER_RESPONSE,
 )
 
@@ -73,11 +75,15 @@ class TestGoodsOrdersAPI:
     async def test_complete_order_success(self, uds_client):
         respx.post(
             "https://api.uds.app/partner/v2/goods-orders/42/complete"
-        ).mock(return_value=Response(200, json=GOODS_ORDER_RESPONSE))
+        ).mock(return_value=Response(200, json=GOODS_ORDER_COMPLETE_RESPONSE))
 
         result = await uds_client.goods_orders.complete(42)
 
-        assert isinstance(result, GoodsOrderDetailed)
+        assert isinstance(result, GoodsOrderCompleteResult)
+        assert result.transaction is not None
+        assert result.transaction.id == 777
+        assert isinstance(result.order, GoodsOrderDetailed)
+        assert result.order.id == 42
 
     async def test_generate_code_success(self, uds_client):
         respx.post("https://api.uds.app/partner/v2/goods-orders/42/code").mock(

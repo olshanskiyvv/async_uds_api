@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import hmac
 import logging
 import time
 import uuid
@@ -133,6 +135,23 @@ class UDSClient:
 
     def _build_auth(self) -> httpx.BasicAuth:
         return self._auth
+
+    def verify_webhook_signature(
+        self,
+        request_id: str,
+        timestamp: str,
+        signature: str,
+    ) -> bool:
+        """
+        Verify webhook X-Signature header.
+
+        Signature = md5(concat(X-RequestId, X-Timestamp, Client-Id, Api-Key))
+        """
+        concatenated = (
+            f"{request_id}{timestamp}{self._company_id}{self._api_key}"
+        )
+        expected_signature = hashlib.md5(concatenated.encode()).hexdigest()
+        return hmac.compare_digest(expected_signature, signature)
 
     async def _request(
         self,

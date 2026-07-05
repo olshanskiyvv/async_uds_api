@@ -49,7 +49,6 @@ from async_uds_api.models import (
     TransactionInfo,
     VoucherInfo,
 )
-from async_uds_api.webhooks import verify_webhook_signature
 
 _logger = logging.getLogger("async_uds_api")
 _logger.addHandler(logging.NullHandler())
@@ -70,7 +69,6 @@ __all__ = [
     "UDSRateLimitError",
     "UDSServerError",
     "UDSUnexpectedError",
-    "verify_webhook_signature",
     "UDSImageError",
     "UDSImageSourceError",
     "UDSImageReadError",

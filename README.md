@@ -184,7 +184,7 @@ import logging
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    format="%(message)s",
 )
 logging.getLogger("async_uds_api").setLevel(logging.INFO)
 ```
@@ -192,12 +192,12 @@ logging.getLogger("async_uds_api").setLevel(logging.INFO)
 Вывод:
 
 ```
-GET /customers [max=50 cursor=abc] [X-Origin-Request-Id=6e1c89d3-...] [X-Timestamp=2026-07-17T19:09:04+00:00]
-GET /customers/find [phone=***4567] [X-Origin-Request-Id=6e1c89d3-...] [X-Timestamp=2026-07-17T19:09:04+00:00]
+GET /customers [max=50 cursor=abc] [X-Origin-Request-Id=6e1c89d3-...] [X-Timestamp=2026-07-18T19:59:54.981185+00:00]
+GET /customers/find [phone=***4567] [X-Origin-Request-Id=6e1c89d3-...] [X-Timestamp=2026-07-18T19:59:54.981185+00:00]
 GET /customers/find -> 200 OK in 0.312s
 ```
 
-### Маскирование персональных данных
+#### Маскирование персональных данных
 
 В лог попадают все query-параметры запроса. Маскируются только `phone`,
 `uid` и `code` — они сокращаются до последних четырёх символов и никогда
@@ -216,7 +216,7 @@ client = UDSClient(company_id="...", api_key="...", silence_httpx_log=False)
 Учтите, что при `silence_httpx_log=False` номера телефонов, uid и коды клиентов
 будут утекать в лог через URL запросов httpx.
 
-### Свой логгер
+#### Свой логгер
 
 `UDSClient` принимает любой объект с методами `debug`/`info`/`warning`/`error`,
 которые получают имя события и поля через `**kwargs`. `structlog` и `loguru`
@@ -241,8 +241,12 @@ client = UDSClient(
 | `uds.error` | ERROR | `method`, `path`, `status`, `elapsed`, `message`, `error_code` |
 | `uds.retry` | WARNING | `method`, `path`, `attempt` |
 
-При стандартном логгере те же поля доступны хендлерам через
-`record.uds` — это словарь с исходными значениями, удобный для JSON-форматтеров.
+При стандартном логгере эти поля доступны хендлерам через `record.uds` —
+словарь с исходными значениями, удобный для JSON-форматтеров. Атрибут
+`uds` присутствует только на записях этих четырёх HTTP-событий: другие
+логгеры библиотеки (например, `async_uds_api.api.images`) пишут в тот же
+логгер `async_uds_api`, но не проставляют `record.uds`. Читайте атрибут
+защищённо: `getattr(record, "uds", None)`.
 
 ### Webhooks
 

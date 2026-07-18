@@ -84,7 +84,7 @@ def _render(event: str, fields: Mapping[str, Any]) -> str:
                 fields["error_code"]
             )
         return template % presentation
-    except (KeyError, TypeError, ValueError, AttributeError):
+    except Exception:
         return _render_fallback(event, fields)
 
 
@@ -109,6 +109,9 @@ class StdlibLoggerAdapter:
     def _log(self, level: int, event: str, fields: Mapping[str, Any]) -> None:
         if not self._logger.isEnabledFor(level):
             return
-        self._logger.log(
-            level, _render(event, fields), extra={"uds": dict(fields)}
-        )
+        try:
+            self._logger.log(
+                level, _render(event, fields), extra={"uds": dict(fields)}
+            )
+        except Exception:
+            pass

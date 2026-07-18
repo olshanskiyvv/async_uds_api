@@ -37,9 +37,11 @@ from async_uds_api.errors import (
     UDSUnexpectedError,
 )
 from async_uds_api.log import (
+    SENSITIVE_PARAMS,
     LoggerProtocol,
     StdlibLoggerAdapter,
     mask_params,
+    mask_value,
 )
 
 DEFAULT_BASE_URL = "https://api.uds.app/partner/v2"
@@ -97,9 +99,12 @@ class UDSClient:
         self._timeout = timeout
         self._retries = retries
         self._external_client = client is not None
-        self._logger: LoggerProtocol = logger or StdlibLoggerAdapter(
-            logging.getLogger("async_uds_api")
-        )
+        if isinstance(logger, logging.Logger):
+            self._logger: LoggerProtocol = StdlibLoggerAdapter(logger)
+        else:
+            self._logger = logger or StdlibLoggerAdapter(
+                logging.getLogger("async_uds_api")
+            )
         if silence_httpx_log:
             logging.getLogger("httpx").setLevel(logging.WARNING)
         self._client: httpx.AsyncClient = client or httpx.AsyncClient(
@@ -259,6 +264,12 @@ class UDSClient:
             except Exception:
                 pass
 
+            if params:
+                for key in SENSITIVE_PARAMS:
+                    raw = params.get(key)
+                    if raw is not None:
+                        message = message.replace(str(raw), mask_value(raw))
+
             self._logger.error(
                 "uds.error",
                 method=method,
@@ -285,6 +296,7 @@ class UDSClient:
             else:
                 exc_cls = UDSUnexpectedError
 
+            exc.args = (f"{status} for {method} {path}",)
             raise exc_cls(
                 message, status_code=status, error_code=error_code
             ) from exc

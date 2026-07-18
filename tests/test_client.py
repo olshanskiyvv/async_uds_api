@@ -1,4 +1,5 @@
 import logging
+import traceback
 
 import httpx
 import pytest
@@ -193,6 +194,16 @@ class TestClientLogging:
 
         assert client._logger is fake
 
+    def test_plain_stdlib_logger_is_wrapped(self):
+        raw_logger = logging.getLogger("some.logger")
+
+        client = UDSClient(
+            company_id="123456", api_key="test-api-key", logger=raw_logger
+        )
+
+        assert isinstance(client._logger, StdlibLoggerAdapter)
+        assert client._logger._logger is raw_logger
+
     def test_silences_httpx_logger_by_default(self, httpx_log_level):
         httpx_log_level.setLevel(logging.INFO)
 
@@ -264,3 +275,111 @@ class TestClientLogging:
 
         response_events = [e for e in fake.events if e[1] == "uds.response"]
         assert response_events[0][2]["status"] == 200
+
+    async def test_exception_chain_does_not_leak_phone(self, mock_httpx):
+        respx.get("https://api.uds.app/partner/v2/customers/find").mock(
+            return_value=httpx.Response(404, json={"message": "Not found"})
+        )
+
+        async with UDSClient(
+            company_id="123456", api_key="test-api-key", retries=1
+        ) as client:
+            with pytest.raises(Exception) as exc_info:
+                await client._get_json(
+                    "/customers/find", params={"phone": "+79991234567"}
+                )
+
+        cause = exc_info.value.__cause__
+        assert cause is not None
+        chain_text = "".join(
+            traceback.format_exception_only(
+                type(exc_info.value), exc_info.value
+            )
+        ) + "".join(traceback.format_exception_only(type(cause), cause))
+        assert "79991234567" not in chain_text
+
+    async def test_error_event_emitted_with_fields(self, mock_httpx):
+        fake = FakeLogger()
+        respx.get("https://api.uds.app/partner/v2/customers/find").mock(
+            return_value=httpx.Response(
+                404,
+                json={"errorCode": "notFound", "message": "Not found"},
+            )
+        )
+
+        async with UDSClient(
+            company_id="123456",
+            api_key="test-api-key",
+            retries=1,
+            logger=fake,
+        ) as client:
+            with pytest.raises(Exception):
+                await client._get_json(
+                    "/customers/find", params={"phone": "+79991234567"}
+                )
+
+        error_events = [e for e in fake.events if e[1] == "uds.error"]
+        assert len(error_events) == 1
+        fields = error_events[0][2]
+        for key in (
+            "method",
+            "path",
+            "status",
+            "elapsed",
+            "message",
+            "error_code",
+        ):
+            assert key in fields
+        assert fields["status"] == 404
+        assert fields["error_code"] == "notFound"
+
+    async def test_error_message_redacts_sensitive_params(self, mock_httpx):
+        fake = FakeLogger()
+        respx.get("https://api.uds.app/partner/v2/customers/find").mock(
+            return_value=httpx.Response(
+                400,
+                json={
+                    "errorCode": "badRequest",
+                    "message": "Invalid phone: +79991234567",
+                },
+            )
+        )
+
+        async with UDSClient(
+            company_id="123456",
+            api_key="test-api-key",
+            retries=1,
+            logger=fake,
+        ) as client:
+            with pytest.raises(Exception):
+                await client._get_json(
+                    "/customers/find", params={"phone": "+79991234567"}
+                )
+
+        error_events = [e for e in fake.events if e[1] == "uds.error"]
+        message = error_events[0][2]["message"]
+        assert "***4567" in message
+        assert "79991234567" not in message
+
+    async def test_retry_event_emitted_with_fields(self, mock_httpx):
+        fake = FakeLogger()
+        route = respx.get("https://api.uds.app/partner/v2/customers")
+        route.side_effect = [
+            httpx.Response(500, json={"message": "Server error"}),
+            httpx.Response(200, json={"rows": []}),
+        ]
+
+        async with UDSClient(
+            company_id="123456",
+            api_key="test-api-key",
+            retries=2,
+            logger=fake,
+        ) as client:
+            await client._get_json("/customers")
+
+        retry_events = [e for e in fake.events if e[1] == "uds.retry"]
+        assert len(retry_events) == 1
+        fields = retry_events[0][2]
+        assert fields["method"] == "GET"
+        assert fields["path"] == "/customers"
+        assert fields["attempt"] == 2

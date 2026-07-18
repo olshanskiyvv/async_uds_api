@@ -18,6 +18,9 @@ class TestMaskValue:
     def test_masks_empty_value_completely(self):
         assert mask_value("") == "***"
 
+    def test_masks_none_completely(self):
+        assert mask_value(None) == "***"
+
     def test_converts_non_string_before_masking(self):
         assert mask_value(79991234567) == "***4567"
 
@@ -51,6 +54,9 @@ class TestMaskParams:
 
     def test_sensitive_params_content(self):
         assert SENSITIVE_PARAMS == frozenset({"phone", "uid", "code"})
+
+    def test_masks_none_sensitive_value(self):
+        assert mask_params({"uid": None}) == {"uid": "***"}
 
 
 class TestStdlibLoggerAdapter:
@@ -210,12 +216,28 @@ class TestStdlibLoggerAdapter:
 
         assert caplog.messages == []
 
+    def test_logging_never_raises_on_broken_field(self, caplog):
+        class Explodes:
+            def __str__(self):
+                raise RuntimeError("boom")
+
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds.broken"))
+
+        with caplog.at_level(logging.INFO, logger="test.uds.broken"):
+            adapter.info(
+                "uds.request", method="GET", path="/x", bad=Explodes()
+            )
+
 
 class TestPublicExports:
     def test_logging_helpers_are_exported(self):
+        import typing
+
         import async_uds_api
 
-        assert async_uds_api.LoggerProtocol is not None
+        assert issubclass(async_uds_api.LoggerProtocol, typing.Protocol)
+        for method_name in ("debug", "info", "warning", "error"):
+            assert hasattr(async_uds_api.StdlibLoggerAdapter, method_name)
         assert async_uds_api.StdlibLoggerAdapter is not None
         assert async_uds_api.mask_value("+79991234567") == "***4567"
         assert async_uds_api.mask_params({"uid": "abcd1234"}) == {

@@ -63,6 +63,31 @@ class TestImagesAPI:
 
         assert result == "image/jpeg"
 
+    def test_detect_content_type_from_url_with_query(self, uds_client):
+        result = uds_client.images._detect_content_type(
+            "https://cdn.example.com/pic.jpg?token=abc123&x=1"
+        )
+
+        assert result == "image/jpeg"
+
+    def test_detect_content_type_from_url_with_fragment(self, uds_client):
+        result = uds_client.images._detect_content_type(
+            "https://cdn.example.com/pic.png#preview"
+        )
+
+        assert result == "image/png"
+
+    def test_detect_content_type_keeps_query_for_local_path(self, uds_client):
+        result = uds_client.images._detect_content_type("/tmp/a?b/pic.png")
+
+        assert result == "image/png"
+
+    def test_detect_content_type_url_without_extension(self, uds_client):
+        with pytest.raises(UDSImageUnsupportedSourceError):
+            uds_client.images._detect_content_type(
+                "https://cdn.example.com/pic?token=abc123"
+            )
+
     def test_detect_content_type_from_png(self, uds_client):
         result = uds_client.images._detect_content_type("/path/to/image.png")
 

@@ -92,9 +92,17 @@ class ImagesAPI:
                 f"Expected format: 'type/subtype' (e.g., 'image/jpeg')"
             )
 
+    @staticmethod
+    def _strip_url_suffix(source: str) -> str:
+        """Drop query and fragment so MIME detection sees the bare path."""
+        parsed = urlparse(source)
+        if parsed.scheme not in ("http", "https"):
+            return source
+        return parsed.path or source
+
     def _detect_content_type(self, source: str | Path) -> str:
         source_str = str(source)
-        mime_type, _ = mimetypes.guess_type(source_str)
+        mime_type, _ = mimetypes.guess_type(self._strip_url_suffix(source_str))
         if mime_type is None:
             raise UDSImageUnsupportedSourceError(
                 f"Cannot detect content type for '{source_str}'. "

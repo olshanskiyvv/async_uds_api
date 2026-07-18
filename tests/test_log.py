@@ -227,6 +227,13 @@ class TestStdlibLoggerAdapter:
                 "uds.request", method="GET", path="/x", bad=Explodes()
             )
 
+        assert len(caplog.records) == 1
+        message = caplog.records[0].getMessage()
+        assert message.startswith("uds.request")
+        assert "method=GET" in message
+        assert "path=/x" in message
+        assert caplog.records[0].uds["method"] == "GET"
+
 
 class TestImageTemplates:
     def test_renders_upload_url_request(self, caplog):

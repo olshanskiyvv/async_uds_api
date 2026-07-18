@@ -32,6 +32,30 @@ def _describe_exception(exc: BaseException) -> str:
     return name
 
 
+def _mask_source(source: str | Path) -> str:
+    """Mask the query string of http(s) sources, leaving paths untouched."""
+    text = str(source)
+    if urlparse(text).scheme in ("http", "https"):
+        return mask_url(text)
+    return text
+
+
+def _scrub_http_exception(exc: BaseException, method: str, url: str) -> None:
+    """Replace an httpx exception's own text with a safe summary.
+
+    The exception object stays intact as ``__cause__`` so its type and
+    ``.response`` remain inspectable, but a formatted traceback no longer
+    carries the presigned URL's query string.
+    """
+    if not isinstance(exc, (httpx.HTTPError, httpx.InvalidURL)):
+        return
+    if isinstance(exc, httpx.HTTPStatusError):
+        head = str(exc.response.status_code)
+    else:
+        head = type(exc).__name__
+    exc.args = (f"{head} for {method} {mask_url(url)}",)
+
+
 class ImagesAPI:
     def __init__(self, client: "UDSClient", timeout: float) -> None:
         self._client = client
@@ -81,7 +105,7 @@ class ImagesAPI:
                 content_type = self._detect_content_type(source)
             self._logger.debug(
                 "uds.image.upload_start_source",
-                source=source,
+                source=_mask_source(source),
                 content_type=content_type,
             )
 
@@ -106,8 +130,8 @@ class ImagesAPI:
         mime_type, _ = mimetypes.guess_type(source_str)
         if mime_type is None:
             raise UDSImageUnsupportedSourceError(
-                f"Cannot detect content type for '{source_str}'. "
-                "Provide content_type explicitly."
+                f"Cannot detect content type for '{_mask_source(source_str)}'."
+                " Provide content_type explicitly."
             )
         return mime_type
 
@@ -163,6 +187,7 @@ class ImagesAPI:
                 url=masked_url,
                 error=detail,
             )
+            _scrub_http_exception(e, "GET", url)
             raise UDSImageDownloadError(
                 f"Failed to download image from {masked_url}: {detail}"
             ) from e
@@ -210,6 +235,7 @@ class ImagesAPI:
         except Exception as e:
             detail = f"{mask_url(upload_info.url)}: {_describe_exception(e)}"
             self._logger.error("uds.image.upload_failed", error=detail)
+            _scrub_http_exception(e, method, upload_info.url)
             raise UDSImageUploadError(
                 f"Failed to upload image: {detail}"
             ) from e

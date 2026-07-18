@@ -1,4 +1,7 @@
+import traceback
+
 import aiofiles
+import httpx
 import pytest
 import respx
 from httpx import Response
@@ -17,6 +20,13 @@ IMAGE_UPLOAD_URL_POST_RESPONSE = {
     **IMAGE_UPLOAD_URL_RESPONSE,
     "method": "POST",
 }
+
+
+def formatted_traceback(exc: BaseException) -> str:
+    """Render the exception exactly as logging.exception would."""
+    return "".join(
+        traceback.format_exception(type(exc), exc, exc.__traceback__)
+    )
 
 
 class TestImagesAPI:
@@ -187,6 +197,9 @@ class TestImagesAPI:
 
         assert "super-secret-signature" not in caplog.text
         assert "super-secret-signature" not in str(exc_info.value)
+        assert "super-secret-signature" not in formatted_traceback(
+            exc_info.value
+        )
 
     async def test_custom_logger_receives_image_events(self, mock_httpx):
         fake = FakeLogger()
@@ -226,6 +239,7 @@ class TestImageUrlContainment:
 
         assert "DEADBEEFSECRET" not in caplog.text
         assert "DEADBEEFSECRET" not in str(exc_info.value)
+        assert "DEADBEEFSECRET" not in formatted_traceback(exc_info.value)
         assert exc_info.value.__cause__ is not None
 
     async def test_upload_failure_does_not_leak_signature(
@@ -252,4 +266,101 @@ class TestImageUrlContainment:
 
         assert "DEADBEEFSECRET" not in caplog.text
         assert "DEADBEEFSECRET" not in str(exc_info.value)
+        assert "DEADBEEFSECRET" not in formatted_traceback(exc_info.value)
         assert exc_info.value.__cause__ is not None
+        assert isinstance(exc_info.value.__cause__, httpx.HTTPStatusError)
+        assert exc_info.value.__cause__.response.status_code == 403
+
+    async def test_transport_error_does_not_leak_signature(
+        self, mock_httpx, caplog
+    ):
+        import logging
+
+        signed_url = (
+            "https://cdn.example.com/pic.jpg?X-Amz-Signature=DEADBEEFSECRET"
+        )
+        respx.route(
+            method="GET", host="cdn.example.com", path="/pic.jpg"
+        ).mock(
+            side_effect=httpx.ConnectError(
+                f"failed to connect to {signed_url}"
+            )
+        )
+
+        with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
+            async with UDSClient(
+                company_id="123456", api_key="test-api-key", retries=1
+            ) as client:
+                with pytest.raises(UDSImageDownloadError) as exc_info:
+                    await client.images._download_from_url(signed_url)
+
+        assert "DEADBEEFSECRET" not in caplog.text
+        assert "DEADBEEFSECRET" not in str(exc_info.value)
+        assert "DEADBEEFSECRET" not in formatted_traceback(exc_info.value)
+        assert isinstance(exc_info.value.__cause__, httpx.ConnectError)
+
+    async def test_upload_start_log_masks_source_url(self, mock_httpx, caplog):
+        import logging
+
+        signed_url = (
+            "https://cdn.example.com/pic.jpg?X-Amz-Signature=DEADBEEFSECRET"
+        )
+        respx.get(signed_url).mock(
+            return_value=Response(200, content=b"image")
+        )
+        respx.post("https://api.uds.app/partner/v2/image-upload-url").mock(
+            return_value=Response(200, json=IMAGE_UPLOAD_URL_RESPONSE)
+        )
+        respx.put(
+            "https://storage.googleapis.com/test-bucket/test-image"
+        ).mock(return_value=Response(200))
+
+        with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
+            async with UDSClient(
+                company_id="123456", api_key="test-api-key", retries=1
+            ) as client:
+                await client.images.upload(signed_url)
+
+        assert "DEADBEEFSECRET" not in caplog.text
+        for record in caplog.records:
+            assert "DEADBEEFSECRET" not in str(getattr(record, "uds", ""))
+        assert "https://cdn.example.com/pic.jpg?***" in caplog.text
+
+    async def test_upload_start_log_keeps_local_path_intact(
+        self, mock_httpx, caplog, tmp_path
+    ):
+        import logging
+
+        path = tmp_path / "what?ever.jpg"
+        path.write_bytes(b"image")
+        respx.post("https://api.uds.app/partner/v2/image-upload-url").mock(
+            return_value=Response(200, json=IMAGE_UPLOAD_URL_RESPONSE)
+        )
+        respx.put(
+            "https://storage.googleapis.com/test-bucket/test-image"
+        ).mock(return_value=Response(200))
+
+        with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
+            async with UDSClient(
+                company_id="123456", api_key="test-api-key", retries=1
+            ) as client:
+                await client.images.upload(str(path))
+
+        assert str(path) in caplog.text
+
+    def test_detect_content_type_masks_url_query(self, uds_client):
+        signed_url = (
+            "https://cdn.example.com/pic?X-Amz-Signature=DEADBEEFSECRET"
+        )
+
+        with pytest.raises(UDSImageUnsupportedSourceError) as exc_info:
+            uds_client.images._detect_content_type(signed_url)
+
+        assert "DEADBEEFSECRET" not in str(exc_info.value)
+        assert "https://cdn.example.com/pic?***" in str(exc_info.value)
+
+    def test_detect_content_type_keeps_local_path_intact(self, uds_client):
+        with pytest.raises(UDSImageUnsupportedSourceError) as exc_info:
+            uds_client.images._detect_content_type("./rel/what?ever.zzz")
+
+        assert "./rel/what?ever.zzz" in str(exc_info.value)

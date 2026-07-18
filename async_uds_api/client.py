@@ -274,6 +274,9 @@ class UDSClient:
             except Exception:
                 pass
 
+            if not message.strip():
+                message = f"{status} for {method} {path}"
+
             self._logger.error(
                 "uds.error",
                 method=method,

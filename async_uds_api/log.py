@@ -105,8 +105,18 @@ def _render_error_code(error_code: object) -> str:
     return f" [errorCode={error_code}]"
 
 
+def _safe_text(value: object) -> str:
+    """Stringify a field value, tolerating a broken ``__str__``."""
+    try:
+        return str(value)
+    except Exception:
+        return "<unprintable>"
+
+
 def _render_fallback(event: str, fields: Mapping[str, Any]) -> str:
-    body = "".join(f" {key}={value}" for key, value in fields.items())
+    body = "".join(
+        f" {key}={_safe_text(value)}" for key, value in fields.items()
+    )
     return f"{event}{body}"
 
 

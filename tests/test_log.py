@@ -568,6 +568,24 @@ class TestMaskUrl:
     def test_keeps_ipv6_host_bracketed(self):
         assert mask_url("https://[::1]:8443/a?b=1") == "https://[::1]:8443/***"
 
+    def test_masks_url_with_unparseable_port(self):
+        token = "".join(["SEC", "RET"])
+        masked = mask_url(f"https://h:notaport/p?token={token}")
+        assert masked == "https://***"
+        assert token not in masked
+
+    def test_masks_url_with_out_of_range_port(self):
+        token = "".join(["SEC", "RET"])
+        masked = mask_url(f"https://h:99999/p?token={token}")
+        assert masked == "https://***"
+        assert token not in masked
+
+    def test_masks_url_with_empty_host(self):
+        token = "".join(["SEC", "RET"])
+        masked = mask_url(f"https:///p?token={token}")
+        assert masked == "https://***"
+        assert token not in masked
+
     @pytest.mark.parametrize(
         "value",
         [
@@ -578,15 +596,23 @@ class TestMaskUrl:
             "./rel/what?ever.zzz",
             "C:\\images\\a.png",
             "ftp://host/p?q=1",
-            "https://",
-            "http://",
             "not a url at all",
-            "https://[bad",
-            "https://host:notaport/a",
         ],
     )
     def test_returns_non_http_url_input_unchanged(self, value):
         assert mask_url(value) == value
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            ("https://", "https://***"),
+            ("http://", "http://***"),
+            ("https://[bad", "***"),
+            ("https://host:notaport/a", "https://***"),
+        ],
+    )
+    def test_malformed_http_url_never_round_trips(self, value, expected):
+        assert mask_url(value) == expected
 
 
 class BrokenHandler(logging.Handler):

@@ -26,19 +26,23 @@ def mask_url(url: str) -> str:
     Userinfo, path, query and fragment are discarded outright: any of them
     may carry a credential or a signature. A non-default port is kept.
     Anything that is not an http(s) URL (a filesystem path, for example)
-    is returned unchanged.
+    is returned unchanged. A malformed http(s) URL never round-trips: its
+    host is replaced by the mask rather than passed through.
     """
     try:
         parsed = urlsplit(url)
         scheme = parsed.scheme.lower()
-        if scheme not in ("http", "https"):
-            return url
+    except Exception:
+        return _MASK
+    if scheme not in ("http", "https"):
+        return url
+    try:
         host = parsed.hostname
         port = parsed.port
     except Exception:
-        return url
+        return f"{scheme}://{_MASK}"
     if not host:
-        return url
+        return f"{scheme}://{_MASK}"
     if ":" in host:
         host = f"[{host}]"
     if port is not None and port != _DEFAULT_PORTS[scheme]:

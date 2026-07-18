@@ -428,3 +428,53 @@ class TestPathAndUserinfoContainment:
         url = f"https://user:{PASSWORD}@cdn.example.com/k.jpg?sig=abc"
         await self._assert_upload_contains(caplog, url, PASSWORD)
         assert "https://cdn.example.com/***" in caplog.text
+
+
+class TestNonHttpSourceScheme:
+    async def test_upload_rejects_non_http_scheme(
+        self, mock_httpx, caplog, uds_client
+    ):
+        import logging
+
+        source = f"s3://bucket/key.png?X-Sig={SECRET}"
+
+        with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
+            with pytest.raises(UDSImageUnsupportedSourceError) as exc_info:
+                await uds_client.images.upload(source)
+
+        message = str(exc_info.value)
+        assert "s3" in message
+        assert SECRET not in message
+        assert "bucket" not in message
+        assert SECRET not in caplog.text
+        for record in caplog.records:
+            assert SECRET not in str(getattr(record, "uds", ""))
+
+    async def test_read_image_data_rejects_non_http_scheme(self, uds_client):
+        source = f"ftp://host/key.png?token={SECRET}"
+
+        with pytest.raises(UDSImageUnsupportedSourceError) as exc_info:
+            await uds_client.images._read_image_data(source)
+
+        assert "ftp" in str(exc_info.value)
+        assert SECRET not in str(exc_info.value)
+
+    async def test_windows_path_is_treated_as_filesystem_path(
+        self, uds_client
+    ):
+        with pytest.raises(UDSImageReadError) as exc_info:
+            await uds_client.images._read_image_data("C:\\images\\pic.png")
+
+        assert "File not found" in str(exc_info.value)
+
+    async def test_posix_paths_are_treated_as_filesystem_paths(
+        self, uds_client, tmp_path
+    ):
+        target = tmp_path / "pic.png"
+        target.write_bytes(b"image")
+
+        data = await uds_client.images._read_image_data(str(target))
+        assert data == b"image"
+
+        with pytest.raises(UDSImageReadError):
+            await uds_client.images._read_image_data("relative/pic.png")

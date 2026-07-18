@@ -40,6 +40,23 @@ def _mask_source(source: str | Path) -> str:
     return text
 
 
+def _source_scheme(source: str | Path) -> str:
+    """Return the source's lowercased scheme, rejecting unsupported ones.
+
+    A bare filesystem path has no scheme; a Windows path such as
+    ``C:\\images\\pic.png`` parses with a single-letter drive scheme and is
+    treated as a path too. Any other non-http(s) scheme is refused, and the
+    error names only the scheme so the source itself never reaches a message.
+    """
+    scheme = urlparse(str(source)).scheme.lower()
+    if scheme in ("http", "https") or len(scheme) <= 1:
+        return scheme
+    raise UDSImageUnsupportedSourceError(
+        f"Unsupported source scheme: '{scheme}'. "
+        "Expected an http(s) URL or a filesystem path."
+    )
+
+
 def _scrub_http_exception(exc: BaseException, method: str, url: str) -> None:
     """Replace an httpx exception's own text with a safe summary.
 
@@ -99,6 +116,7 @@ class ImagesAPI:
                 content_type=content_type,
             )
         else:
+            _source_scheme(source)
             if content_type is not None:
                 self._validate_content_type(content_type)
             else:
@@ -140,8 +158,7 @@ class ImagesAPI:
             return source
 
         source_str = str(source)
-        parsed = urlparse(source_str)
-        if parsed.scheme in ("http", "https"):
+        if _source_scheme(source_str) in ("http", "https"):
             return await self._download_from_url(source_str)
 
         return await self._read_from_file(Path(source))

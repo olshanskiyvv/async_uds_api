@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import Enum
 
 
@@ -16,6 +18,12 @@ class PurchaseTokenAction(str, Enum):
 
 class Action(str, Enum):
     PURCHASE = "PURCHASE"
+    GOODS_PURCHASE = "GOODS_PURCHASE"
+    UNKNOWN = "UNKNOWN"
+
+    @classmethod
+    def _missing_(cls, value: object) -> Action:
+        return cls.UNKNOWN
 
 
 class ActionState(str, Enum):

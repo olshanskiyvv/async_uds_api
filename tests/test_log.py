@@ -167,6 +167,24 @@ class TestStdlibLoggerAdapter:
 
         assert caplog.messages == ["uds.response method=GET"]
 
+    def test_non_mapping_params_falls_back(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+
+        with caplog.at_level(logging.INFO, logger="test.uds"):
+            adapter.info(
+                "uds.request",
+                method="GET",
+                path="/customers",
+                params="not-a-mapping",
+                request_id="req-1",
+                timestamp="2026-07-17T19:09:04+00:00",
+            )
+
+        assert caplog.messages == [
+            "uds.request method=GET path=/customers params=not-a-mapping "
+            "request_id=req-1 timestamp=2026-07-17T19:09:04+00:00"
+        ]
+
     def test_passes_raw_fields_to_extra(self, caplog):
         adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
 

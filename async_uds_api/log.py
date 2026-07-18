@@ -75,15 +75,16 @@ def _render(event: str, fields: Mapping[str, Any]) -> str:
     if template is None:
         return _render_fallback(event, fields)
 
-    presentation = dict(fields)
-    if "params" in presentation:
-        presentation["params"] = _render_params(fields["params"])
-    if "error_code" in presentation:
-        presentation["error_code"] = _render_error_code(fields["error_code"])
-
     try:
+        presentation = dict(fields)
+        if "params" in presentation:
+            presentation["params"] = _render_params(fields["params"])
+        if "error_code" in presentation:
+            presentation["error_code"] = _render_error_code(
+                fields["error_code"]
+            )
         return template % presentation
-    except (KeyError, TypeError, ValueError):
+    except (KeyError, TypeError, ValueError, AttributeError):
         return _render_fallback(event, fields)
 
 

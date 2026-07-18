@@ -213,15 +213,19 @@ GET /customers/find -> 200 OK in 0.312s
 `str(exc)` у `UDSAPIError` — это безопасная сводка вида
 `400 for GET /customers/find [errorCode=badRequest]`.
 
-Полный текст ответа сервера доступен в атрибуте `exc.message` — его
-можно осознанно прочитать и, при необходимости, залогировать самому.
-Если тело ответа пустое, в `exc.message` попадает та же безопасная
-сводка (`500 for GET /customers/find`), а не пустая строка:
+В атрибут `exc.message` попадает **только** поле `message` из корректно
+разобранного JSON-объекта ответа — это документированное поле UDS API,
+его можно осознанно прочитать и, при необходимости, залогировать самому.
+Любое другое тело ответа (plain text или HTML-страница от прокси, WAF или
+CDN — такие страницы часто печатают запрошенный URI вместе с
+незамаскированным `phone`) в `exc.message` не попадает: вместо него
+используется та же безопасная сводка, что и при пустом теле
+(`500 for GET /customers/find`):
 
 ```python
 except UDSAPIError as e:
     print(e)          # 400 for GET /customers/find [errorCode=badRequest]
-    print(e.message)  # текст сервера, может содержать ПДн
+    print(e.message)  # поле message из JSON UDS, может содержать ПДн
 ```
 
 То же правило применяется к исключениям сторонних библиотек: текст
@@ -230,7 +234,7 @@ except UDSAPIError as e:
 используется имя класса исключения и, для `HTTPStatusError`, HTTP-статус.
 Само исключение остаётся доступным через `__cause__` (его тип и
 `.response` не меняются), но его собственный текст переписывается на
-безопасную сводку вида `403 for PUT https://s3.example.com/put/img?***`.
+безопасную сводку вида `403 for PUT https://s3.example.com/***`.
 Благодаря этому подпись не появляется и в полном traceback, который
 печатает `logging.exception`.
 
@@ -296,13 +300,26 @@ client = UDSClient(
 
 Для событий `uds.image.download_start`, `uds.image.download_done` и
 `uds.image.download_failed` поле `url` маскируется функцией `mask_url`:
-схема, хост и путь сохраняются, а непустая query-строка (в которой может
-быть, например, `X-Amz-Signature` у presigned-URL) заменяется на `***`.
-То же самое применяется к URL, встроенному в текст `UDSImageDownloadError`.
-URL без query-строки в лог попадает без изменений. Событие
-`uds.image.upload_failed` и текст `UDSImageUploadError` также содержат
-только замаскированный presigned-URL и тип исключения — подпись
-`X-Amz-Signature` в лог не попадает.
+от URL остаются только схема и хост (плюс нестандартный порт), всё
+остальное заменяется на `/***`:
+
+```python
+mask_url("https://s3.example.com/img.png?X-Amz-Signature=abc")
+# -> "https://s3.example.com/***"
+mask_url("https://user:pwd@cdn.example.com:8443/tok/img.png")
+# -> "https://cdn.example.com:8443/***"
+mask_url("/local/images/photo.png")
+# -> "/local/images/photo.png"
+```
+
+Отбрасываются не только query-строка, но и userinfo (`user:password@`)
+и путь: подпись presigned-URL может лежать в любом из них — например,
+в пути у CloudFront, Akamai и Azure SAS. Значение, которое не является
+http(s)-URL (обычный путь в файловой системе), возвращается без
+изменений. То же самое применяется к URL, встроенному в текст
+`UDSImageDownloadError`. Событие `uds.image.upload_failed` и текст
+`UDSImageUploadError` также содержат только замаскированный
+presigned-URL и тип исключения.
 
 При стандартном логгере эти поля доступны хендлерам через `record.uds` —
 словарь с исходными значениями, удобный для JSON-форматтеров. Атрибут

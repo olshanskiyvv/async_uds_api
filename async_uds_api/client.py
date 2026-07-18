@@ -264,17 +264,19 @@ class UDSClient:
             res = exc.response
             status = res.status_code
             error_code: str | None = None
-            message: str = res.text
+            message: str | None = None
 
             try:
                 payload = res.json()
                 if isinstance(payload, dict):
                     error_code = payload.get("errorCode") or error_code
-                    message = payload.get("message") or message
+                    raw_message = payload.get("message")
+                    if isinstance(raw_message, str):
+                        message = raw_message or None
             except Exception:
                 pass
 
-            if not message.strip():
+            if not message or not message.strip():
                 message = f"{status} for {method} {path}"
 
             self._logger.error(

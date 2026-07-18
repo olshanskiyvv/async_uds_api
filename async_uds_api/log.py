@@ -4,12 +4,13 @@ import logging
 import os
 from collections.abc import Mapping
 from typing import Any, Protocol
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import urlsplit
 
 SENSITIVE_PARAMS = frozenset({"phone", "uid", "code"})
 
 _MASK = "***"
 _VISIBLE_TAIL = 4
+_DEFAULT_PORTS = {"http": 80, "https": 443}
 
 
 def mask_value(value: object) -> str:
@@ -20,11 +21,29 @@ def mask_value(value: object) -> str:
 
 
 def mask_url(url: str) -> str:
-    """Mask a non-empty query string while keeping scheme, host and path."""
-    parsed = urlsplit(url)
-    if not parsed.query:
+    """Reduce an http(s) URL to scheme and host, dropping everything else.
+
+    Userinfo, path, query and fragment are discarded outright: any of them
+    may carry a credential or a signature. A non-default port is kept.
+    Anything that is not an http(s) URL (a filesystem path, for example)
+    is returned unchanged.
+    """
+    try:
+        parsed = urlsplit(url)
+        scheme = parsed.scheme.lower()
+        if scheme not in ("http", "https"):
+            return url
+        host = parsed.hostname
+        port = parsed.port
+    except Exception:
         return url
-    return urlunsplit(parsed._replace(query=_MASK))
+    if not host:
+        return url
+    if ":" in host:
+        host = f"[{host}]"
+    if port is not None and port != _DEFAULT_PORTS[scheme]:
+        host = f"{host}:{port}"
+    return f"{scheme}://{host}/{_MASK}"
 
 
 def mask_params(

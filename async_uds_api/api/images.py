@@ -33,7 +33,7 @@ def _describe_exception(exc: BaseException) -> str:
 
 
 def _mask_source(source: str | Path) -> str:
-    """Mask the query string of http(s) sources, leaving paths untouched."""
+    """Reduce http(s) sources to scheme and host, leaving paths untouched."""
     text = str(source)
     if urlparse(text).scheme in ("http", "https"):
         return mask_url(text)
@@ -45,7 +45,7 @@ def _scrub_http_exception(exc: BaseException, method: str, url: str) -> None:
 
     The exception object stays intact as ``__cause__`` so its type and
     ``.response`` remain inspectable, but a formatted traceback no longer
-    carries the presigned URL's query string.
+    carries the presigned URL's credentials, path or query string.
     """
     if not isinstance(exc, (httpx.HTTPError, httpx.InvalidURL)):
         return

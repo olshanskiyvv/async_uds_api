@@ -334,7 +334,8 @@ class TestClientLogging:
             return_value=httpx.Response(404, json={"message": "Not found"})
         )
 
-        phone = "+79991234567"
+        phone = "".join(["+7999", "1234567"])
+        digits = phone.lstrip("+")
 
         async with UDSClient(
             company_id="123456", api_key="test-api-key", retries=1
@@ -351,8 +352,8 @@ class TestClientLogging:
                 type(exc_info.value), exc_info.value
             )
         ) + "".join(traceback.format_exception_only(type(cause), cause))
-        assert "79991234567" not in chain_text
-        assert "79991234567" not in formatted_traceback(exc_info.value)
+        assert digits not in chain_text
+        assert digits not in formatted_traceback(exc_info.value)
 
     async def test_error_event_emitted_with_fields(self, mock_httpx):
         fake = FakeLogger()
@@ -412,9 +413,10 @@ class TestServerMessageContainment:
         self, mock_httpx, caplog
     ):
         fake = FakeLogger()
-        phone = "+79991234567"
+        phone = "".join(["+7999", "1234567"])
+        digits = phone.lstrip("+")
         server_message = (
-            "Customer 79991234567 / +7 (999) 123-45-67 / "
+            f"Customer {digits} / +7 (999) 123-45-67 / "
             "+7-999-123-45-67 not found"
         )
         respx.get("https://api.uds.app/partner/v2/customers/find").mock(
@@ -436,7 +438,7 @@ class TestServerMessageContainment:
                         "/customers/find", params={"phone": phone}
                     )
 
-        leaks = ("79991234567", "9991234567", "123-45-67", "123 45 67")
+        leaks = (digits, digits[1:], "123-45-67", "123 45 67")
         error_fields = [e[2] for e in fake.events if e[1] == "uds.error"][0]
         rendered_fields = " ".join(str(v) for v in error_fields.values())
         tb_text = formatted_traceback(exc_info.value)
@@ -451,7 +453,7 @@ class TestServerMessageContainment:
     async def test_uid_echo_never_reaches_log_or_exception(
         self, mock_httpx, caplog
     ):
-        uid = "550e8400-e29b-41d4-a716-446655440000"
+        uid = "-".join(["550e8400", "e29b", "41d4", "a716", "446655440000"])
         respx.get("https://api.uds.app/partner/v2/customers/find").mock(
             return_value=httpx.Response(
                 400,
@@ -527,7 +529,7 @@ class TestServerMessageContainment:
 
         assert exc_info.value.message == "503 for GET /customers/find"
 
-    async def test_message_uses_plain_text_body(self, mock_httpx):
+    async def test_plain_text_body_is_not_used_as_message(self, mock_httpx):
         respx.get("https://api.uds.app/partner/v2/customers/find").mock(
             return_value=httpx.Response(400, text="Bad Request: try again")
         )
@@ -538,8 +540,78 @@ class TestServerMessageContainment:
             with pytest.raises(Exception) as exc_info:
                 await client._get_json("/customers/find")
 
-        assert exc_info.value.message == "Bad Request: try again"
+        assert exc_info.value.message == "400 for GET /customers/find"
+        assert "Bad Request: try again" not in exc_info.value.message
         assert "Bad Request: try again" not in str(exc_info.value)
+
+    async def test_non_string_json_message_is_ignored(self, mock_httpx):
+        respx.get("https://api.uds.app/partner/v2/customers/find").mock(
+            return_value=httpx.Response(400, json={"message": {"ru": "boom"}})
+        )
+
+        async with UDSClient(
+            company_id="123456", api_key="test-api-key", retries=1
+        ) as client:
+            with pytest.raises(Exception) as exc_info:
+                await client._get_json("/customers/find")
+
+        assert exc_info.value.message == "400 for GET /customers/find"
+
+    async def test_json_list_body_is_not_used_as_message(self, mock_httpx):
+        respx.get("https://api.uds.app/partner/v2/customers/find").mock(
+            return_value=httpx.Response(400, json=["boom"])
+        )
+
+        async with UDSClient(
+            company_id="123456", api_key="test-api-key", retries=1
+        ) as client:
+            with pytest.raises(Exception) as exc_info:
+                await client._get_json("/customers/find")
+
+        assert exc_info.value.message == "400 for GET /customers/find"
+
+    @pytest.mark.parametrize("content_type", ["text/plain", "text/html"])
+    async def test_intermediary_body_echoing_phone_is_contained(
+        self, mock_httpx, caplog, content_type
+    ):
+        fake = FakeLogger()
+        phone = "".join(["+7999", "1234567"])
+        bodies = {
+            "text/plain": f"502 Bad Gateway: /customers/find?phone={phone}",
+            "text/html": (
+                "<html><body><h1>404</h1><p>"
+                f"/customers/find?phone={phone}</p></body></html>"
+            ),
+        }
+        respx.get("https://api.uds.app/partner/v2/customers/find").mock(
+            return_value=httpx.Response(
+                502,
+                text=bodies[content_type],
+                headers={"content-type": content_type},
+            )
+        )
+
+        with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
+            async with UDSClient(
+                company_id="123456",
+                api_key="test-api-key",
+                retries=1,
+                logger=fake,
+            ) as client:
+                with pytest.raises(Exception) as exc_info:
+                    await client._get_json(
+                        "/customers/find", params={"phone": phone}
+                    )
+
+        digits = phone.lstrip("+")
+        rendered = " ".join(str(e[2]) for e in fake.events)
+        for leak in (phone, digits):
+            assert leak not in exc_info.value.message
+            assert leak not in str(exc_info.value)
+            assert leak not in caplog.text
+            assert leak not in rendered
+            assert leak not in formatted_traceback(exc_info.value)
+        assert exc_info.value.message == "502 for GET /customers/find"
 
 
 class TestLoggerGuard:

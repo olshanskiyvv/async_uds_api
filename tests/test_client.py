@@ -1,7 +1,11 @@
+import logging
+
 import httpx
 import pytest
+import respx
 
 from async_uds_api import UDSClient
+from async_uds_api.log import StdlibLoggerAdapter
 
 
 class TestUDSClient:
@@ -147,3 +151,116 @@ class TestUDSClient:
 
         with pytest.raises(ValueError, match="api_key cannot be empty"):
             UDSClient(company_id="123456", api_key="   ")
+
+
+class FakeLogger:
+    def __init__(self):
+        self.events = []
+
+    def debug(self, event, **fields):
+        self.events.append(("debug", event, fields))
+
+    def info(self, event, **fields):
+        self.events.append(("info", event, fields))
+
+    def warning(self, event, **fields):
+        self.events.append(("warning", event, fields))
+
+    def error(self, event, **fields):
+        self.events.append(("error", event, fields))
+
+
+@pytest.fixture
+def httpx_log_level():
+    logger = logging.getLogger("httpx")
+    original = logger.level
+    yield logger
+    logger.setLevel(original)
+
+
+class TestClientLogging:
+    def test_default_logger_is_stdlib_adapter(self):
+        client = UDSClient(company_id="123456", api_key="test-api-key")
+
+        assert isinstance(client._logger, StdlibLoggerAdapter)
+
+    def test_custom_logger_is_used(self):
+        fake = FakeLogger()
+
+        client = UDSClient(
+            company_id="123456", api_key="test-api-key", logger=fake
+        )
+
+        assert client._logger is fake
+
+    def test_silences_httpx_logger_by_default(self, httpx_log_level):
+        httpx_log_level.setLevel(logging.INFO)
+
+        UDSClient(company_id="123456", api_key="test-api-key")
+
+        assert httpx_log_level.level == logging.WARNING
+
+    def test_leaves_httpx_logger_alone_when_disabled(self, httpx_log_level):
+        httpx_log_level.setLevel(logging.INFO)
+
+        UDSClient(
+            company_id="123456",
+            api_key="test-api-key",
+            silence_httpx_log=False,
+        )
+
+        assert httpx_log_level.level == logging.INFO
+
+    async def test_request_event_masks_sensitive_params(self, mock_httpx):
+        fake = FakeLogger()
+        respx.get("https://api.uds.app/partner/v2/customers/find").mock(
+            return_value=httpx.Response(200, json={"user": None})
+        )
+
+        async with UDSClient(
+            company_id="123456",
+            api_key="test-api-key",
+            retries=1,
+            logger=fake,
+        ) as client:
+            await client._get_json(
+                "/customers/find", params={"phone": "+79991234567"}
+            )
+
+        request_events = [e for e in fake.events if e[1] == "uds.request"]
+        assert request_events[0][2]["params"] == {"phone": "***4567"}
+
+    async def test_phone_never_appears_in_stdlib_output(
+        self, mock_httpx, caplog
+    ):
+        respx.get("https://api.uds.app/partner/v2/customers/find").mock(
+            return_value=httpx.Response(200, json={"user": None})
+        )
+
+        with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
+            async with UDSClient(
+                company_id="123456", api_key="test-api-key", retries=1
+            ) as client:
+                await client._get_json(
+                    "/customers/find", params={"phone": "+79991234567"}
+                )
+
+        assert "+79991234567" not in caplog.text
+        assert "79991234567" not in caplog.text
+
+    async def test_response_event_reports_status(self, mock_httpx):
+        fake = FakeLogger()
+        respx.get("https://api.uds.app/partner/v2/customers").mock(
+            return_value=httpx.Response(200, json={"rows": []})
+        )
+
+        async with UDSClient(
+            company_id="123456",
+            api_key="test-api-key",
+            retries=1,
+            logger=fake,
+        ) as client:
+            await client._get_json("/customers")
+
+        response_events = [e for e in fake.events if e[1] == "uds.response"]
+        assert response_events[0][2]["status"] == 200

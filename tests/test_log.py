@@ -209,3 +209,23 @@ class TestStdlibLoggerAdapter:
             adapter.debug("uds.custom", alpha=1)
 
         assert caplog.messages == []
+
+
+class TestPublicExports:
+    def test_logging_helpers_are_exported(self):
+        import async_uds_api
+
+        assert async_uds_api.LoggerProtocol is not None
+        assert async_uds_api.StdlibLoggerAdapter is not None
+        assert async_uds_api.mask_value("+79991234567") == "***4567"
+        assert async_uds_api.mask_params({"uid": "abcd1234"}) == {
+            "uid": "***1234"
+        }
+        assert "phone" in async_uds_api.SENSITIVE_PARAMS
+
+    def test_get_logger_still_available(self):
+        import logging
+
+        import async_uds_api
+
+        assert isinstance(async_uds_api.get_logger(), logging.Logger)

@@ -18,6 +18,13 @@ from async_uds_api.errors import (
     UDSUnauthorizedError,
     UDSUnexpectedError,
 )
+from async_uds_api.log import (
+    SENSITIVE_PARAMS,
+    LoggerProtocol,
+    StdlibLoggerAdapter,
+    mask_params,
+    mask_value,
+)
 from async_uds_api.models import (
     CompanySettings,
     Customer,
@@ -76,6 +83,11 @@ __all__ = [
     "UDSImageUploadError",
     "UDSImageUnsupportedSourceError",
     "get_logger",
+    "LoggerProtocol",
+    "StdlibLoggerAdapter",
+    "SENSITIVE_PARAMS",
+    "mask_value",
+    "mask_params",
     # Models
     "CompanySettings",
     "Customer",

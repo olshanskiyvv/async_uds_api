@@ -174,6 +174,76 @@ result.order  # GoodsOrderDetailed
 code_info = await client.goods_orders.generate_code(order_id=123)
 ```
 
+### Логирование
+
+Библиотека пишет в логгер `async_uds_api` и по умолчанию ничего не выводит
+(`NullHandler`). Чтобы увидеть сообщения, настройте стандартный `logging`:
+
+```python
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+logging.getLogger("async_uds_api").setLevel(logging.INFO)
+```
+
+Вывод:
+
+```
+GET /customers [max=50 cursor=abc] [X-Origin-Request-Id=6e1c89d3-...] [X-Timestamp=2026-07-17T19:09:04+00:00]
+GET /customers/find [phone=***4567] [X-Origin-Request-Id=6e1c89d3-...] [X-Timestamp=2026-07-17T19:09:04+00:00]
+GET /customers/find -> 200 OK in 0.312s
+```
+
+### Маскирование персональных данных
+
+В лог попадают все query-параметры запроса. Маскируются только `phone`,
+`uid` и `code` — они сокращаются до последних четырёх символов и никогда
+не попадают в лог целиком. Остальные параметры (например, `max`, `cursor`,
+`offset`) выводятся в логе без изменений — это помогает при разборе
+инцидентов.
+
+По умолчанию `UDSClient` выставляет логгеру `httpx` уровень `WARNING`:
+на уровне `INFO` httpx печатает полный URL запроса вместе с query-строкой,
+то есть **незамаскированный** телефон. Отключить это поведение можно так:
+
+```python
+client = UDSClient(company_id="...", api_key="...", silence_httpx_log=False)
+```
+
+Учтите, что при `silence_httpx_log=False` номера телефонов, uid и коды клиентов
+будут утекать в лог через URL запросов httpx.
+
+### Свой логгер
+
+`UDSClient` принимает любой объект с методами `debug`/`info`/`warning`/`error`,
+которые получают имя события и поля через `**kwargs`. `structlog` и `loguru`
+подходят без обёртки:
+
+```python
+import structlog
+
+client = UDSClient(
+    company_id="...",
+    api_key="...",
+    logger=structlog.get_logger(),
+)
+```
+
+События и их поля:
+
+| Событие | Уровень | Поля |
+|---|---|---|
+| `uds.request` | INFO | `method`, `path`, `params`, `request_id`, `timestamp` |
+| `uds.response` | INFO | `method`, `path`, `status`, `elapsed` |
+| `uds.error` | ERROR | `method`, `path`, `status`, `elapsed`, `message`, `error_code` |
+| `uds.retry` | WARNING | `method`, `path`, `attempt` |
+
+При стандартном логгере те же поля доступны хендлерам через
+`record.uds` — это словарь с исходными значениями, удобный для JSON-форматтеров.
+
 ### Webhooks
 
 ```python

@@ -229,6 +229,248 @@ class TestStdlibLoggerAdapter:
             )
 
 
+class TestImageTemplates:
+    def test_renders_upload_url_request(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+
+        with caplog.at_level(logging.DEBUG, logger="test.uds"):
+            adapter.debug(
+                "uds.image.upload_url_request", content_type="image/png"
+            )
+
+        assert caplog.messages == [
+            "Requesting upload URL for content_type=image/png"
+        ]
+
+    def test_renders_upload_url_received(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+
+        with caplog.at_level(logging.INFO, logger="test.uds"):
+            adapter.info("uds.image.upload_url_received", image_id="img-1")
+
+        assert caplog.messages == ["Got upload URL: image_id=img-1"]
+
+    def test_renders_upload_start_bytes(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+
+        with caplog.at_level(logging.DEBUG, logger="test.uds"):
+            adapter.debug(
+                "uds.image.upload_start_bytes",
+                size=1024,
+                content_type="image/jpeg",
+            )
+
+        assert caplog.messages == [
+            "Uploading 1024 bytes with content_type=image/jpeg"
+        ]
+
+    def test_renders_upload_start_source(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+
+        with caplog.at_level(logging.DEBUG, logger="test.uds"):
+            adapter.debug(
+                "uds.image.upload_start_source",
+                source="/tmp/x.png",
+                content_type="image/png",
+            )
+
+        assert caplog.messages == [
+            "Uploading from /tmp/x.png with content_type=image/png"
+        ]
+
+    def test_renders_read(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+
+        with caplog.at_level(logging.DEBUG, logger="test.uds"):
+            adapter.debug("uds.image.read", size=2048)
+
+        assert caplog.messages == ["Read 2048 bytes"]
+
+    def test_renders_uploaded(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+
+        with caplog.at_level(logging.INFO, logger="test.uds"):
+            adapter.info("uds.image.uploaded", image_id="img-2")
+
+        assert caplog.messages == [
+            "Image uploaded successfully: image_id=img-2"
+        ]
+
+    def test_renders_file_read_start(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+
+        with caplog.at_level(logging.DEBUG, logger="test.uds"):
+            adapter.debug("uds.image.file_read_start", path="/tmp/x.png")
+
+        assert caplog.messages == ["Reading image from file: /tmp/x.png"]
+
+    def test_renders_file_read_done(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+
+        with caplog.at_level(logging.DEBUG, logger="test.uds"):
+            adapter.debug(
+                "uds.image.file_read_done", size=1024, path="/tmp/x.png"
+            )
+
+        assert caplog.messages == ["Read 1024 bytes from /tmp/x.png"]
+
+    def test_renders_file_not_found(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+
+        with caplog.at_level(logging.ERROR, logger="test.uds"):
+            adapter.error("uds.image.file_not_found", path="/tmp/x.png")
+
+        assert caplog.messages == ["File not found: /tmp/x.png"]
+
+    def test_renders_file_read_failed(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+
+        with caplog.at_level(logging.ERROR, logger="test.uds"):
+            adapter.error(
+                "uds.image.file_read_failed",
+                path="/tmp/x.png",
+                error="boom",
+            )
+
+        assert caplog.messages == ["Failed to read file /tmp/x.png: boom"]
+
+    def test_renders_download_start(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+
+        with caplog.at_level(logging.DEBUG, logger="test.uds"):
+            adapter.debug("uds.image.download_start", url="https://x/y.png")
+
+        assert caplog.messages == [
+            "Downloading image from URL: https://x/y.png"
+        ]
+
+    def test_renders_download_done(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+
+        with caplog.at_level(logging.DEBUG, logger="test.uds"):
+            adapter.debug(
+                "uds.image.download_done", size=512, url="https://x/y.png"
+            )
+
+        assert caplog.messages == ["Downloaded 512 bytes from https://x/y.png"]
+
+    def test_renders_download_failed(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+
+        with caplog.at_level(logging.ERROR, logger="test.uds"):
+            adapter.error(
+                "uds.image.download_failed",
+                url="https://x/y.png",
+                error="boom",
+            )
+
+        assert caplog.messages == [
+            "Failed to download image from https://x/y.png: boom"
+        ]
+
+    def test_renders_presigned_upload_start(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+
+        with caplog.at_level(logging.DEBUG, logger="test.uds"):
+            adapter.debug(
+                "uds.image.presigned_upload_start", size=256, method="PUT"
+            )
+
+        assert caplog.messages == [
+            "Uploading 256 bytes to presigned URL (method=PUT)"
+        ]
+
+    def test_renders_presigned_upload_done(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+
+        with caplog.at_level(logging.DEBUG, logger="test.uds"):
+            adapter.debug("uds.image.presigned_upload_done", status=200)
+
+        assert caplog.messages == ["Upload completed with status 200"]
+
+    def test_renders_upload_failed(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+
+        with caplog.at_level(logging.ERROR, logger="test.uds"):
+            adapter.error("uds.image.upload_failed", error="boom")
+
+        assert caplog.messages == ["Failed to upload image: boom"]
+
+    def test_all_image_events_are_registered(self):
+        from async_uds_api.log import _TEMPLATES
+
+        expected_events = {
+            "uds.image.upload_url_request",
+            "uds.image.upload_url_received",
+            "uds.image.upload_start_bytes",
+            "uds.image.upload_start_source",
+            "uds.image.read",
+            "uds.image.uploaded",
+            "uds.image.file_read_start",
+            "uds.image.file_read_done",
+            "uds.image.file_not_found",
+            "uds.image.file_read_failed",
+            "uds.image.download_start",
+            "uds.image.download_done",
+            "uds.image.download_failed",
+            "uds.image.presigned_upload_start",
+            "uds.image.presigned_upload_done",
+            "uds.image.upload_failed",
+        }
+
+        registered = {
+            key for key in _TEMPLATES if key.startswith("uds.image.")
+        }
+
+        assert registered == expected_events
+
+    def test_no_image_event_falls_back_to_key_value(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+        fields_by_event = {
+            "uds.image.upload_url_request": {"content_type": "image/png"},
+            "uds.image.upload_url_received": {"image_id": "img-1"},
+            "uds.image.upload_start_bytes": {
+                "size": 1,
+                "content_type": "image/png",
+            },
+            "uds.image.upload_start_source": {
+                "source": "x",
+                "content_type": "image/png",
+            },
+            "uds.image.read": {"size": 1},
+            "uds.image.uploaded": {"image_id": "img-1"},
+            "uds.image.file_read_start": {"path": "/tmp/x"},
+            "uds.image.file_read_done": {"size": 1, "path": "/tmp/x"},
+            "uds.image.file_not_found": {"path": "/tmp/x"},
+            "uds.image.file_read_failed": {
+                "path": "/tmp/x",
+                "error": "boom",
+            },
+            "uds.image.download_start": {"url": "https://x"},
+            "uds.image.download_done": {"size": 1, "url": "https://x"},
+            "uds.image.download_failed": {
+                "url": "https://x",
+                "error": "boom",
+            },
+            "uds.image.presigned_upload_start": {
+                "size": 1,
+                "method": "PUT",
+            },
+            "uds.image.presigned_upload_done": {"status": 200},
+            "uds.image.upload_failed": {"error": "boom"},
+        }
+
+        with caplog.at_level(logging.DEBUG, logger="test.uds"):
+            for event, fields in fields_by_event.items():
+                adapter.debug(event, **fields)
+
+        assert len(caplog.messages) == len(fields_by_event)
+        for message, event in zip(
+            caplog.messages, fields_by_event, strict=True
+        ):
+            assert not message.startswith(event)
+
+
 class TestPublicExports:
     def test_logging_helpers_are_exported(self):
         import typing

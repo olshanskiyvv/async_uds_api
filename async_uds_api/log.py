@@ -39,6 +39,36 @@ _TEMPLATES: dict[str, str] = {
         "%(message)s%(error_code)s"
     ),
     "uds.retry": "Retry attempt %(attempt)d for %(method)s %(path)s",
+    "uds.image.upload_url_request": (
+        "Requesting upload URL for content_type=%(content_type)s"
+    ),
+    "uds.image.upload_url_received": "Got upload URL: image_id=%(image_id)s",
+    "uds.image.upload_start_bytes": (
+        "Uploading %(size)d bytes with content_type=%(content_type)s"
+    ),
+    "uds.image.upload_start_source": (
+        "Uploading from %(source)s with content_type=%(content_type)s"
+    ),
+    "uds.image.read": "Read %(size)d bytes",
+    "uds.image.uploaded": (
+        "Image uploaded successfully: image_id=%(image_id)s"
+    ),
+    "uds.image.file_read_start": "Reading image from file: %(path)s",
+    "uds.image.file_read_done": "Read %(size)d bytes from %(path)s",
+    "uds.image.file_not_found": "File not found: %(path)s",
+    "uds.image.file_read_failed": "Failed to read file %(path)s: %(error)s",
+    "uds.image.download_start": "Downloading image from URL: %(url)s",
+    "uds.image.download_done": "Downloaded %(size)d bytes from %(url)s",
+    "uds.image.download_failed": (
+        "Failed to download image from %(url)s: %(error)s"
+    ),
+    "uds.image.presigned_upload_start": (
+        "Uploading %(size)d bytes to presigned URL (method=%(method)s)"
+    ),
+    "uds.image.presigned_upload_done": (
+        "Upload completed with status %(status)d"
+    ),
+    "uds.image.upload_failed": "Failed to upload image: %(error)s",
 }
 
 

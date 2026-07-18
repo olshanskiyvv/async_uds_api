@@ -4,12 +4,14 @@ import respx
 from httpx import Response
 
 from async_uds_api import (
+    UDSClient,
     UDSImageDownloadError,
     UDSImageReadError,
     UDSImageUnsupportedSourceError,
     UDSImageUploadError,
 )
 from tests.fixtures.images import IMAGE_UPLOAD_URL_RESPONSE
+from tests.test_client import FakeLogger
 
 IMAGE_UPLOAD_URL_POST_RESPONSE = {
     **IMAGE_UPLOAD_URL_RESPONSE,
@@ -164,3 +166,20 @@ class TestImagesAPI:
 
         with pytest.raises(UDSImageUploadError):
             await uds_client.images.upload(b"image", "image/jpeg")
+
+    async def test_custom_logger_receives_image_events(self, mock_httpx):
+        fake = FakeLogger()
+        respx.post("https://api.uds.app/partner/v2/image-upload-url").mock(
+            return_value=Response(200, json=IMAGE_UPLOAD_URL_RESPONSE)
+        )
+
+        async with UDSClient(
+            company_id="123456",
+            api_key="test-api-key",
+            retries=1,
+            logger=fake,
+        ) as client:
+            await client.images.get_upload_url("image/png")
+
+        events = [event for _, event, _ in fake.events]
+        assert "uds.image.upload_url_received" in events

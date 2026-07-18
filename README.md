@@ -240,13 +240,13 @@ client = UDSClient(
 | `uds.response` | INFO | `method`, `path`, `status`, `elapsed` |
 | `uds.error` | ERROR | `method`, `path`, `status`, `elapsed`, `message`, `error_code` |
 | `uds.retry` | WARNING | `method`, `path`, `attempt` |
+| `uds.image.*` | DEBUG/INFO/ERROR | зависит от события |
 
 При стандартном логгере эти поля доступны хендлерам через `record.uds` —
 словарь с исходными значениями, удобный для JSON-форматтеров. Атрибут
-`uds` присутствует только на записях этих четырёх HTTP-событий: другие
-логгеры библиотеки (например, `async_uds_api.api.images`) пишут в тот же
-логгер `async_uds_api`, но не проставляют `record.uds`. Читайте атрибут
-защищённо: `getattr(record, "uds", None)`.
+`uds` присутствует на всех записях, которые библиотека пишет через
+`StdlibLoggerAdapter`, включая события `async_uds_api.api.images`. Читать
+его всё равно стоит защищённо: `getattr(record, "uds", None)`.
 
 ### Webhooks
 

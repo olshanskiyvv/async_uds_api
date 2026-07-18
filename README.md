@@ -146,6 +146,10 @@ image_id = await client.images.upload(image_bytes, content_type="image/png")
 upload_url = await client.images.get_upload_url("image/jpeg")
 ```
 
+Источником может быть путь в файловой системе, http(s)-URL или байты.
+Строка со схемой `http` или `https` скачивается по сети, любая другая
+строка интерпретируется как путь в файловой системе.
+
 #### Goods Orders
 
 ```python
@@ -172,6 +176,160 @@ result.order  # GoodsOrderDetailed
 
 # Генерация кода оплаты
 code_info = await client.goods_orders.generate_code(order_id=123)
+```
+
+### Логирование
+
+Библиотека пишет в логгер `async_uds_api` и по умолчанию ничего не выводит
+(`NullHandler`). Чтобы увидеть сообщения, настройте стандартный `logging`:
+
+```python
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+)
+logging.getLogger("async_uds_api").setLevel(logging.INFO)
+```
+
+Вывод:
+
+```
+GET /customers [max=50 cursor=abc] [X-Origin-Request-Id=6e1c89d3-...] [X-Timestamp=2026-07-18T19:59:54.981185+00:00]
+GET /customers/find [phone=***4567] [X-Origin-Request-Id=6e1c89d3-...] [X-Timestamp=2026-07-18T19:59:54.981185+00:00]
+GET /customers/find -> 200 OK in 0.312s
+```
+
+#### Маскирование персональных данных
+
+В лог попадают все query-параметры запроса. Маскируются только `phone`,
+`uid` и `code` — они сокращаются до последних четырёх символов и никогда
+не попадают в лог целиком. Остальные параметры (например, `max`, `cursor`,
+`offset`) выводятся в логе без изменений — это помогает при разборе
+инцидентов.
+
+Текст сообщения об ошибке, который UDS возвращает в ответе, может
+содержать эхо `phone`/`uid`/`code` — иногда в нормализованном виде,
+отличном от того, что было передано в запросе. Библиотека не пытается
+вычищать чужой текст регулярными выражениями: она просто **никогда его
+не логирует**. Событие `uds.error` не содержит поля `message`, а
+`str(exc)` у `UDSAPIError` — это безопасная сводка вида
+`400 for GET /customers/find [errorCode=badRequest]`.
+
+В атрибут `exc.message` попадает **только** поле `message` из корректно
+разобранного JSON-объекта ответа — это документированное поле UDS API,
+его можно осознанно прочитать и, при необходимости, залогировать самому.
+Любое другое тело ответа (plain text или HTML-страница от прокси, WAF или
+CDN — такие страницы часто печатают запрошенный URI вместе с
+незамаскированным `phone`) в `exc.message` не попадает: вместо него
+используется та же безопасная сводка, что и при пустом теле
+(`500 for GET /customers/find`):
+
+```python
+except UDSAPIError as e:
+    print(e)          # 400 for GET /customers/find [errorCode=badRequest]
+    print(e.message)  # поле message из JSON UDS, может содержать ПДн
+```
+
+То же относится и к `httpx.HTTPStatusError`, который остаётся в
+`__cause__` у ошибок API-запросов: его собственный текст содержит полный
+URL запроса вместе с query-строкой, поэтому он переписывается на сводку
+вида `400 for GET /customers/find` — без query-строки, а значит без
+`phone`/`uid`/`code`. Тип исключения и его `.response` не меняются.
+Благодаря этому телефон не появляется и в полном traceback, который
+печатает `logging.exception`.
+
+Это правило касается только запросов к API UDS. URL в путях загрузки
+изображений (presigned-ссылки и адрес источника) не маскируются: они
+короткоживущие, а без полного URL непонятно, какой именно объект не
+загрузился. Сообщения и traceback этих путей содержат исходный URL
+целиком.
+
+`mask_value` и `mask_params` экспортируются из `async_uds_api` — ими
+можно пользоваться и вне библиотеки, например в собственных логах.
+
+По умолчанию `UDSClient` выставляет логгеру `httpx` уровень `WARNING`:
+на уровне `INFO` httpx печатает полный URL запроса вместе с query-строкой,
+то есть **незамаскированный** телефон. Отключить это поведение можно так:
+
+```python
+client = UDSClient(company_id="...", api_key="...", silence_httpx_log=False)
+```
+
+Учтите, что при `silence_httpx_log=False` номера телефонов, uid и коды клиентов
+будут утекать в лог через URL запросов httpx.
+
+#### Свой логгер
+
+`UDSClient` принимает любой объект с методами `debug`/`info`/`warning`/`error`,
+которые получают имя события и поля через `**kwargs`. `structlog` и `loguru`
+подходят без обёртки:
+
+```python
+import structlog
+
+client = UDSClient(
+    company_id="...",
+    api_key="...",
+    logger=structlog.get_logger(),
+)
+```
+
+Также можно передать обычный `logging.Logger` или `logging.LoggerAdapter` —
+оба автоматически оборачиваются в `StdlibLoggerAdapter`, так что классический
+формат сообщений (см. пример вывода выше) сохраняется и для `LoggerAdapter`:
+
+```python
+import logging
+
+client = UDSClient(
+    company_id="...",
+    api_key="...",
+    logger=logging.LoggerAdapter(logging.getLogger("myapp"), {}),
+)
+```
+
+Если переданный объект не является ни `Logger`/`LoggerAdapter`, ни
+объектом с методами `debug`/`info`/`warning`/`error`, `UDSClient` бросает
+`TypeError` уже в конструкторе — до того, как логирование сломает первый
+же запрос.
+
+События и их поля:
+
+| Событие | Уровень | Поля |
+|---|---|---|
+| `uds.request` | INFO | `method`, `path`, `params`, `request_id`, `timestamp` |
+| `uds.response` | INFO | `method`, `path`, `status`, `elapsed` |
+| `uds.error` | ERROR | `method`, `path`, `status`, `elapsed`, `error_code` |
+| `uds.retry` | WARNING | `method`, `path`, `attempt` |
+| `uds.image.*` | DEBUG/INFO/ERROR | зависит от события |
+
+События `uds.image.*` пишут URL как есть: поле `url` у
+`uds.image.download_start`, `uds.image.download_done` и
+`uds.image.download_failed`, поле `source` у
+`uds.image.upload_start_source`, а также тексты `UDSImageDownloadError`
+и `UDSImageUploadError` содержат полный URL. Это осознанный выбор:
+presigned-ссылки короткоживущие, а `https://cdn.example.com/***` не
+говорит, какой объект не загрузился. Если такие URL не должны попадать
+в ваш лог, отфильтруйте эти события на стороне хендлера.
+
+При стандартном логгере эти поля доступны хендлерам через `record.uds` —
+словарь с исходными значениями, удобный для JSON-форматтеров. Атрибут
+`uds` присутствует на всех записях, которые библиотека пишет через
+`StdlibLoggerAdapter`, включая события `async_uds_api.api.images`. Читать
+его всё равно стоит защищённо: `getattr(record, "uds", None)`.
+
+#### Диагностика логирования
+
+Логирование никогда не должно ронять запрос: если пользовательский
+обработчик логов бросает исключение, `StdlibLoggerAdapter` по умолчанию
+молча его глотает. Чтобы увидеть это исключение при отладке, выставьте
+переменную окружения `ASYNC_UDS_API_DEBUG_LOGGING` в любое непустое
+значение — тогда исключение из обработчика будет пробрасываться наружу:
+
+```bash
+export ASYNC_UDS_API_DEBUG_LOGGING=1
 ```
 
 ### Webhooks
@@ -207,6 +365,12 @@ except UDSAPIError as e:
 except UDSClientError as e:
     print(f"Ошибка клиента: {e}")
 ```
+
+`str(e)` у `UDSAPIError` — это безопасная сводка (`404 for GET
+/customers/999999`), пригодная для логирования. Текст, который вернул
+сервер, лежит в `e.message` и может содержать персональные данные:
+читайте его осознанно и не пишите в лог не подумав. Подробнее — в
+разделе [Маскирование персональных данных](#маскирование-персональных-данных).
 
 ### Требования
 

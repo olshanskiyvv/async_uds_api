@@ -512,6 +512,32 @@ class TestActionEnums:
     def test_action_enum(self):
         """Test Action enum."""
         assert Action.PURCHASE == "PURCHASE"
+        assert Action.GOODS_PURCHASE == "GOODS_PURCHASE"
+
+    def test_action_enum_unknown_value(self):
+        """Unknown action values fall back to UNKNOWN instead of raising."""
+        assert Action("SOMETHING_NEW") is Action.UNKNOWN
+
+    def test_operation_parses_goods_purchase(self):
+        """Operation parses transactions created by goods order completion."""
+        operation = Operation.model_validate(
+            {
+                "id": 1454045580,
+                "action": "GOODS_PURCHASE",
+                "state": "NORMAL",
+                "total": 3000.0,
+            }
+        )
+
+        assert operation.action == Action.GOODS_PURCHASE
+
+    def test_operation_parses_undocumented_action(self):
+        """Undocumented action values do not break Operation parsing."""
+        operation = Operation.model_validate(
+            {"id": 1, "action": "FUTURE_ACTION"}
+        )
+
+        assert operation.action is Action.UNKNOWN
 
     def test_action_state_enum(self):
         """Test ActionState enum."""

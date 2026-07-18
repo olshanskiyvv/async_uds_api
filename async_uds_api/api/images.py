@@ -1,4 +1,3 @@
-import logging
 import mimetypes
 import re
 from pathlib import Path
@@ -19,8 +18,6 @@ from async_uds_api.models import ImageUploadUrl
 if TYPE_CHECKING:
     from async_uds_api.client import UDSClient
 
-_logger = logging.getLogger("async_uds_api")
-
 _MIME_RE = re.compile(
     r"^[a-zA-Z0-9!#$%^&\*\_\-+{}|\.]+/[a-zA-Z0-9!#$%^&\*\_\-+{}|\.]+$"
 )
@@ -30,6 +27,7 @@ class ImagesAPI:
     def __init__(self, client: "UDSClient", timeout: float) -> None:
         self._client = client
         self._timeout = timeout
+        self._logger = client._logger
         self._upload_client = httpx.AsyncClient(timeout=timeout)
 
     async def aclose(self) -> None:
@@ -39,13 +37,15 @@ class ImagesAPI:
     async def get_upload_url(self, content_type: str) -> ImageUploadUrl:
         """Request a presigned upload URL for the given MIME type."""
         self._validate_content_type(content_type)
-        _logger.debug(
-            "Requesting upload URL for content_type=%s", content_type
+        self._logger.debug(
+            "uds.image.upload_url_request", content_type=content_type
         )
         body = {"contentType": content_type}
         data = await self._client._post_json("/image-upload-url", body=body)
         result = ImageUploadUrl.model_validate(data)
-        _logger.info("Got upload URL: image_id=%s", result.image_id)
+        self._logger.info(
+            "uds.image.upload_url_received", image_id=result.image_id
+        )
         return result
 
     async def upload(
@@ -60,29 +60,29 @@ class ImagesAPI:
                     "content_type is required when source is bytes"
                 )
             self._validate_content_type(content_type)
-            _logger.debug(
-                "Uploading %d bytes with content_type=%s",
-                len(source),
-                content_type,
+            self._logger.debug(
+                "uds.image.upload_start_bytes",
+                size=len(source),
+                content_type=content_type,
             )
         else:
             if content_type is not None:
                 self._validate_content_type(content_type)
             else:
                 content_type = self._detect_content_type(source)
-            _logger.debug(
-                "Uploading from %s with content_type=%s", source, content_type
+            self._logger.debug(
+                "uds.image.upload_start_source",
+                source=source,
+                content_type=content_type,
             )
 
         image_data = await self._read_image_data(source)
-        _logger.debug("Read %d bytes", len(image_data))
+        self._logger.debug("uds.image.read", size=len(image_data))
 
         upload_info = await self.get_upload_url(content_type)
         await self._upload_to_url(upload_info, image_data)
 
-        _logger.info(
-            "Image uploaded successfully: image_id=%s", upload_info.image_id
-        )
+        self._logger.info("uds.image.uploaded", image_id=upload_info.image_id)
         return upload_info.image_id
 
     def _validate_content_type(self, content_type: str) -> None:
@@ -92,9 +92,17 @@ class ImagesAPI:
                 f"Expected format: 'type/subtype' (e.g., 'image/jpeg')"
             )
 
+    @staticmethod
+    def _strip_url_suffix(source: str) -> str:
+        """Drop query and fragment so MIME detection sees the bare path."""
+        parsed = urlparse(source)
+        if parsed.scheme not in ("http", "https"):
+            return source
+        return parsed.path or source
+
     def _detect_content_type(self, source: str | Path) -> str:
         source_str = str(source)
-        mime_type, _ = mimetypes.guess_type(source_str)
+        mime_type, _ = mimetypes.guess_type(self._strip_url_suffix(source_str))
         if mime_type is None:
             raise UDSImageUnsupportedSourceError(
                 f"Cannot detect content type for '{source_str}'. "
@@ -114,31 +122,41 @@ class ImagesAPI:
         return await self._read_from_file(Path(source))
 
     async def _read_from_file(self, path: Path) -> bytes:
-        _logger.debug("Reading image from file: %s", path)
+        self._logger.debug("uds.image.file_read_start", path=path)
         try:
             async with aiofiles.open(path, "rb") as f:
                 data = await f.read()
-            _logger.debug("Read %d bytes from %s", len(data), path)
+            self._logger.debug(
+                "uds.image.file_read_done", size=len(data), path=path
+            )
             return data
         except FileNotFoundError:
-            _logger.error("File not found: %s", path)
+            self._logger.error("uds.image.file_not_found", path=path)
             raise UDSImageReadError(f"File not found: {path}")
         except Exception as e:
-            _logger.error("Failed to read file %s: %s", path, e)
+            self._logger.error(
+                "uds.image.file_read_failed", path=path, error=e
+            )
             raise UDSImageReadError(f"Failed to read file {path}: {e}") from e
 
     async def _download_from_url(self, url: str) -> bytes:
-        _logger.debug("Downloading image from URL: %s", url)
+        self._logger.debug("uds.image.download_start", url=url)
         try:
             async with httpx.AsyncClient(timeout=self._timeout) as client:
                 response = await client.get(url)
                 response.raise_for_status()
-            _logger.debug(
-                "Downloaded %d bytes from %s", len(response.content), url
+            self._logger.debug(
+                "uds.image.download_done",
+                size=len(response.content),
+                url=url,
             )
             return response.content
         except Exception as e:
-            _logger.error("Failed to download image from %s: %s", url, e)
+            self._logger.error(
+                "uds.image.download_failed",
+                url=url,
+                error=e,
+            )
             raise UDSImageDownloadError(
                 f"Failed to download image from {url}: {e}"
             ) from e
@@ -158,10 +176,10 @@ class ImagesAPI:
                 f"Unsupported upload method: {upload_info.method}"
             )
 
-        _logger.debug(
-            "Uploading %d bytes to presigned URL (method=%s)",
-            len(image_data),
-            upload_info.method,
+        self._logger.debug(
+            "uds.image.presigned_upload_start",
+            size=len(image_data),
+            method=upload_info.method,
         )
         try:
             if method == "PUT":
@@ -177,11 +195,12 @@ class ImagesAPI:
                     headers=headers,
                 )
             response.raise_for_status()
-            _logger.debug(
-                "Upload completed with status %d", response.status_code
+            self._logger.debug(
+                "uds.image.presigned_upload_done",
+                status=response.status_code,
             )
         except UDSImageUploadError:
             raise
         except Exception as e:
-            _logger.error("Failed to upload image: %s", e)
+            self._logger.error("uds.image.upload_failed", error=e)
             raise UDSImageUploadError(f"Failed to upload image: {e}") from e

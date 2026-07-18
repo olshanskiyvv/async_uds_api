@@ -37,11 +37,10 @@ from async_uds_api.errors import (
     UDSUnexpectedError,
 )
 from async_uds_api.log import (
-    SENSITIVE_PARAMS,
     LoggerProtocol,
     StdlibLoggerAdapter,
     mask_params,
-    mask_value,
+    redact_message,
 )
 
 DEFAULT_BASE_URL = "https://api.uds.app/partner/v2"
@@ -99,12 +98,24 @@ class UDSClient:
         self._timeout = timeout
         self._retries = retries
         self._external_client = client is not None
-        if isinstance(logger, logging.Logger):
+        if isinstance(logger, (logging.Logger, logging.LoggerAdapter)):
             self._logger: LoggerProtocol = StdlibLoggerAdapter(logger)
-        else:
-            self._logger = logger or StdlibLoggerAdapter(
+        elif logger is None:
+            self._logger = StdlibLoggerAdapter(
                 logging.getLogger("async_uds_api")
             )
+        else:
+            missing = [
+                name
+                for name in ("debug", "info", "warning", "error")
+                if not callable(getattr(logger, name, None))
+            ]
+            if missing:
+                raise TypeError(
+                    "logger is missing required method(s): "
+                    + ", ".join(missing)
+                )
+            self._logger = logger
         if silence_httpx_log:
             logging.getLogger("httpx").setLevel(logging.WARNING)
         self._client: httpx.AsyncClient = client or httpx.AsyncClient(
@@ -264,11 +275,7 @@ class UDSClient:
             except Exception:
                 pass
 
-            if params:
-                for key in SENSITIVE_PARAMS:
-                    raw = params.get(key)
-                    if raw is not None:
-                        message = message.replace(str(raw), mask_value(raw))
+            message = redact_message(message, params)
 
             self._logger.error(
                 "uds.error",

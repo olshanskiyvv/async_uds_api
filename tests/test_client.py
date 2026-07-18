@@ -204,6 +204,52 @@ class TestClientLogging:
         assert isinstance(client._logger, StdlibLoggerAdapter)
         assert client._logger._logger is raw_logger
 
+    def test_logger_adapter_is_wrapped(self):
+        raw_adapter = logging.LoggerAdapter(
+            logging.getLogger("some.adapter.logger"), {}
+        )
+
+        client = UDSClient(
+            company_id="123456", api_key="test-api-key", logger=raw_adapter
+        )
+
+        assert isinstance(client._logger, StdlibLoggerAdapter)
+        assert client._logger._logger is raw_adapter
+
+    async def test_logger_adapter_survives_real_request_at_info_level(
+        self, mock_httpx, caplog
+    ):
+        raw_adapter = logging.LoggerAdapter(
+            logging.getLogger("some.adapter.request"), {}
+        )
+        respx.get("https://api.uds.app/partner/v2/customers").mock(
+            return_value=httpx.Response(200, json={"rows": []})
+        )
+
+        with caplog.at_level(logging.INFO, logger="some.adapter.request"):
+            async with UDSClient(
+                company_id="123456",
+                api_key="test-api-key",
+                retries=1,
+                logger=raw_adapter,
+            ) as client:
+                await client._get_json("/customers")
+
+    def test_non_logger_object_missing_methods_raises_type_error(self):
+        with pytest.raises(TypeError):
+            UDSClient(
+                company_id="123456", api_key="test-api-key", logger=object()
+            )
+
+    def test_valid_duck_typed_logger_is_still_accepted(self):
+        fake = FakeLogger()
+
+        client = UDSClient(
+            company_id="123456", api_key="test-api-key", logger=fake
+        )
+
+        assert client._logger is fake
+
     def test_silences_httpx_logger_by_default(self, httpx_log_level):
         httpx_log_level.setLevel(logging.INFO)
 
@@ -332,6 +378,35 @@ class TestClientLogging:
             assert key in fields
         assert fields["status"] == 404
         assert fields["error_code"] == "notFound"
+
+    async def test_error_message_redacts_normalized_echo(self, mock_httpx):
+        fake = FakeLogger()
+        respx.get("https://api.uds.app/partner/v2/customers/find").mock(
+            return_value=httpx.Response(
+                400,
+                json={
+                    "errorCode": "notFound",
+                    "message": ("Customer with phone 79991234567 not found"),
+                },
+            )
+        )
+
+        async with UDSClient(
+            company_id="123456",
+            api_key="test-api-key",
+            retries=1,
+            logger=fake,
+        ) as client:
+            with pytest.raises(Exception) as exc_info:
+                await client._get_json(
+                    "/customers/find", params={"phone": "+79991234567"}
+                )
+
+        error_events = [e for e in fake.events if e[1] == "uds.error"]
+        message = error_events[0][2]["message"]
+        assert "***4567" in message
+        assert "79991234567" not in message
+        assert "79991234567" not in str(exc_info.value)
 
     async def test_error_message_redacts_sensitive_params(self, mock_httpx):
         fake = FakeLogger()

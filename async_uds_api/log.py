@@ -1,13 +1,24 @@
 from __future__ import annotations
 
 import logging
+import os
+import re
 from collections.abc import Mapping
 from typing import Any, Protocol
+from urllib.parse import urlsplit, urlunsplit
 
 SENSITIVE_PARAMS = frozenset({"phone", "uid", "code"})
 
 _MASK = "***"
 _VISIBLE_TAIL = 4
+
+_MIN_REDACTABLE_LENGTH = 5
+_PHONE_RE = re.compile(r"\+?\d{7,15}")
+_UUID_RE = re.compile(
+    r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+    re.IGNORECASE,
+)
+_SENSITIVE_SEPARATORS_RE = re.compile(r"[+\-\s()]")
 
 
 def mask_value(value: object) -> str:
@@ -15,6 +26,41 @@ def mask_value(value: object) -> str:
     if len(text) <= _VISIBLE_TAIL:
         return _MASK
     return f"{_MASK}{text[-_VISIBLE_TAIL:]}"
+
+
+def _normalize_sensitive(value: str) -> str:
+    return _SENSITIVE_SEPARATORS_RE.sub("", value).casefold()
+
+
+def redact_message(
+    message: str, params: Mapping[str, Any] | None = None
+) -> str:
+    """Structurally redact PII-shaped substrings from an error message."""
+    result = _PHONE_RE.sub(lambda match: mask_value(match.group()), message)
+    result = _UUID_RE.sub(lambda match: mask_value(match.group()), result)
+
+    if params:
+        for key in SENSITIVE_PARAMS:
+            raw = params.get(key)
+            if raw is None:
+                continue
+            normalized = _normalize_sensitive(str(raw))
+            if len(normalized) < _MIN_REDACTABLE_LENGTH:
+                continue
+            pattern = re.compile(re.escape(normalized), re.IGNORECASE)
+            result = pattern.sub(
+                lambda match: mask_value(match.group()), result
+            )
+
+    return result
+
+
+def mask_url(url: str) -> str:
+    """Mask a non-empty query string while keeping scheme, host and path."""
+    parsed = urlsplit(url)
+    if not parsed.query:
+        return url
+    return urlunsplit(parsed._replace(query=_MASK))
 
 
 def mask_params(
@@ -121,7 +167,9 @@ def _render(event: str, fields: Mapping[str, Any]) -> str:
 class StdlibLoggerAdapter:
     """Render structured events into the library's classic log format."""
 
-    def __init__(self, logger: logging.Logger) -> None:
+    def __init__(
+        self, logger: logging.Logger | logging.LoggerAdapter[Any]
+    ) -> None:
         self._logger = logger
 
     def debug(self, event: str, **fields: Any) -> None:
@@ -144,4 +192,5 @@ class StdlibLoggerAdapter:
                 level, _render(event, fields), extra={"uds": dict(fields)}
             )
         except Exception:
-            pass
+            if os.environ.get("ASYNC_UDS_API_DEBUG_LOGGING"):
+                raise

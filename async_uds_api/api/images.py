@@ -13,6 +13,7 @@ from async_uds_api.errors import (
     UDSImageUnsupportedSourceError,
     UDSImageUploadError,
 )
+from async_uds_api.log import mask_url
 from async_uds_api.models import ImageUploadUrl
 
 if TYPE_CHECKING:
@@ -132,7 +133,8 @@ class ImagesAPI:
             raise UDSImageReadError(f"Failed to read file {path}: {e}") from e
 
     async def _download_from_url(self, url: str) -> bytes:
-        self._logger.debug("uds.image.download_start", url=url)
+        masked_url = mask_url(url)
+        self._logger.debug("uds.image.download_start", url=masked_url)
         try:
             async with httpx.AsyncClient(timeout=self._timeout) as client:
                 response = await client.get(url)
@@ -140,13 +142,18 @@ class ImagesAPI:
             self._logger.debug(
                 "uds.image.download_done",
                 size=len(response.content),
-                url=url,
+                url=masked_url,
             )
             return response.content
         except Exception as e:
-            self._logger.error("uds.image.download_failed", url=url, error=e)
+            error_text = str(e).replace(url, masked_url)
+            self._logger.error(
+                "uds.image.download_failed",
+                url=masked_url,
+                error=error_text,
+            )
             raise UDSImageDownloadError(
-                f"Failed to download image from {url}: {e}"
+                f"Failed to download image from {masked_url}: {error_text}"
             ) from e
 
     async def _upload_to_url(

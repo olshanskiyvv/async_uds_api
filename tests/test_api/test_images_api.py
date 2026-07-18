@@ -167,6 +167,27 @@ class TestImagesAPI:
         with pytest.raises(UDSImageUploadError):
             await uds_client.images.upload(b"image", "image/jpeg")
 
+    async def test_download_failure_does_not_leak_signature(
+        self, mock_httpx, caplog
+    ):
+        import logging
+
+        signed_url = (
+            "https://example.com/notfound.jpg"
+            "?X-Amz-Signature=super-secret-signature"
+        )
+        respx.get(signed_url).mock(return_value=Response(404))
+
+        with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
+            async with UDSClient(
+                company_id="123456", api_key="test-api-key", retries=1
+            ) as client:
+                with pytest.raises(UDSImageDownloadError) as exc_info:
+                    await client.images._download_from_url(signed_url)
+
+        assert "super-secret-signature" not in caplog.text
+        assert "super-secret-signature" not in str(exc_info.value)
+
     async def test_custom_logger_receives_image_events(self, mock_httpx):
         fake = FakeLogger()
         respx.post("https://api.uds.app/partner/v2/image-upload-url").mock(

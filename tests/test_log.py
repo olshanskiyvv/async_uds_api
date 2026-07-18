@@ -4,7 +4,9 @@ from async_uds_api.log import (
     SENSITIVE_PARAMS,
     StdlibLoggerAdapter,
     mask_params,
+    mask_url,
     mask_value,
+    redact_message,
 )
 
 
@@ -486,6 +488,14 @@ class TestPublicExports:
             "uid": "***1234"
         }
         assert "phone" in async_uds_api.SENSITIVE_PARAMS
+        assert (
+            async_uds_api.redact_message("Invalid request", None)
+            == "Invalid request"
+        )
+        assert (
+            async_uds_api.mask_url("https://x/y.png?a=1")
+            == "https://x/y.png?***"
+        )
 
     def test_get_logger_still_available(self):
         import logging
@@ -493,3 +503,124 @@ class TestPublicExports:
         import async_uds_api
 
         assert isinstance(async_uds_api.get_logger(), logging.Logger)
+
+
+class TestRedactMessage:
+    def test_redacts_normalized_phone_echo(self):
+        message = redact_message(
+            "Customer with phone 79991234567 not found",
+            {"phone": "+79991234567"},
+        )
+
+        assert "***4567" in message
+        assert "79991234567" not in message
+
+    def test_redacts_case_differing_uid_echo(self):
+        message = redact_message(
+            "User ABCD1234EFGH5678 not found",
+            {"uid": "abcd1234efgh5678"},
+        )
+
+        assert "abcd1234efgh5678" not in message.lower()
+        assert "***5678" in message
+
+    def test_leaves_short_value_message_unchanged(self):
+        message = redact_message(
+            "Invalid code 12: request 12345 rejected at 12:00",
+            {"code": "12"},
+        )
+
+        assert message == ("Invalid code 12: request 12345 rejected at 12:00")
+
+    def test_redacts_phone_shaped_run_without_params(self):
+        message = redact_message("Contact +79991234567 for details", None)
+
+        assert "***4567" in message
+        assert "79991234567" not in message
+
+    def test_redacts_uuid_in_message(self):
+        message = redact_message(
+            "Order 9f8b1c2d-4e5f-6a7b-8c9d-0e1f2a3ba97e failed", None
+        )
+
+        assert "***a97e" in message
+        assert "9f8b1c2d-4e5f-6a7b-8c9d-0e1f2a3ba97e" not in message
+
+    def test_plain_message_without_params_is_untouched(self):
+        assert redact_message("Invalid request", None) == "Invalid request"
+
+    def test_plain_message_with_empty_params_is_untouched(self):
+        assert redact_message("Invalid request", {}) == "Invalid request"
+
+    def test_ignores_params_key_absent_from_sensitive_set(self):
+        message = redact_message(
+            "cursor abc123 is invalid", {"cursor": "abc123"}
+        )
+
+        assert message == "cursor abc123 is invalid"
+
+    def test_ignores_none_valued_sensitive_param(self):
+        message = redact_message("Invalid request", {"phone": None})
+
+        assert message == "Invalid request"
+
+    def test_digit_run_of_six_is_left_alone(self):
+        message = redact_message("Order 123456 not found", None)
+
+        assert message == "Order 123456 not found"
+
+
+class TestMaskUrl:
+    def test_masks_query_string(self):
+        assert (
+            mask_url("https://s3.example/img.png?X-Amz-Signature=abc")
+            == "https://s3.example/img.png?***"
+        )
+
+    def test_leaves_url_without_query_untouched(self):
+        assert (
+            mask_url("https://s3.example/img.png")
+            == "https://s3.example/img.png"
+        )
+
+    def test_masks_multi_param_query_string(self):
+        assert (
+            mask_url(
+                "https://s3.example/img.png?"
+                "X-Amz-Signature=abc&X-Amz-Expires=60"
+            )
+            == "https://s3.example/img.png?***"
+        )
+
+
+class TestStdlibLoggerAdapterDebugEscapeHatch:
+    def test_swallows_broken_handler_by_default(self, caplog, monkeypatch):
+        monkeypatch.delenv("ASYNC_UDS_API_DEBUG_LOGGING", raising=False)
+
+        class BrokenHandler(logging.Handler):
+            def emit(self, record):
+                raise RuntimeError("handler boom")
+
+        logger = logging.getLogger("test.uds.escape_hatch.default")
+        logger.addHandler(BrokenHandler())
+        logger.setLevel(logging.INFO)
+        adapter = StdlibLoggerAdapter(logger)
+
+        adapter.info("uds.request", method="GET", path="/x")
+
+    def test_reraises_when_debug_env_var_set(self, monkeypatch):
+        monkeypatch.setenv("ASYNC_UDS_API_DEBUG_LOGGING", "1")
+
+        class BrokenHandler(logging.Handler):
+            def emit(self, record):
+                raise RuntimeError("handler boom")
+
+        logger = logging.getLogger("test.uds.escape_hatch.enabled")
+        logger.addHandler(BrokenHandler())
+        logger.setLevel(logging.INFO)
+        adapter = StdlibLoggerAdapter(logger)
+
+        import pytest
+
+        with pytest.raises(RuntimeError, match="handler boom"):
+            adapter.info("uds.request", method="GET", path="/x")

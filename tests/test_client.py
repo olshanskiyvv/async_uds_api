@@ -367,74 +367,11 @@ class TestClientLogging:
         error_events = [e for e in fake.events if e[1] == "uds.error"]
         assert len(error_events) == 1
         fields = error_events[0][2]
-        for key in (
-            "method",
-            "path",
-            "status",
-            "elapsed",
-            "message",
-            "error_code",
-        ):
+        for key in ("method", "path", "status", "elapsed", "error_code"):
             assert key in fields
+        assert "message" not in fields
         assert fields["status"] == 404
         assert fields["error_code"] == "notFound"
-
-    async def test_error_message_redacts_normalized_echo(self, mock_httpx):
-        fake = FakeLogger()
-        respx.get("https://api.uds.app/partner/v2/customers/find").mock(
-            return_value=httpx.Response(
-                400,
-                json={
-                    "errorCode": "notFound",
-                    "message": ("Customer with phone 79991234567 not found"),
-                },
-            )
-        )
-
-        async with UDSClient(
-            company_id="123456",
-            api_key="test-api-key",
-            retries=1,
-            logger=fake,
-        ) as client:
-            with pytest.raises(Exception) as exc_info:
-                await client._get_json(
-                    "/customers/find", params={"phone": "+79991234567"}
-                )
-
-        error_events = [e for e in fake.events if e[1] == "uds.error"]
-        message = error_events[0][2]["message"]
-        assert "***4567" in message
-        assert "79991234567" not in message
-        assert "79991234567" not in str(exc_info.value)
-
-    async def test_error_message_redacts_sensitive_params(self, mock_httpx):
-        fake = FakeLogger()
-        respx.get("https://api.uds.app/partner/v2/customers/find").mock(
-            return_value=httpx.Response(
-                400,
-                json={
-                    "errorCode": "badRequest",
-                    "message": "Invalid phone: +79991234567",
-                },
-            )
-        )
-
-        async with UDSClient(
-            company_id="123456",
-            api_key="test-api-key",
-            retries=1,
-            logger=fake,
-        ) as client:
-            with pytest.raises(Exception):
-                await client._get_json(
-                    "/customers/find", params={"phone": "+79991234567"}
-                )
-
-        error_events = [e for e in fake.events if e[1] == "uds.error"]
-        message = error_events[0][2]["message"]
-        assert "***4567" in message
-        assert "79991234567" not in message
 
     async def test_retry_event_emitted_with_fields(self, mock_httpx):
         fake = FakeLogger()
@@ -458,3 +395,113 @@ class TestClientLogging:
         assert fields["method"] == "GET"
         assert fields["path"] == "/customers"
         assert fields["attempt"] == 2
+
+
+class TestServerMessageContainment:
+    async def test_phone_echo_never_reaches_log_or_exception(
+        self, mock_httpx, caplog
+    ):
+        fake = FakeLogger()
+        server_message = (
+            "Customer 79991234567 / +7 (999) 123-45-67 / "
+            "+7-999-123-45-67 not found"
+        )
+        respx.get("https://api.uds.app/partner/v2/customers/find").mock(
+            return_value=httpx.Response(
+                400,
+                json={"errorCode": "badRequest", "message": server_message},
+            )
+        )
+
+        with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
+            async with UDSClient(
+                company_id="123456",
+                api_key="test-api-key",
+                retries=1,
+                logger=fake,
+            ) as client:
+                with pytest.raises(Exception) as exc_info:
+                    await client._get_json(
+                        "/customers/find", params={"phone": "+79991234567"}
+                    )
+
+        leaks = ("79991234567", "9991234567", "123-45-67", "123 45 67")
+        error_fields = [e[2] for e in fake.events if e[1] == "uds.error"][0]
+        rendered_fields = " ".join(str(v) for v in error_fields.values())
+        for leak in leaks:
+            assert leak not in caplog.text
+            assert leak not in rendered_fields
+            assert leak not in str(exc_info.value)
+        assert "message" not in error_fields
+        assert exc_info.value.message == server_message
+
+    async def test_uid_echo_never_reaches_log_or_exception(
+        self, mock_httpx, caplog
+    ):
+        uid = "550e8400-e29b-41d4-a716-446655440000"
+        respx.get("https://api.uds.app/partner/v2/customers/find").mock(
+            return_value=httpx.Response(
+                400,
+                json={
+                    "errorCode": "badRequest",
+                    "message": f"Customer {uid} is blocked",
+                },
+            )
+        )
+
+        with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
+            async with UDSClient(
+                company_id="123456", api_key="test-api-key", retries=1
+            ) as client:
+                with pytest.raises(Exception) as exc_info:
+                    await client._get_json(
+                        "/customers/find", params={"uid": uid}
+                    )
+
+        assert uid not in caplog.text
+        assert uid not in str(exc_info.value)
+        assert uid in exc_info.value.message
+
+    async def test_error_summary_contains_only_safe_parts(self, mock_httpx):
+        respx.get("https://api.uds.app/partner/v2/customers/find").mock(
+            return_value=httpx.Response(
+                400,
+                json={"errorCode": "badRequest", "message": "secret text"},
+            )
+        )
+
+        async with UDSClient(
+            company_id="123456", api_key="test-api-key", retries=1
+        ) as client:
+            with pytest.raises(Exception) as exc_info:
+                await client._get_json("/customers/find")
+
+        text = str(exc_info.value)
+        assert "secret text" not in text
+        assert "400" in text
+        assert "GET" in text
+        assert "/customers/find" in text
+        assert "badRequest" in text
+
+
+class TestLoggerGuard:
+    async def test_broken_is_enabled_for_does_not_break_request(
+        self, mock_httpx
+    ):
+        class BrokenAdapter(logging.LoggerAdapter):
+            def isEnabledFor(self, level):  # noqa: N802
+                raise RuntimeError("isEnabledFor boom")
+
+        respx.get("https://api.uds.app/partner/v2/customers").mock(
+            return_value=httpx.Response(200, json={"rows": []})
+        )
+
+        async with UDSClient(
+            company_id="123456",
+            api_key="test-api-key",
+            retries=1,
+            logger=BrokenAdapter(logging.getLogger("test.uds.broken2"), {}),
+        ) as client:
+            data = await client._get_json("/customers")
+
+        assert data == {"rows": []}

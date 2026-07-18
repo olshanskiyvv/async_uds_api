@@ -40,7 +40,6 @@ from async_uds_api.log import (
     LoggerProtocol,
     StdlibLoggerAdapter,
     mask_params,
-    redact_message,
 )
 
 DEFAULT_BASE_URL = "https://api.uds.app/partner/v2"
@@ -275,15 +274,12 @@ class UDSClient:
             except Exception:
                 pass
 
-            message = redact_message(message, params)
-
             self._logger.error(
                 "uds.error",
                 method=method,
                 path=path,
                 status=status,
                 elapsed=elapsed,
-                message=message,
                 error_code=error_code,
             )
 
@@ -305,7 +301,11 @@ class UDSClient:
 
             exc.args = (f"{status} for {method} {path}",)
             raise exc_cls(
-                message, status_code=status, error_code=error_code
+                message,
+                status_code=status,
+                error_code=error_code,
+                method=method,
+                path=path,
             ) from exc
 
     async def _get_json(

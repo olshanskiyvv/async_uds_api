@@ -10,6 +10,10 @@ class UDSClientError(Exception):
 class UDSAPIError(UDSClientError):
     """
     Базовое исключение для ошибок UDS Partner API.
+
+    Текст ответа сервера хранится в атрибуте ``message`` и никогда
+    не попадает в ``args``: ``str(exc)`` содержит только безопасную
+    сводку (статус, метод, путь, код ошибки) и пригоден для логов.
     """
 
     def __init__(
@@ -18,10 +22,23 @@ class UDSAPIError(UDSClientError):
         *,
         status_code: int,
         error_code: str | None = None,
+        method: str | None = None,
+        path: str | None = None,
     ) -> None:
+        self.message = message
         self.status_code = status_code
         self.error_code = error_code
-        super().__init__(message)
+        self.method = method
+        self.path = path
+        super().__init__(self._summary())
+
+    def _summary(self) -> str:
+        text = str(self.status_code)
+        if self.method and self.path:
+            text = f"{text} for {self.method} {self.path}"
+        if self.error_code:
+            text = f"{text} [errorCode={self.error_code}]"
+        return text
 
 
 class UDSBadRequestError(UDSAPIError):

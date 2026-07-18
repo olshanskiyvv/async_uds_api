@@ -92,7 +92,8 @@ class TestAPIErrorAttributes:
 
         assert error.status_code == 400
         assert error.error_code == "TEST_ERROR"
-        assert str(error) == "Test error"
+        assert error.message == "Test error"
+        assert str(error) == "400 [errorCode=TEST_ERROR]"
 
     def test_uds_api_error_without_error_code(self):
         """Test UDSAPIError without error_code."""
@@ -136,9 +137,15 @@ class TestExceptionCatching:
 
 class TestExceptionMessages:
     def test_api_error_message(self):
-        """Test UDSAPIError message."""
-        error = UDSAPIError("API error", status_code=500)
-        assert "API error" in str(error)
+        """Test UDSAPIError keeps server text off str()."""
+        error = UDSAPIError(
+            "API error",
+            status_code=500,
+            method="POST",
+            path="/operations",
+        )
+        assert error.message == "API error"
+        assert str(error) == "500 for POST /operations"
 
     def test_image_error_message(self):
         """Test UDSImageError message."""

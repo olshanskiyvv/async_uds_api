@@ -25,7 +25,6 @@ from async_uds_api.log import (
     mask_params,
     mask_url,
     mask_value,
-    redact_message,
 )
 from async_uds_api.models import (
     CompanySettings,
@@ -91,7 +90,6 @@ __all__ = [
     "mask_value",
     "mask_params",
     "mask_url",
-    "redact_message",
     # Models
     "CompanySettings",
     "Customer",

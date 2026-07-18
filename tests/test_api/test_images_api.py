@@ -204,3 +204,52 @@ class TestImagesAPI:
 
         events = [event for _, event, _ in fake.events]
         assert "uds.image.upload_url_received" in events
+
+
+class TestImageUrlContainment:
+    async def test_download_failure_with_host_case_mismatch(
+        self, mock_httpx, caplog
+    ):
+        import logging
+
+        signed_url = (
+            "https://EXAMPLE.com/notfound.jpg?X-Amz-Signature=DEADBEEFSECRET"
+        )
+        respx.get(signed_url).mock(return_value=Response(404))
+
+        with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
+            async with UDSClient(
+                company_id="123456", api_key="test-api-key", retries=1
+            ) as client:
+                with pytest.raises(UDSImageDownloadError) as exc_info:
+                    await client.images._download_from_url(signed_url)
+
+        assert "DEADBEEFSECRET" not in caplog.text
+        assert "DEADBEEFSECRET" not in str(exc_info.value)
+        assert exc_info.value.__cause__ is not None
+
+    async def test_upload_failure_does_not_leak_signature(
+        self, mock_httpx, caplog
+    ):
+        import logging
+
+        signed_url = (
+            "https://storage.googleapis.com/test-bucket/test-image"
+            "?X-Amz-Signature=DEADBEEFSECRET"
+        )
+        upload_response = {**IMAGE_UPLOAD_URL_RESPONSE, "url": signed_url}
+        respx.post("https://api.uds.app/partner/v2/image-upload-url").mock(
+            return_value=Response(200, json=upload_response)
+        )
+        respx.put(signed_url).mock(return_value=Response(403))
+
+        with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
+            async with UDSClient(
+                company_id="123456", api_key="test-api-key", retries=1
+            ) as client:
+                with pytest.raises(UDSImageUploadError) as exc_info:
+                    await client.images.upload(b"image", "image/jpeg")
+
+        assert "DEADBEEFSECRET" not in caplog.text
+        assert "DEADBEEFSECRET" not in str(exc_info.value)
+        assert exc_info.value.__cause__ is not None

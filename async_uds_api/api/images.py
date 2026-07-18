@@ -24,6 +24,14 @@ _MIME_RE = re.compile(
 )
 
 
+def _describe_exception(exc: BaseException) -> str:
+    """Summarise a third-party exception without quoting its text."""
+    name = type(exc).__name__
+    if isinstance(exc, httpx.HTTPStatusError):
+        return f"{name} (status {exc.response.status_code})"
+    return name
+
+
 class ImagesAPI:
     def __init__(self, client: "UDSClient", timeout: float) -> None:
         self._client = client
@@ -127,10 +135,13 @@ class ImagesAPI:
             self._logger.error("uds.image.file_not_found", path=path)
             raise UDSImageReadError(f"File not found: {path}")
         except Exception as e:
+            detail = _describe_exception(e)
             self._logger.error(
-                "uds.image.file_read_failed", path=path, error=e
+                "uds.image.file_read_failed", path=path, error=detail
             )
-            raise UDSImageReadError(f"Failed to read file {path}: {e}") from e
+            raise UDSImageReadError(
+                f"Failed to read file {path}: {detail}"
+            ) from e
 
     async def _download_from_url(self, url: str) -> bytes:
         masked_url = mask_url(url)
@@ -146,14 +157,14 @@ class ImagesAPI:
             )
             return response.content
         except Exception as e:
-            error_text = str(e).replace(url, masked_url)
+            detail = _describe_exception(e)
             self._logger.error(
                 "uds.image.download_failed",
                 url=masked_url,
-                error=error_text,
+                error=detail,
             )
             raise UDSImageDownloadError(
-                f"Failed to download image from {masked_url}: {error_text}"
+                f"Failed to download image from {masked_url}: {detail}"
             ) from e
 
     async def _upload_to_url(
@@ -197,5 +208,8 @@ class ImagesAPI:
         except UDSImageUploadError:
             raise
         except Exception as e:
-            self._logger.error("uds.image.upload_failed", error=e)
-            raise UDSImageUploadError(f"Failed to upload image: {e}") from e
+            detail = f"{mask_url(upload_info.url)}: {_describe_exception(e)}"
+            self._logger.error("uds.image.upload_failed", error=detail)
+            raise UDSImageUploadError(
+                f"Failed to upload image: {detail}"
+            ) from e

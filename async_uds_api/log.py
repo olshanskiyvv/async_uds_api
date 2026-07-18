@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-import re
 from collections.abc import Mapping
 from typing import Any, Protocol
 from urllib.parse import urlsplit, urlunsplit
@@ -12,47 +11,12 @@ SENSITIVE_PARAMS = frozenset({"phone", "uid", "code"})
 _MASK = "***"
 _VISIBLE_TAIL = 4
 
-_MIN_REDACTABLE_LENGTH = 5
-_PHONE_RE = re.compile(r"\+?\d{7,15}")
-_UUID_RE = re.compile(
-    r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
-    re.IGNORECASE,
-)
-_SENSITIVE_SEPARATORS_RE = re.compile(r"[+\-\s()]")
-
 
 def mask_value(value: object) -> str:
     text = str(value)
     if len(text) <= _VISIBLE_TAIL:
         return _MASK
     return f"{_MASK}{text[-_VISIBLE_TAIL:]}"
-
-
-def _normalize_sensitive(value: str) -> str:
-    return _SENSITIVE_SEPARATORS_RE.sub("", value).casefold()
-
-
-def redact_message(
-    message: str, params: Mapping[str, Any] | None = None
-) -> str:
-    """Structurally redact PII-shaped substrings from an error message."""
-    result = _PHONE_RE.sub(lambda match: mask_value(match.group()), message)
-    result = _UUID_RE.sub(lambda match: mask_value(match.group()), result)
-
-    if params:
-        for key in SENSITIVE_PARAMS:
-            raw = params.get(key)
-            if raw is None:
-                continue
-            normalized = _normalize_sensitive(str(raw))
-            if len(normalized) < _MIN_REDACTABLE_LENGTH:
-                continue
-            pattern = re.compile(re.escape(normalized), re.IGNORECASE)
-            result = pattern.sub(
-                lambda match: mask_value(match.group()), result
-            )
-
-    return result
 
 
 def mask_url(url: str) -> str:
@@ -81,8 +45,8 @@ _TEMPLATES: dict[str, str] = {
     ),
     "uds.response": "%(method)s %(path)s -> %(status)d OK in %(elapsed).3fs",
     "uds.error": (
-        "%(method)s %(path)s -> %(status)d Error in %(elapsed).3fs: "
-        "%(message)s%(error_code)s"
+        "%(method)s %(path)s -> %(status)d Error in "
+        "%(elapsed).3fs%(error_code)s"
     ),
     "uds.retry": "Retry attempt %(attempt)d for %(method)s %(path)s",
     "uds.image.upload_url_request": (
@@ -185,9 +149,9 @@ class StdlibLoggerAdapter:
         self._log(logging.ERROR, event, fields)
 
     def _log(self, level: int, event: str, fields: Mapping[str, Any]) -> None:
-        if not self._logger.isEnabledFor(level):
-            return
         try:
+            if not self._logger.isEnabledFor(level):
+                return
             self._logger.log(
                 level, _render(event, fields), extra={"uds": dict(fields)}
             )

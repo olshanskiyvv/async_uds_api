@@ -13,7 +13,6 @@ from async_uds_api.errors import (
     UDSImageUnsupportedSourceError,
     UDSImageUploadError,
 )
-from async_uds_api.log import mask_url
 from async_uds_api.models import ImageUploadUrl
 
 if TYPE_CHECKING:
@@ -22,55 +21,6 @@ if TYPE_CHECKING:
 _MIME_RE = re.compile(
     r"^[a-zA-Z0-9!#$%^&\*\_\-+{}|\.]+/[a-zA-Z0-9!#$%^&\*\_\-+{}|\.]+$"
 )
-
-
-def _describe_exception(exc: BaseException) -> str:
-    """Summarise a third-party exception without quoting its text."""
-    name = type(exc).__name__
-    if isinstance(exc, httpx.HTTPStatusError):
-        return f"{name} (status {exc.response.status_code})"
-    return name
-
-
-def _mask_source(source: str | Path) -> str:
-    """Reduce http(s) sources to scheme and host, leaving paths untouched."""
-    text = str(source)
-    if urlparse(text).scheme in ("http", "https"):
-        return mask_url(text)
-    return text
-
-
-def _source_scheme(source: str | Path) -> str:
-    """Return the source's lowercased scheme, rejecting unsupported ones.
-
-    A bare filesystem path has no scheme; a Windows path such as
-    ``C:\\images\\pic.png`` parses with a single-letter drive scheme and is
-    treated as a path too. Any other non-http(s) scheme is refused, and the
-    error names only the scheme so the source itself never reaches a message.
-    """
-    scheme = urlparse(str(source)).scheme.lower()
-    if scheme in ("http", "https") or len(scheme) <= 1:
-        return scheme
-    raise UDSImageUnsupportedSourceError(
-        f"Unsupported source scheme: '{scheme}'. "
-        "Expected an http(s) URL or a filesystem path."
-    )
-
-
-def _scrub_http_exception(exc: BaseException, method: str, url: str) -> None:
-    """Replace an httpx exception's own text with a safe summary.
-
-    The exception object stays intact as ``__cause__`` so its type and
-    ``.response`` remain inspectable, but a formatted traceback no longer
-    carries the presigned URL's credentials, path or query string.
-    """
-    if not isinstance(exc, (httpx.HTTPError, httpx.InvalidURL)):
-        return
-    if isinstance(exc, httpx.HTTPStatusError):
-        head = str(exc.response.status_code)
-    else:
-        head = type(exc).__name__
-    exc.args = (f"{head} for {method} {mask_url(url)}",)
 
 
 class ImagesAPI:
@@ -116,14 +66,13 @@ class ImagesAPI:
                 content_type=content_type,
             )
         else:
-            _source_scheme(source)
             if content_type is not None:
                 self._validate_content_type(content_type)
             else:
                 content_type = self._detect_content_type(source)
             self._logger.debug(
                 "uds.image.upload_start_source",
-                source=_mask_source(source),
+                source=source,
                 content_type=content_type,
             )
 
@@ -148,8 +97,8 @@ class ImagesAPI:
         mime_type, _ = mimetypes.guess_type(source_str)
         if mime_type is None:
             raise UDSImageUnsupportedSourceError(
-                f"Cannot detect content type for '{_mask_source(source_str)}'."
-                " Provide content_type explicitly."
+                f"Cannot detect content type for '{source_str}'. "
+                "Provide content_type explicitly."
             )
         return mime_type
 
@@ -158,7 +107,8 @@ class ImagesAPI:
             return source
 
         source_str = str(source)
-        if _source_scheme(source_str) in ("http", "https"):
+        parsed = urlparse(source_str)
+        if parsed.scheme in ("http", "https"):
             return await self._download_from_url(source_str)
 
         return await self._read_from_file(Path(source))
@@ -176,17 +126,13 @@ class ImagesAPI:
             self._logger.error("uds.image.file_not_found", path=path)
             raise UDSImageReadError(f"File not found: {path}")
         except Exception as e:
-            detail = _describe_exception(e)
             self._logger.error(
-                "uds.image.file_read_failed", path=path, error=detail
+                "uds.image.file_read_failed", path=path, error=e
             )
-            raise UDSImageReadError(
-                f"Failed to read file {path}: {detail}"
-            ) from e
+            raise UDSImageReadError(f"Failed to read file {path}: {e}") from e
 
     async def _download_from_url(self, url: str) -> bytes:
-        masked_url = mask_url(url)
-        self._logger.debug("uds.image.download_start", url=masked_url)
+        self._logger.debug("uds.image.download_start", url=url)
         try:
             async with httpx.AsyncClient(timeout=self._timeout) as client:
                 response = await client.get(url)
@@ -194,19 +140,17 @@ class ImagesAPI:
             self._logger.debug(
                 "uds.image.download_done",
                 size=len(response.content),
-                url=masked_url,
+                url=url,
             )
             return response.content
         except Exception as e:
-            detail = _describe_exception(e)
             self._logger.error(
                 "uds.image.download_failed",
-                url=masked_url,
-                error=detail,
+                url=url,
+                error=e,
             )
-            _scrub_http_exception(e, "GET", url)
             raise UDSImageDownloadError(
-                f"Failed to download image from {masked_url}: {detail}"
+                f"Failed to download image from {url}: {e}"
             ) from e
 
     async def _upload_to_url(
@@ -250,9 +194,5 @@ class ImagesAPI:
         except UDSImageUploadError:
             raise
         except Exception as e:
-            detail = f"{mask_url(upload_info.url)}: {_describe_exception(e)}"
-            self._logger.error("uds.image.upload_failed", error=detail)
-            _scrub_http_exception(e, method, upload_info.url)
-            raise UDSImageUploadError(
-                f"Failed to upload image: {detail}"
-            ) from e
+            self._logger.error("uds.image.upload_failed", error=e)
+            raise UDSImageUploadError(f"Failed to upload image: {e}") from e

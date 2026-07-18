@@ -147,10 +147,8 @@ upload_url = await client.images.get_upload_url("image/jpeg")
 ```
 
 Источником может быть путь в файловой системе, http(s)-URL или байты.
-Строка с любой другой схемой (например `s3://bucket/key.png`) больше не
-интерпретируется как путь: `upload` поднимает
-`UDSImageUnsupportedSourceError`, и в тексте ошибки указывается только
-схема, но не сам источник.
+Строка со схемой `http` или `https` скачивается по сети, любая другая
+строка интерпретируется как путь в файловой системе.
 
 #### Goods Orders
 
@@ -234,19 +232,22 @@ except UDSAPIError as e:
     print(e.message)  # поле message из JSON UDS, может содержать ПДн
 ```
 
-То же правило применяется к исключениям сторонних библиотек: текст
-исключения `httpx` (в котором лежит полный URL с подписью) никогда не
-подставляется в лог или в сообщение исключения — вместо него
-используется имя класса исключения и, для `HTTPStatusError`, HTTP-статус.
-Само исключение остаётся доступным через `__cause__` (его тип и
-`.response` не меняются), но его собственный текст переписывается на
-безопасную сводку вида `403 for PUT https://s3.example.com/***`.
-Благодаря этому подпись не появляется и в полном traceback, который
+То же относится и к `httpx.HTTPStatusError`, который остаётся в
+`__cause__` у ошибок API-запросов: его собственный текст содержит полный
+URL запроса вместе с query-строкой, поэтому он переписывается на сводку
+вида `400 for GET /customers/find` — без query-строки, а значит без
+`phone`/`uid`/`code`. Тип исключения и его `.response` не меняются.
+Благодаря этому телефон не появляется и в полном traceback, который
 печатает `logging.exception`.
 
-`mask_url` (см. ниже) экспортируется из `async_uds_api` наравне с
-`mask_value`/`mask_params` — ими можно пользоваться и вне библиотеки,
-например в собственных логах.
+Это правило касается только запросов к API UDS. URL в путях загрузки
+изображений (presigned-ссылки и адрес источника) не маскируются: они
+короткоживущие, а без полного URL непонятно, какой именно объект не
+загрузился. Сообщения и traceback этих путей содержат исходный URL
+целиком.
+
+`mask_value` и `mask_params` экспортируются из `async_uds_api` — ими
+можно пользоваться и вне библиотеки, например в собственных логах.
 
 По умолчанию `UDSClient` выставляет логгеру `httpx` уровень `WARNING`:
 на уровне `INFO` httpx печатает полный URL запроса вместе с query-строкой,
@@ -304,32 +305,14 @@ client = UDSClient(
 | `uds.retry` | WARNING | `method`, `path`, `attempt` |
 | `uds.image.*` | DEBUG/INFO/ERROR | зависит от события |
 
-Для событий `uds.image.download_start`, `uds.image.download_done` и
-`uds.image.download_failed` поле `url` маскируется функцией `mask_url`:
-от URL остаются только схема и хост (плюс нестандартный порт), всё
-остальное заменяется на `/***`:
-
-```python
-mask_url("https://s3.example.com/img.png?X-Amz-Signature=abc")
-# -> "https://s3.example.com/***"
-mask_url("https://user:pwd@cdn.example.com:8443/tok/img.png")
-# -> "https://cdn.example.com:8443/***"
-mask_url("/local/images/photo.png")
-# -> "/local/images/photo.png"
-mask_url("https://host:notaport/p?token=secret")
-# -> "https://***"
-```
-
-Отбрасываются не только query-строка, но и userinfo (`user:password@`)
-и путь: подпись presigned-URL может лежать в любом из них — например,
-в пути у CloudFront, Akamai и Azure SAS. Значение, которое не является
-http(s)-URL (обычный путь в файловой системе), возвращается без
-изменений. Некорректный http(s)-URL (неразбираемый или выходящий за
-диапазон порт, пустой хост) никогда не возвращается как есть — вместо
-хоста подставляется маска. То же самое применяется к URL, встроенному в текст
-`UDSImageDownloadError`. Событие `uds.image.upload_failed` и текст
-`UDSImageUploadError` также содержат только замаскированный
-presigned-URL и тип исключения.
+События `uds.image.*` пишут URL как есть: поле `url` у
+`uds.image.download_start`, `uds.image.download_done` и
+`uds.image.download_failed`, поле `source` у
+`uds.image.upload_start_source`, а также тексты `UDSImageDownloadError`
+и `UDSImageUploadError` содержат полный URL. Это осознанный выбор:
+presigned-ссылки короткоживущие, а `https://cdn.example.com/***` не
+говорит, какой объект не загрузился. Если такие URL не должны попадать
+в ваш лог, отфильтруйте эти события на стороне хендлера.
 
 При стандартном логгере эти поля доступны хендлерам через `record.uds` —
 словарь с исходными значениями, удобный для JSON-форматтеров. Атрибут

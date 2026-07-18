@@ -23,7 +23,6 @@ from async_uds_api.log import (
     LoggerProtocol,
     StdlibLoggerAdapter,
     mask_params,
-    mask_url,
     mask_value,
 )
 from async_uds_api.models import (
@@ -89,7 +88,6 @@ __all__ = [
     "SENSITIVE_PARAMS",
     "mask_value",
     "mask_params",
-    "mask_url",
     # Models
     "CompanySettings",
     "Customer",

@@ -6,7 +6,6 @@ from async_uds_api.log import (
     SENSITIVE_PARAMS,
     StdlibLoggerAdapter,
     mask_params,
-    mask_url,
     mask_value,
 )
 
@@ -493,7 +492,7 @@ class TestPublicExports:
         }
         assert "phone" in async_uds_api.SENSITIVE_PARAMS
         assert not hasattr(async_uds_api, "redact_message")
-        assert async_uds_api.mask_url("https://x/y.png?a=1") == "https://x/***"
+        assert not hasattr(async_uds_api, "mask_url")
 
     def test_get_logger_still_available(self):
         import logging
@@ -501,118 +500,6 @@ class TestPublicExports:
         import async_uds_api
 
         assert isinstance(async_uds_api.get_logger(), logging.Logger)
-
-
-class TestMaskUrl:
-    def test_masks_query_string(self):
-        assert (
-            mask_url("https://s3.example/img.png?X-Amz-Signature=abc")
-            == "https://s3.example/***"
-        )
-
-    def test_masks_path_even_without_query(self):
-        assert (
-            mask_url("https://s3.example/img.png") == "https://s3.example/***"
-        )
-
-    def test_masks_multi_param_query_string(self):
-        assert (
-            mask_url(
-                "https://s3.example/img.png?"
-                "X-Amz-Signature=abc&X-Amz-Expires=60"
-            )
-            == "https://s3.example/***"
-        )
-
-    def test_masks_path_embedded_token(self):
-        token = "".join(["DEAD", "BEEF", "SECRET"])
-        masked = mask_url(f"https://bucket.s3.amazonaws.com/{token}/key.jpg")
-        assert masked == "https://bucket.s3.amazonaws.com/***"
-        assert token not in masked
-
-    def test_drops_userinfo_entirely(self):
-        password = "".join(["P4SS", "WORD", "XYZ"])
-        masked = mask_url(
-            f"https://user:{password}@bucket.example.com/k.jpg?sig=abc"
-        )
-        assert masked == "https://bucket.example.com/***"
-        assert password not in masked
-        assert "user" not in masked
-
-    def test_drops_fragment(self):
-        assert (
-            mask_url("https://s3.example/img.png#secret")
-            == "https://s3.example/***"
-        )
-
-    def test_keeps_non_default_port(self):
-        assert (
-            mask_url("https://cdn.example.com:8443/a/b?x=1")
-            == "https://cdn.example.com:8443/***"
-        )
-
-    def test_drops_default_port(self):
-        assert (
-            mask_url("https://cdn.example.com:443/a/b")
-            == "https://cdn.example.com/***"
-        )
-        assert (
-            mask_url("http://cdn.example.com:80/a/b")
-            == "http://cdn.example.com/***"
-        )
-
-    def test_uniform_output_for_empty_or_root_path(self):
-        assert mask_url("https://host") == "https://host/***"
-        assert mask_url("https://host/") == "https://host/***"
-
-    def test_keeps_ipv6_host_bracketed(self):
-        assert mask_url("https://[::1]:8443/a?b=1") == "https://[::1]:8443/***"
-
-    def test_masks_url_with_unparseable_port(self):
-        token = "".join(["SEC", "RET"])
-        masked = mask_url(f"https://h:notaport/p?token={token}")
-        assert masked == "https://***"
-        assert token not in masked
-
-    def test_masks_url_with_out_of_range_port(self):
-        token = "".join(["SEC", "RET"])
-        masked = mask_url(f"https://h:99999/p?token={token}")
-        assert masked == "https://***"
-        assert token not in masked
-
-    def test_masks_url_with_empty_host(self):
-        token = "".join(["SEC", "RET"])
-        masked = mask_url(f"https:///p?token={token}")
-        assert masked == "https://***"
-        assert token not in masked
-
-    @pytest.mark.parametrize(
-        "value",
-        [
-            "",
-            "://",
-            "bareword",
-            "/local/path/img.png",
-            "./rel/what?ever.zzz",
-            "C:\\images\\a.png",
-            "ftp://host/p?q=1",
-            "not a url at all",
-        ],
-    )
-    def test_returns_non_http_url_input_unchanged(self, value):
-        assert mask_url(value) == value
-
-    @pytest.mark.parametrize(
-        ("value", "expected"),
-        [
-            ("https://", "https://***"),
-            ("http://", "http://***"),
-            ("https://[bad", "***"),
-            ("https://host:notaport/a", "https://***"),
-        ],
-    )
-    def test_malformed_http_url_never_round_trips(self, value, expected):
-        assert mask_url(value) == expected
 
 
 class BrokenHandler(logging.Handler):

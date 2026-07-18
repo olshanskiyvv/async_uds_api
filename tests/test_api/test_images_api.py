@@ -21,9 +21,6 @@ IMAGE_UPLOAD_URL_POST_RESPONSE = {
     "method": "POST",
 }
 
-SECRET = "".join(["DEAD", "BEEF", "SECRET"])
-PASSWORD = "".join(["P4SS", "WORD", "XYZ"])
-
 
 def formatted_traceback(exc: BaseException) -> str:
     """Render the exception exactly as logging.exception would."""
@@ -180,27 +177,6 @@ class TestImagesAPI:
         with pytest.raises(UDSImageUploadError):
             await uds_client.images.upload(b"image", "image/jpeg")
 
-    async def test_download_failure_does_not_leak_signature(
-        self, mock_httpx, caplog
-    ):
-        import logging
-
-        signed_url = (
-            f"https://example.com/notfound.jpg?X-Amz-Signature={SECRET}"
-        )
-        respx.get(signed_url).mock(return_value=Response(404))
-
-        with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
-            async with UDSClient(
-                company_id="123456", api_key="test-api-key", retries=1
-            ) as client:
-                with pytest.raises(UDSImageDownloadError) as exc_info:
-                    await client.images._download_from_url(signed_url)
-
-        assert SECRET not in caplog.text
-        assert SECRET not in str(exc_info.value)
-        assert SECRET not in formatted_traceback(exc_info.value)
-
     async def test_custom_logger_receives_image_events(self, mock_httpx):
         fake = FakeLogger()
         respx.post("https://api.uds.app/partner/v2/image-upload-url").mock(
@@ -219,114 +195,7 @@ class TestImagesAPI:
         assert "uds.image.upload_url_received" in events
 
 
-class TestImageUrlContainment:
-    async def test_download_failure_with_host_case_mismatch(
-        self, mock_httpx, caplog
-    ):
-        import logging
-
-        signed_url = (
-            f"https://EXAMPLE.com/notfound.jpg?X-Amz-Signature={SECRET}"
-        )
-        respx.get(signed_url).mock(return_value=Response(404))
-
-        with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
-            async with UDSClient(
-                company_id="123456", api_key="test-api-key", retries=1
-            ) as client:
-                with pytest.raises(UDSImageDownloadError) as exc_info:
-                    await client.images._download_from_url(signed_url)
-
-        assert SECRET not in caplog.text
-        assert SECRET not in str(exc_info.value)
-        assert SECRET not in formatted_traceback(exc_info.value)
-        assert exc_info.value.__cause__ is not None
-
-    async def test_upload_failure_does_not_leak_signature(
-        self, mock_httpx, caplog
-    ):
-        import logging
-
-        signed_url = (
-            "https://storage.googleapis.com/test-bucket/test-image"
-            f"?X-Amz-Signature={SECRET}"
-        )
-        upload_response = {**IMAGE_UPLOAD_URL_RESPONSE, "url": signed_url}
-        respx.post("https://api.uds.app/partner/v2/image-upload-url").mock(
-            return_value=Response(200, json=upload_response)
-        )
-        respx.put(signed_url).mock(return_value=Response(403))
-
-        with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
-            async with UDSClient(
-                company_id="123456", api_key="test-api-key", retries=1
-            ) as client:
-                with pytest.raises(UDSImageUploadError) as exc_info:
-                    await client.images.upload(b"image", "image/jpeg")
-
-        assert SECRET not in caplog.text
-        assert SECRET not in str(exc_info.value)
-        assert SECRET not in formatted_traceback(exc_info.value)
-        assert exc_info.value.__cause__ is not None
-        assert isinstance(exc_info.value.__cause__, httpx.HTTPStatusError)
-        assert exc_info.value.__cause__.response.status_code == 403
-
-    async def test_transport_error_does_not_leak_signature(
-        self, mock_httpx, caplog
-    ):
-        import logging
-
-        signed_url = (
-            f"https://cdn.example.com/pic.jpg?X-Amz-Signature={SECRET}"
-        )
-        respx.route(
-            method="GET", host="cdn.example.com", path="/pic.jpg"
-        ).mock(
-            side_effect=httpx.ConnectError(
-                f"failed to connect to {signed_url}"
-            )
-        )
-
-        with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
-            async with UDSClient(
-                company_id="123456", api_key="test-api-key", retries=1
-            ) as client:
-                with pytest.raises(UDSImageDownloadError) as exc_info:
-                    await client.images._download_from_url(signed_url)
-
-        assert SECRET not in caplog.text
-        assert SECRET not in str(exc_info.value)
-        assert SECRET not in formatted_traceback(exc_info.value)
-        assert isinstance(exc_info.value.__cause__, httpx.ConnectError)
-
-    async def test_upload_start_log_masks_source_url(self, mock_httpx, caplog):
-        import logging
-
-        signed_url = (
-            f"https://cdn.example.com/pic.jpg?X-Amz-Signature={SECRET}"
-        )
-        respx.get(signed_url).mock(
-            return_value=Response(200, content=b"image")
-        )
-        respx.post("https://api.uds.app/partner/v2/image-upload-url").mock(
-            return_value=Response(200, json=IMAGE_UPLOAD_URL_RESPONSE)
-        )
-        respx.put(
-            "https://storage.googleapis.com/test-bucket/test-image"
-        ).mock(return_value=Response(200))
-
-        with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
-            async with UDSClient(
-                company_id="123456", api_key="test-api-key", retries=1
-            ) as client:
-                await client.images.upload(signed_url)
-
-        assert SECRET not in caplog.text
-        for record in caplog.records:
-            assert SECRET not in str(getattr(record, "uds", ""))
-        assert "https://cdn.example.com/***" in caplog.text
-        assert "pic.jpg" not in caplog.text
-
+class TestImageSourceLogging:
     async def test_upload_start_log_keeps_local_path_intact(
         self, mock_httpx, caplog, tmp_path
     ):
@@ -349,14 +218,32 @@ class TestImageUrlContainment:
 
         assert str(path) in caplog.text
 
-    def test_detect_content_type_masks_url_query(self, uds_client):
-        signed_url = f"https://cdn.example.com/pic?X-Amz-Signature={SECRET}"
+    async def test_upload_start_log_keeps_source_url_intact(
+        self, mock_httpx, caplog
+    ):
+        import logging
 
-        with pytest.raises(UDSImageUnsupportedSourceError) as exc_info:
-            uds_client.images._detect_content_type(signed_url)
+        source_url = "https://cdn.example.com/pic.jpg?token=abc123"
+        respx.get(source_url).mock(
+            return_value=Response(200, content=b"image")
+        )
+        respx.post("https://api.uds.app/partner/v2/image-upload-url").mock(
+            return_value=Response(200, json=IMAGE_UPLOAD_URL_RESPONSE)
+        )
+        respx.put(
+            "https://storage.googleapis.com/test-bucket/test-image"
+        ).mock(return_value=Response(200))
 
-        assert SECRET not in str(exc_info.value)
-        assert "https://cdn.example.com/***" in str(exc_info.value)
+        with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
+            async with UDSClient(
+                company_id="123456", api_key="test-api-key", retries=1
+            ) as client:
+                await client.images.upload(source_url)
+
+        assert (
+            f"Uploading from {source_url} with content_type=image/jpeg"
+            in caplog.text
+        )
 
     def test_detect_content_type_keeps_local_path_intact(self, uds_client):
         with pytest.raises(UDSImageUnsupportedSourceError) as exc_info:
@@ -364,12 +251,26 @@ class TestImageUrlContainment:
 
         assert "./rel/what?ever.zzz" in str(exc_info.value)
 
+    def test_detect_content_type_keeps_url_intact(self, uds_client):
+        url = "https://cdn.example.com/pic?token=abc123"
 
-class TestPathAndUserinfoContainment:
-    async def _assert_download_contains(self, caplog, url, secret):
+        with pytest.raises(UDSImageUnsupportedSourceError) as exc_info:
+            uds_client.images._detect_content_type(url)
+
+        assert str(exc_info.value) == (
+            f"Cannot detect content type for '{url}'. "
+            "Provide content_type explicitly."
+        )
+
+
+class TestImageMessageWording:
+    async def test_download_failed_message_matches_original(
+        self, mock_httpx, caplog
+    ):
         import logging
 
-        respx.route(method="GET").mock(return_value=Response(403))
+        url = "https://cdn.example.com/notfound.jpg?token=abc123"
+        respx.get(url).mock(return_value=Response(404))
 
         with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
             async with UDSClient(
@@ -378,21 +279,26 @@ class TestPathAndUserinfoContainment:
                 with pytest.raises(UDSImageDownloadError) as exc_info:
                     await client.images._download_from_url(url)
 
-        assert secret not in caplog.text
-        for record in caplog.records:
-            assert secret not in str(getattr(record, "uds", ""))
-        assert secret not in str(exc_info.value)
-        assert secret not in formatted_traceback(exc_info.value)
+        cause = exc_info.value.__cause__
+        expected = f"Failed to download image from {url}: {cause}"
+        assert str(exc_info.value) == expected
+        assert expected in caplog.text
+        assert f"Downloading image from URL: {url}" in caplog.text
 
-    async def _assert_upload_contains(self, caplog, url, secret):
+    async def test_upload_failed_message_matches_original(
+        self, mock_httpx, caplog
+    ):
         import logging
 
+        signed_url = (
+            "https://storage.googleapis.com/test-bucket/test-image?sig=abc123"
+        )
         respx.post("https://api.uds.app/partner/v2/image-upload-url").mock(
             return_value=Response(
-                200, json={**IMAGE_UPLOAD_URL_RESPONSE, "url": url}
+                200, json={**IMAGE_UPLOAD_URL_RESPONSE, "url": signed_url}
             )
         )
-        respx.route(method="PUT").mock(return_value=Response(403))
+        respx.put(signed_url).mock(return_value=Response(403))
 
         with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
             async with UDSClient(
@@ -401,69 +307,77 @@ class TestPathAndUserinfoContainment:
                 with pytest.raises(UDSImageUploadError) as exc_info:
                     await client.images.upload(b"image", "image/jpeg")
 
-        assert secret not in caplog.text
-        for record in caplog.records:
-            assert secret not in str(getattr(record, "uds", ""))
-        assert secret not in str(exc_info.value)
-        assert secret not in formatted_traceback(exc_info.value)
+        cause = exc_info.value.__cause__
+        expected = f"Failed to upload image: {cause}"
+        assert str(exc_info.value) == expected
+        assert expected in caplog.text
+        assert isinstance(cause, httpx.HTTPStatusError)
 
-    async def test_download_hides_path_embedded_token(
-        self, mock_httpx, caplog
-    ):
-        url = f"https://bucket.s3.amazonaws.com/{SECRET}/key.jpg"
-        await self._assert_download_contains(caplog, url, SECRET)
-        assert "https://bucket.s3.amazonaws.com/***" in caplog.text
-
-    async def test_download_hides_userinfo_password(self, mock_httpx, caplog):
-        url = f"https://user:{PASSWORD}@cdn.example.com/k.jpg?sig=abc"
-        await self._assert_download_contains(caplog, url, PASSWORD)
-        assert "https://cdn.example.com/***" in caplog.text
-
-    async def test_upload_hides_path_embedded_token(self, mock_httpx, caplog):
-        url = f"https://bucket.s3.amazonaws.com/{SECRET}/key.jpg"
-        await self._assert_upload_contains(caplog, url, SECRET)
-        assert "https://bucket.s3.amazonaws.com/***" in caplog.text
-
-    async def test_upload_hides_userinfo_password(self, mock_httpx, caplog):
-        url = f"https://user:{PASSWORD}@cdn.example.com/k.jpg?sig=abc"
-        await self._assert_upload_contains(caplog, url, PASSWORD)
-        assert "https://cdn.example.com/***" in caplog.text
-
-
-class TestNonHttpSourceScheme:
-    async def test_upload_rejects_non_http_scheme(
-        self, mock_httpx, caplog, uds_client
+    async def test_file_read_failed_message_matches_original(
+        self, mock_httpx, caplog, tmp_path, monkeypatch
     ):
         import logging
 
-        source = f"s3://bucket/key.png?X-Sig={SECRET}"
+        path = tmp_path / "pic.png"
+        path.write_bytes(b"image")
+        boom = OSError("disk on fire")
+
+        def explode(*args, **kwargs):
+            raise boom
+
+        monkeypatch.setattr(aiofiles, "open", explode)
 
         with caplog.at_level(logging.DEBUG, logger="async_uds_api"):
-            with pytest.raises(UDSImageUnsupportedSourceError) as exc_info:
-                await uds_client.images.upload(source)
+            async with UDSClient(
+                company_id="123456", api_key="test-api-key", retries=1
+            ) as client:
+                with pytest.raises(UDSImageReadError) as exc_info:
+                    await client.images._read_from_file(path)
 
-        message = str(exc_info.value)
-        assert "s3" in message
-        assert SECRET not in message
-        assert "bucket" not in message
-        assert SECRET not in caplog.text
-        for record in caplog.records:
-            assert SECRET not in str(getattr(record, "uds", ""))
+        expected = f"Failed to read file {path}: {boom}"
+        assert str(exc_info.value) == expected
+        assert expected in caplog.text
 
-    async def test_read_image_data_rejects_non_http_scheme(self, uds_client):
-        source = f"ftp://host/key.png?token={SECRET}"
+    async def test_download_traceback_keeps_httpx_text(
+        self, mock_httpx, caplog
+    ):
+        url = "https://cdn.example.com/notfound.jpg"
+        respx.get(url).mock(return_value=Response(404))
 
-        with pytest.raises(UDSImageUnsupportedSourceError) as exc_info:
-            await uds_client.images._read_image_data(source)
+        async with UDSClient(
+            company_id="123456", api_key="test-api-key", retries=1
+        ) as client:
+            with pytest.raises(UDSImageDownloadError) as exc_info:
+                await client.images._download_from_url(url)
 
-        assert "ftp" in str(exc_info.value)
-        assert SECRET not in str(exc_info.value)
+        cause = exc_info.value.__cause__
+        assert isinstance(cause, httpx.HTTPStatusError)
+        assert url in str(cause)
+        assert url in formatted_traceback(exc_info.value)
 
+
+class TestNonHttpSource:
     async def test_windows_path_is_treated_as_filesystem_path(
         self, uds_client
     ):
         with pytest.raises(UDSImageReadError) as exc_info:
             await uds_client.images._read_image_data("C:\\images\\pic.png")
+
+        assert "File not found" in str(exc_info.value)
+
+    async def test_colon_bearing_relative_path_is_a_filesystem_path(
+        self, uds_client
+    ):
+        with pytest.raises(UDSImageReadError) as exc_info:
+            await uds_client.images._read_image_data("backup:photos/a.png")
+
+        assert "File not found" in str(exc_info.value)
+
+    async def test_non_http_scheme_is_treated_as_filesystem_path(
+        self, uds_client
+    ):
+        with pytest.raises(UDSImageReadError) as exc_info:
+            await uds_client.images._read_image_data("ftp://host/key.png")
 
         assert "File not found" in str(exc_info.value)
 

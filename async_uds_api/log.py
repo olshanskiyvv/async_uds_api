@@ -4,13 +4,11 @@ import logging
 import os
 from collections.abc import Mapping
 from typing import Any, Protocol
-from urllib.parse import urlsplit
 
 SENSITIVE_PARAMS = frozenset({"phone", "uid", "code"})
 
 _MASK = "***"
 _VISIBLE_TAIL = 4
-_DEFAULT_PORTS = {"http": 80, "https": 443}
 
 
 def mask_value(value: object) -> str:
@@ -18,36 +16,6 @@ def mask_value(value: object) -> str:
     if len(text) <= _VISIBLE_TAIL:
         return _MASK
     return f"{_MASK}{text[-_VISIBLE_TAIL:]}"
-
-
-def mask_url(url: str) -> str:
-    """Reduce an http(s) URL to scheme and host, dropping everything else.
-
-    Userinfo, path, query and fragment are discarded outright: any of them
-    may carry a credential or a signature. A non-default port is kept.
-    Anything that is not an http(s) URL (a filesystem path, for example)
-    is returned unchanged. A malformed http(s) URL never round-trips: its
-    host is replaced by the mask rather than passed through.
-    """
-    try:
-        parsed = urlsplit(url)
-        scheme = parsed.scheme.lower()
-    except Exception:
-        return _MASK
-    if scheme not in ("http", "https"):
-        return url
-    try:
-        host = parsed.hostname
-        port = parsed.port
-    except Exception:
-        return f"{scheme}://{_MASK}"
-    if not host:
-        return f"{scheme}://{_MASK}"
-    if ":" in host:
-        host = f"[{host}]"
-    if port is not None and port != _DEFAULT_PORTS[scheme]:
-        host = f"{host}:{port}"
-    return f"{scheme}://{host}/{_MASK}"
 
 
 def mask_params(

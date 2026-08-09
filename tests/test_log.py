@@ -108,9 +108,32 @@ class TestStdlibLoggerAdapter:
                 path="/customers",
                 status=200,
                 elapsed=0.3125,
+                request_id="req-1",
+                uds_request_id="srv-9",
             )
 
-        assert caplog.messages == ["GET /customers -> 200 OK in 0.312s"]
+        assert caplog.messages == [
+            "GET /customers -> 200 OK in 0.312s "
+            "[X-Origin-Request-Id=req-1] [X-Request-Id=srv-9]"
+        ]
+
+    def test_renders_response_without_server_request_id(self, caplog):
+        adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
+
+        with caplog.at_level(logging.INFO, logger="test.uds"):
+            adapter.info(
+                "uds.response",
+                method="GET",
+                path="/customers",
+                status=200,
+                elapsed=0.3125,
+                request_id="req-1",
+                uds_request_id=None,
+            )
+
+        assert caplog.messages == [
+            "GET /customers -> 200 OK in 0.312s [X-Origin-Request-Id=req-1]"
+        ]
 
     def test_renders_error_with_code(self, caplog):
         adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
@@ -123,11 +146,14 @@ class TestStdlibLoggerAdapter:
                 status=404,
                 elapsed=0.208,
                 error_code="notFound",
+                request_id="req-1",
+                uds_request_id="srv-9",
             )
 
         assert caplog.messages == [
             "POST /goods-orders/1/complete -> 404 Error in 0.208s "
-            "[errorCode=notFound]"
+            "[errorCode=notFound] [X-Origin-Request-Id=req-1] "
+            "[X-Request-Id=srv-9]"
         ]
 
     def test_renders_error_without_code(self, caplog):
@@ -141,9 +167,14 @@ class TestStdlibLoggerAdapter:
                 status=500,
                 elapsed=1.5,
                 error_code=None,
+                request_id="req-1",
+                uds_request_id=None,
             )
 
-        assert caplog.messages == ["POST /operations -> 500 Error in 1.500s"]
+        assert caplog.messages == [
+            "POST /operations -> 500 Error in 1.500s "
+            "[X-Origin-Request-Id=req-1]"
+        ]
 
     def test_renders_retry(self, caplog):
         adapter = StdlibLoggerAdapter(logging.getLogger("test.uds"))
@@ -500,6 +531,18 @@ class TestPublicExports:
         import async_uds_api
 
         assert isinstance(async_uds_api.get_logger(), logging.Logger)
+
+    def test_request_id_helpers_are_exported(self):
+        import async_uds_api
+
+        for name in (
+            "get_origin_request_id",
+            "reset_origin_request_id",
+            "set_origin_request_id",
+            "use_origin_request_id",
+        ):
+            assert name in async_uds_api.__all__
+            assert callable(getattr(async_uds_api, name))
 
 
 class BrokenHandler(logging.Handler):

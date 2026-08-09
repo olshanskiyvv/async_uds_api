@@ -34,10 +34,14 @@ _TEMPLATES: dict[str, str] = {
         "%(method)s %(path)s%(params)s "
         "[X-Origin-Request-Id=%(request_id)s] [X-Timestamp=%(timestamp)s]"
     ),
-    "uds.response": "%(method)s %(path)s -> %(status)d OK in %(elapsed).3fs",
+    "uds.response": (
+        "%(method)s %(path)s -> %(status)d OK in %(elapsed).3fs "
+        "[X-Origin-Request-Id=%(request_id)s]%(uds_request_id)s"
+    ),
     "uds.error": (
         "%(method)s %(path)s -> %(status)d Error in "
-        "%(elapsed).3fs%(error_code)s"
+        "%(elapsed).3fs%(error_code)s "
+        "[X-Origin-Request-Id=%(request_id)s]%(uds_request_id)s"
     ),
     "uds.retry": "Retry attempt %(attempt)d for %(method)s %(path)s",
     "uds.image.upload_url_request": (
@@ -96,6 +100,12 @@ def _render_error_code(error_code: object) -> str:
     return f" [errorCode={error_code}]"
 
 
+def _render_uds_request_id(value: object) -> str:
+    if not value:
+        return ""
+    return f" [X-Request-Id={value}]"
+
+
 def _safe_text(value: object) -> str:
     """Stringify a field value, tolerating a broken ``__str__``."""
     try:
@@ -123,6 +133,10 @@ def _render(event: str, fields: Mapping[str, Any]) -> str:
         if "error_code" in presentation:
             presentation["error_code"] = _render_error_code(
                 fields["error_code"]
+            )
+        if "uds_request_id" in presentation:
+            presentation["uds_request_id"] = _render_uds_request_id(
+                fields["uds_request_id"]
             )
         return template % presentation
     except Exception:

@@ -24,6 +24,7 @@ class CustomersAPI:
         max: int | None = None,
         offset: int | None = None,
         cursor: str | None = None,
+        request_id: str | None = None,
     ) -> CustomersPage:
         """Return a page of customers, filtered by cursor or offset."""
         params: dict[str, Any] = {}
@@ -35,17 +36,26 @@ class CustomersAPI:
             params["cursor"] = cursor
 
         data = await self._client._get_json(
-            "/customers", params=params or None
+            "/customers", params=params or None, request_id=request_id
         )
         return CustomersPage.model_validate(data)
 
     async def iter_all(
-        self, *, page_size: int = 50
+        self, *, page_size: int = 50, request_id: str | None = None
     ) -> AsyncIterator[Customer]:
-        """Yield every customer, fetching pages transparently via cursor."""
+        """Yield every customer, fetching pages transparently via cursor.
+
+        The explicit request_id parameter, if given, is sent for every
+        page. A value bound via use_origin_request_id is not: an async
+        generator does not capture the context of the block where it
+        was created, so pages pulled after that block exits get a
+        freshly generated uuid4.
+        """
         cursor: str | None = None
         while True:
-            page = await self.list(max=page_size, cursor=cursor)
+            page = await self.list(
+                max=page_size, cursor=cursor, request_id=request_id
+            )
             for row in page.rows:
                 yield row
             if not page.rows or page.cursor is None:
@@ -62,6 +72,7 @@ class CustomersAPI:
         total: float | None = None,
         skip_loyalty_total: float | None = None,
         unredeemable_total: float | None = None,
+        request_id: str | None = None,
     ) -> FindCustomerResponse:
         """Find a customer by code, phone, or uid."""
         params: dict[str, Any] = {}
@@ -81,26 +92,40 @@ class CustomersAPI:
             params["unredeemableTotal"] = unredeemable_total
 
         data = await self._client._get_json(
-            "/customers/find", params=params or None
+            "/customers/find", params=params or None, request_id=request_id
         )
         return FindCustomerResponse.model_validate(data)
 
-    async def get(self, customer_id: int) -> CustomerDetail:
+    async def get(
+        self, customer_id: int, *, request_id: str | None = None
+    ) -> CustomerDetail:
         """Return customer details including participant stats and tags."""
-        data = await self._client._get_json(f"/customers/{customer_id}")
+        data = await self._client._get_json(
+            f"/customers/{customer_id}", request_id=request_id
+        )
         return CustomerDetail.model_validate(data)
 
-    async def get_tags(self, customer_id: int) -> TagsPage:
+    async def get_tags(
+        self, customer_id: int, *, request_id: str | None = None
+    ) -> TagsPage:
         """Return tags currently assigned to a customer."""
-        data = await self._client._get_json(f"/customers/{customer_id}/tags")
+        data = await self._client._get_json(
+            f"/customers/{customer_id}/tags", request_id=request_id
+        )
         return TagsPage.model_validate(data)
 
     async def set_tags(
-        self, customer_id: int, tag_ids: builtins.list[int]
+        self,
+        customer_id: int,
+        tag_ids: builtins.list[int],
+        *,
+        request_id: str | None = None,
     ) -> TagsPage:
         """Replace all tags for a customer with the given list of tag IDs."""
         body = {"ids": tag_ids}
         data = await self._client._post_json(
-            f"/customers/{customer_id}/tags", body=body
+            f"/customers/{customer_id}/tags",
+            body=body,
+            request_id=request_id,
         )
         return TagsPage.model_validate(data)

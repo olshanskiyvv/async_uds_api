@@ -56,6 +56,12 @@ from async_uds_api.models import (
     TransactionInfo,
     VoucherInfo,
 )
+from async_uds_api.request_id import (
+    get_origin_request_id,
+    reset_origin_request_id,
+    set_origin_request_id,
+    use_origin_request_id,
+)
 
 _logger = logging.getLogger("async_uds_api")
 _logger.addHandler(logging.NullHandler())
@@ -88,6 +94,10 @@ __all__ = [
     "SENSITIVE_PARAMS",
     "mask_value",
     "mask_params",
+    "get_origin_request_id",
+    "reset_origin_request_id",
+    "set_origin_request_id",
+    "use_origin_request_id",
     # Models
     "CompanySettings",
     "Customer",

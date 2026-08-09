@@ -217,3 +217,93 @@ class TestRequestIdReachesTheWire:
             call.request.headers["X-Origin-Request-Id"] for call in route.calls
         }
         assert len(ids) == 2
+
+
+class TestExplicitParamInApiMethods:
+    async def test_customers_find(self, uds_client):
+        route = respx.get(
+            "https://api.uds.app/partner/v2/customers/find"
+        ).mock(return_value=httpx.Response(200, json={"user": {}}))
+
+        await uds_client.customers.find(
+            code="1234", request_id="trace-customers"
+        )
+
+        assert (
+            route.calls[0].request.headers["X-Origin-Request-Id"]
+            == "trace-customers"
+        )
+
+    async def test_customers_iter_all_uses_one_id_for_all_pages(
+        self, uds_client
+    ):
+        route = respx.get("https://api.uds.app/partner/v2/customers")
+        route.side_effect = [
+            httpx.Response(
+                200, json={"rows": [{"uid": "u-1"}], "cursor": "next"}
+            ),
+            httpx.Response(200, json={"rows": [], "cursor": None}),
+        ]
+
+        rows = [
+            row
+            async for row in uds_client.customers.iter_all(
+                page_size=1, request_id="trace-pages"
+            )
+        ]
+
+        ids = [
+            call.request.headers["X-Origin-Request-Id"] for call in route.calls
+        ]
+        assert len(rows) == 1
+        assert ids == ["trace-pages", "trace-pages"]
+
+    async def test_operations_get(self, uds_client):
+        route = respx.get("https://api.uds.app/partner/v2/operations/7").mock(
+            return_value=httpx.Response(
+                200, json={"id": 7, "action": "PURCHASE"}
+            )
+        )
+
+        await uds_client.operations.get(7, request_id="trace-operations")
+
+        assert (
+            route.calls[0].request.headers["X-Origin-Request-Id"]
+            == "trace-operations"
+        )
+
+    async def test_tags_list(self, uds_client):
+        route = respx.get("https://api.uds.app/partner/v2/tags").mock(
+            return_value=httpx.Response(200, json={"rows": []})
+        )
+
+        await uds_client.tags.list(request_id="trace-tags")
+
+        assert (
+            route.calls[0].request.headers["X-Origin-Request-Id"]
+            == "trace-tags"
+        )
+
+    async def test_settings_get(self, uds_client):
+        route = respx.get("https://api.uds.app/partner/v2/settings").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "id": 123456,
+                    "name": "Test Company",
+                    "promoCode": "TEST",
+                    "baseDiscountPolicy": "CHARGE_SCORES",
+                    "purchaseByPhone": True,
+                    "usePointsByPhone": True,
+                    "writeInvoice": False,
+                    "slug": "test-company",
+                },
+            )
+        )
+
+        await uds_client.settings.get(request_id="trace-settings")
+
+        assert (
+            route.calls[0].request.headers["X-Origin-Request-Id"]
+            == "trace-settings"
+        )

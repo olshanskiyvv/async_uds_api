@@ -14,12 +14,15 @@ class SettingsAPI:
         self._cached: CompanySettings | None = None
         self._cached_at: float = 0.0
 
-    async def get(self) -> CompanySettings:
-        """Return company settings, served from cache within the TTL window."""
+    async def get(self, *, request_id: str | None = None) -> CompanySettings:
+        """Return company settings, served from cache within the TTL window.
+
+        On a cache hit no HTTP request is made and request_id is unused.
+        """
         now = time.monotonic()
         if self._cached is not None and now - self._cached_at < self._ttl:
             return self._cached
-        data = await self._client._get_json("/settings")
+        data = await self._client._get_json("/settings", request_id=request_id)
         self._cached = CompanySettings.model_validate(data)
         self._cached_at = now
         return self._cached

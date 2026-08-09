@@ -41,6 +41,7 @@ from async_uds_api.log import (
     StdlibLoggerAdapter,
     mask_params,
 )
+from async_uds_api.request_id import get_origin_request_id
 
 DEFAULT_BASE_URL = "https://api.uds.app/partner/v2"
 
@@ -51,7 +52,11 @@ class UDSClient:
 
     Поддерживает:
     - базовую авторизацию (companyId:apiKey);
-    - автоматическую установку заголовков X-Origin-Request-Id и X-Timestamp.
+    - автоматическую установку заголовков X-Origin-Request-Id и X-Timestamp;
+    - передачу внешнего идентификатора цепочки запросов в
+      X-Origin-Request-Id: через параметр request_id любого метода API,
+      через use_origin_request_id или через set_origin_request_id.
+      Значение уходит в заголовок как есть и не валидируется.
 
     Доступ к API через атрибуты:
     - settings: SettingsAPI
@@ -159,12 +164,13 @@ class UDSClient:
     ) -> None:
         await self.aclose()
 
-    def _build_headers(self) -> dict[str, str]:
+    def _build_headers(self, request_id: str | None = None) -> dict[str, str]:
         now = datetime.now(timezone.utc).isoformat()
+        resolved = request_id or get_origin_request_id() or str(uuid.uuid4())
         return {
             "Accept": "application/json",
             "Accept-Charset": "utf-8",
-            "X-Origin-Request-Id": str(uuid.uuid4()),
+            "X-Origin-Request-Id": resolved,
             "X-Timestamp": now,
         }
 
@@ -195,6 +201,7 @@ class UDSClient:
         *,
         params: dict[str, Any] | None = None,
         json: dict[str, Any] | None = None,
+        request_id: str | None = None,
     ) -> httpx.Response:
         async for attempt in AsyncRetrying(
             retry=retry_if_exception_type(
@@ -213,7 +220,11 @@ class UDSClient:
                         attempt=attempt.retry_state.attempt_number,
                     )
                 return await self._do_request(
-                    method, path, params=params, json=json
+                    method,
+                    path,
+                    params=params,
+                    json=json,
+                    request_id=request_id,
                 )
         raise UDSClientError("Retry loop exited unexpectedly")
 
@@ -224,9 +235,10 @@ class UDSClient:
         *,
         params: dict[str, Any] | None = None,
         json: dict[str, Any] | None = None,
+        request_id: str | None = None,
     ) -> httpx.Response:
-        headers = self._build_headers()
-        request_id = headers["X-Origin-Request-Id"]
+        headers = self._build_headers(request_id)
+        origin_request_id = headers["X-Origin-Request-Id"]
         timestamp = headers["X-Timestamp"]
 
         self._logger.info(
@@ -234,7 +246,7 @@ class UDSClient:
             method=method,
             path=path,
             params=mask_params(params),
-            request_id=request_id,
+            request_id=origin_request_id,
             timestamp=timestamp,
         )
 
@@ -318,8 +330,11 @@ class UDSClient:
         path: str,
         *,
         params: dict[str, Any] | None = None,
+        request_id: str | None = None,
     ) -> dict[str, Any]:
-        response = await self._request("GET", path, params=params)
+        response = await self._request(
+            "GET", path, params=params, request_id=request_id
+        )
         data = response.json()
         if not isinstance(data, dict):
             raise UDSClientError(
@@ -333,8 +348,11 @@ class UDSClient:
         *,
         body: dict[str, Any] | None = None,
         params: dict[str, Any] | None = None,
+        request_id: str | None = None,
     ) -> dict[str, Any]:
-        response = await self._request("POST", path, params=params, json=body)
+        response = await self._request(
+            "POST", path, params=params, json=body, request_id=request_id
+        )
         if response.content:
             data = response.json()
             if not isinstance(data, dict):
@@ -350,8 +368,11 @@ class UDSClient:
         *,
         body: dict[str, Any] | None = None,
         params: dict[str, Any] | None = None,
+        request_id: str | None = None,
     ) -> dict[str, Any]:
-        response = await self._request("PUT", path, params=params, json=body)
+        response = await self._request(
+            "PUT", path, params=params, json=body, request_id=request_id
+        )
         if response.content:
             data = response.json()
             if not isinstance(data, dict):
@@ -366,5 +387,8 @@ class UDSClient:
         path: str,
         *,
         params: dict[str, Any] | None = None,
+        request_id: str | None = None,
     ) -> None:
-        await self._request("DELETE", path, params=params)
+        await self._request(
+            "DELETE", path, params=params, request_id=request_id
+        )

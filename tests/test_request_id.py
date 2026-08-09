@@ -1,8 +1,12 @@
 import asyncio
+import uuid
 
+import httpx
 import pytest
+import respx
 
 from async_uds_api import (
+    UDSClient,
     get_origin_request_id,
     reset_origin_request_id,
     set_origin_request_id,
@@ -90,3 +94,126 @@ class TestTaskIsolation:
 
         assert inherited == "parent"
         assert get_origin_request_id() is None
+
+
+class TestHeaderResolution:
+    def _client(self):
+        return UDSClient(company_id="123456", api_key="test-api-key")
+
+    def test_generates_uuid_when_nothing_is_set(self):
+        headers = self._client()._build_headers()
+
+        uuid.UUID(headers["X-Origin-Request-Id"])
+
+    def test_uses_contextvar_value(self):
+        client = self._client()
+
+        with use_origin_request_id("trace-ctx"):
+            headers = client._build_headers()
+
+        assert headers["X-Origin-Request-Id"] == "trace-ctx"
+
+    def test_explicit_value_wins_over_contextvar(self):
+        client = self._client()
+
+        with use_origin_request_id("trace-ctx"):
+            headers = client._build_headers("trace-explicit")
+
+        assert headers["X-Origin-Request-Id"] == "trace-explicit"
+
+    def test_empty_explicit_value_falls_back_to_contextvar(self):
+        client = self._client()
+
+        with use_origin_request_id("trace-ctx"):
+            headers = client._build_headers("")
+
+        assert headers["X-Origin-Request-Id"] == "trace-ctx"
+
+    def test_empty_contextvar_value_falls_back_to_uuid(self):
+        client = self._client()
+
+        with use_origin_request_id(""):
+            headers = client._build_headers()
+
+        uuid.UUID(headers["X-Origin-Request-Id"])
+
+    def test_arbitrary_string_is_sent_verbatim(self):
+        client = self._client()
+
+        headers = client._build_headers("order-42/attempt-1")
+
+        assert headers["X-Origin-Request-Id"] == "order-42/attempt-1"
+
+
+class TestRequestIdReachesTheWire:
+    async def test_contextvar_value_is_sent_in_header(self, uds_client):
+        route = respx.get("https://api.uds.app/partner/v2/customers").mock(
+            return_value=httpx.Response(200, json={"rows": []})
+        )
+
+        with use_origin_request_id("trace-ctx"):
+            await uds_client._get_json("/customers")
+
+        sent = route.calls[0].request
+        assert sent.headers["X-Origin-Request-Id"] == "trace-ctx"
+
+    async def test_explicit_value_is_sent_in_header(self, uds_client):
+        route = respx.get("https://api.uds.app/partner/v2/customers").mock(
+            return_value=httpx.Response(200, json={"rows": []})
+        )
+
+        await uds_client._get_json("/customers", request_id="trace-arg")
+
+        sent = route.calls[0].request
+        assert sent.headers["X-Origin-Request-Id"] == "trace-arg"
+
+    async def test_same_id_on_every_call_in_the_block(self, uds_client):
+        route = respx.get("https://api.uds.app/partner/v2/customers").mock(
+            return_value=httpx.Response(200, json={"rows": []})
+        )
+
+        with use_origin_request_id("trace-chain"):
+            await uds_client._get_json("/customers")
+            await uds_client._get_json("/customers")
+
+        ids = [
+            call.request.headers["X-Origin-Request-Id"] for call in route.calls
+        ]
+        assert ids == ["trace-chain", "trace-chain"]
+
+    async def test_same_id_on_every_retry_attempt(self, mock_httpx):
+        route = respx.get("https://api.uds.app/partner/v2/customers")
+        route.side_effect = [
+            httpx.Response(500, json={"message": "server error"}),
+            httpx.Response(200, json={"rows": []}),
+        ]
+
+        async with UDSClient(
+            company_id="123456", api_key="test-api-key", retries=2
+        ) as client:
+            with use_origin_request_id("trace-retry"):
+                await client._get_json("/customers")
+
+        ids = [
+            call.request.headers["X-Origin-Request-Id"] for call in route.calls
+        ]
+        assert ids == ["trace-retry", "trace-retry"]
+
+    async def test_generated_ids_differ_between_retry_attempts(
+        self, mock_httpx
+    ):
+        route = respx.get("https://api.uds.app/partner/v2/customers")
+        route.side_effect = [
+            httpx.Response(500, json={"message": "server error"}),
+            httpx.Response(200, json={"rows": []}),
+        ]
+
+        async with UDSClient(
+            company_id="123456", api_key="test-api-key", retries=2
+        ) as client:
+            await client._get_json("/customers")
+
+        ids = {
+            call.request.headers["X-Origin-Request-Id"] for call in route.calls
+        }
+        assert len(ids) == 2

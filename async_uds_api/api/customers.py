@@ -45,7 +45,11 @@ class CustomersAPI:
     ) -> AsyncIterator[Customer]:
         """Yield every customer, fetching pages transparently via cursor.
 
-        The same request_id is sent for every page.
+        The explicit request_id parameter, if given, is sent for every
+        page. A value bound via use_origin_request_id is not: an async
+        generator does not capture the context of the block where it
+        was created, so pages pulled after that block exits get a
+        freshly generated uuid4.
         """
         cursor: str | None = None
         while True:

@@ -1,4 +1,5 @@
 import asyncio
+import time
 import uuid
 
 import httpx
@@ -12,6 +13,7 @@ from async_uds_api import (
     set_origin_request_id,
     use_origin_request_id,
 )
+from tests.fixtures.settings import COMPANY_SETTINGS_RESPONSE
 
 
 class TestContextVarAccessors:
@@ -87,8 +89,8 @@ class TestTaskIsolation:
             inherited = seen[-1]
 
         async def sibling() -> None:
-            with use_origin_request_id("sibling"):
-                await asyncio.sleep(0)
+            set_origin_request_id("sibling")
+            await asyncio.sleep(0)
 
         await asyncio.gather(sibling())
 
@@ -370,3 +372,87 @@ class TestExplicitParamInRemainingModules:
             route.calls[0].request.headers["X-Origin-Request-Id"]
             == "trace-images"
         )
+
+
+class TestImagesUploadOmitsHeaderOnStorage:
+    async def test_presigned_upload_carries_no_origin_header(self, uds_client):
+        upload_url_route = respx.post(
+            "https://api.uds.app/partner/v2/image-upload-url"
+        ).mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "imageId": "img-1",
+                    "method": "PUT",
+                    "url": "https://storage.example.com/img-1",
+                },
+            )
+        )
+        storage_route = respx.put("https://storage.example.com/img-1").mock(
+            return_value=httpx.Response(200)
+        )
+
+        await uds_client.images.upload(
+            b"image data", "image/jpeg", request_id="trace-upload"
+        )
+
+        assert (
+            upload_url_route.calls[0].request.headers["X-Origin-Request-Id"]
+            == "trace-upload"
+        )
+        assert (
+            "X-Origin-Request-Id" not in storage_route.calls[0].request.headers
+        )
+
+
+class TestSettingsCacheIgnoresRequestId:
+    async def test_cache_hit_skips_request_and_ignores_request_id(
+        self, uds_client
+    ):
+        route = respx.get("https://api.uds.app/partner/v2/settings").mock(
+            return_value=httpx.Response(200, json=COMPANY_SETTINGS_RESPONSE)
+        )
+
+        first = await uds_client.settings.get(request_id="trace-first")
+        second = await uds_client.settings.get(request_id="trace-second")
+
+        assert route.call_count == 1
+        assert first is second
+        assert (
+            route.calls[0].request.headers["X-Origin-Request-Id"]
+            == "trace-first"
+        )
+
+
+class TestLocalProtocolErrorIsNotRetried:
+    async def test_header_injection_value_raises_without_retry(self):
+        connections = 0
+
+        async def handle(
+            reader: asyncio.StreamReader,
+            writer: asyncio.StreamWriter,
+        ) -> None:
+            nonlocal connections
+            connections += 1
+            await reader.read(65536)
+            writer.close()
+
+        server = await asyncio.start_server(handle, "127.0.0.1", 0)
+        port = server.sockets[0].getsockname()[1]
+
+        async with server:
+            async with UDSClient(
+                company_id="123456",
+                api_key="test-api-key",
+                base_url=f"http://127.0.0.1:{port}",
+                retries=3,
+            ) as client:
+                start = time.monotonic()
+                with pytest.raises(httpx.LocalProtocolError):
+                    await client._get_json(
+                        "/customers", request_id="bad\r\nvalue"
+                    )
+                elapsed = time.monotonic() - start
+
+        assert connections == 1
+        assert elapsed < 1.0

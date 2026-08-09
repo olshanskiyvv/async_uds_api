@@ -81,7 +81,11 @@ class GoodsAPI:
     ) -> AsyncIterator[GoodsInfoType]:
         """Yield every goods item, fetching pages transparently via offset.
 
-        The same request_id is sent for every page.
+        The explicit request_id parameter, if given, is sent for every
+        page. A value bound via use_origin_request_id is not: an async
+        generator does not capture the context of the block where it
+        was created, so pages pulled after that block exits get a
+        freshly generated uuid4.
         """
         offset = 0
         while True:

@@ -381,7 +381,10 @@ HTTP-заголовка:
 **`set`/`reset`** — когда вход и выход из контекста разнесены по разным
 функциям, например в middleware. Значение здесь приходит из заголовка,
 подконтрольного внешнему клиенту, поэтому перед передачей в
-`set_origin_request_id` из него вырезаются `\r` и `\n`:
+`set_origin_request_id` из него остаются только печатные ASCII-символы, а
+длина обрезается. Это закрывает сразу все три риска из списка выше: и
+`UnicodeEncodeError` на кириллице и эмодзи, и `LocalProtocolError` на
+управляющих символах, и неограниченную длину:
 
 ```python
 from async_uds_api import reset_origin_request_id, set_origin_request_id
@@ -390,7 +393,7 @@ from async_uds_api import reset_origin_request_id, set_origin_request_id
 @app.middleware("http")
 async def bind_request_id(request, call_next):
     raw = request.headers.get("X-Correlation-Id", "")
-    value = raw.replace("\r", "").replace("\n", "") or None
+    value = "".join(c for c in raw if " " <= c <= "~")[:200] or None
     token = set_origin_request_id(value)
     try:
         return await call_next(request)

@@ -41,6 +41,7 @@ if __name__ == "__main__":
 - **Асинхронный HTTP-клиент** на базе `httpx.AsyncClient`
 - **Авторизация** через Basic Auth (`companyId:apiKey`)
 - **Автоматические заголовки** `X-Origin-Request-Id` и `X-Timestamp`
+- **Сквозной origin request id** — идентификатор внешней цепочки запросов
 - **Pydantic-модели** для валидации данных
 - **Типизация** — полная поддержка статических анализаторов
 - **Обработка ошибок** — иерархия исключений с детальной информацией
@@ -198,7 +199,7 @@ logging.getLogger("async_uds_api").setLevel(logging.INFO)
 ```
 GET /customers [max=50 cursor=abc] [X-Origin-Request-Id=6e1c89d3-...] [X-Timestamp=2026-07-18T19:59:54.981185+00:00]
 GET /customers/find [phone=***4567] [X-Origin-Request-Id=6e1c89d3-...] [X-Timestamp=2026-07-18T19:59:54.981185+00:00]
-GET /customers/find -> 200 OK in 0.312s
+GET /customers/find -> 200 OK in 0.312s [X-Origin-Request-Id=6e1c89d3-...] [X-Request-Id=8c828ee7-...]
 ```
 
 #### Маскирование персональных данных
@@ -300,10 +301,15 @@ client = UDSClient(
 | Событие | Уровень | Поля |
 |---|---|---|
 | `uds.request` | INFO | `method`, `path`, `params`, `request_id`, `timestamp` |
-| `uds.response` | INFO | `method`, `path`, `status`, `elapsed` |
-| `uds.error` | ERROR | `method`, `path`, `status`, `elapsed`, `error_code` |
+| `uds.response` | INFO | `method`, `path`, `status`, `elapsed`, `request_id`, `uds_request_id` |
+| `uds.error` | ERROR | `method`, `path`, `status`, `elapsed`, `error_code`, `request_id`, `uds_request_id` |
 | `uds.retry` | WARNING | `method`, `path`, `attempt` |
 | `uds.image.*` | DEBUG/INFO/ERROR | зависит от события |
+
+Поле `request_id` — это значение, которое клиент отправил в
+`X-Origin-Request-Id`. Поле `uds_request_id` — значение заголовка
+`X-Request-Id`, которым сервер UDS пометил запрос у себя; оно равно
+`None`, если сервер заголовок не прислал.
 
 События `uds.image.*` пишут URL как есть: поле `url` у
 `uds.image.download_start`, `uds.image.download_done` и
@@ -331,6 +337,85 @@ presigned-ссылки короткоживущие, а `https://cdn.example.com
 ```bash
 export ASYNC_UDS_API_DEBUG_LOGGING=1
 ```
+
+### Сквозной origin request id
+
+По умолчанию клиент генерирует `X-Origin-Request-Id` сам — новый UUID на
+каждый HTTP-запрос. Чтобы связать вызовы UDS с трассировкой вашего
+сервиса, передайте идентификатор цепочки одним из трёх способов.
+
+**Параметр метода** — точечно, для одного вызова:
+
+```python
+await client.customers.find(phone="+79991234567", request_id="trace-42")
+```
+
+**Контекстный менеджер** — на блок кода:
+
+```python
+from async_uds_api import use_origin_request_id
+
+with use_origin_request_id("trace-42"):
+    await client.customers.find(phone="+79991234567")
+    await client.operations.create(operation)
+```
+
+**`set`/`reset`** — когда вход и выход из контекста разнесены по разным
+функциям, например в middleware:
+
+```python
+from async_uds_api import reset_origin_request_id, set_origin_request_id
+
+
+@app.middleware("http")
+async def bind_request_id(request, call_next):
+    token = set_origin_request_id(request.headers.get("X-Request-Id"))
+    try:
+        return await call_next(request)
+    finally:
+        reset_origin_request_id(token)
+```
+
+Приоритет источников: параметр метода → контекстная переменная →
+сгенерированный UUID. Пустая строка на любом уровне считается «не
+задано» и передаёт управление следующему уровню.
+
+Одно значение уходит на все запросы внутри блока, включая повторные
+попытки после ошибок. Спецификация UDS рекомендует уникальный
+идентификатор на каждый запрос, но на обработку запроса повторное
+значение не влияет — оно используется для поддержки и разбора инцидентов.
+
+Два места, где `request_id` работает не так, как можно ожидать:
+
+- `images.upload()` передаёт идентификатор только в запрос к UDS за
+  presigned-ссылкой. Сама загрузка идёт в сторонний storage и заголовок
+  не несёт.
+- `settings.get()` при попадании в TTL-кэш не делает HTTP-запрос, и
+  `request_id` ни на что не влияет.
+
+#### Значение не валидируется
+
+Библиотека передаёт значение в заголовок как есть: требования UUID нет,
+подойдёт любая строка. Санитизация — ответственность вызывающей стороны.
+Что важно проверить, если идентификатор приходит из входящего
+HTTP-заголовка:
+
+- символы `\r` и `\n` внутри значения — это вектор header injection;
+- символы вне latin-1 (кириллица, эмодзи) приводят к
+  `UnicodeEncodeError` в глубине httpx;
+- длина не ограничивается — слишком длинное значение может быть
+  отвергнуто сервером.
+
+#### Три разных request id
+
+Имена в API и в логах не совпадают с именами HTTP-заголовков — здесь
+легко запутаться:
+
+| Что это | HTTP-заголовок | Имя в API и логах |
+|---|---|---|
+| Идентификатор цепочки, который клиент шлёт в UDS | `X-Origin-Request-Id`, исходящий | `set_origin_request_id()`, `use_origin_request_id()`, параметр `request_id=`, поле лога `request_id` |
+| Идентификатор, присвоенный запросу сервером UDS | `X-Request-Id`, в ответе | поле лога `uds_request_id` |
+| Идентификатор вебхука, пришедшего от UDS | `X-RequestId`, без дефиса | параметр `verify_webhook_signature(request_id=...)` |
 
 ### Webhooks
 

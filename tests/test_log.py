@@ -532,6 +532,18 @@ class TestPublicExports:
 
         assert isinstance(async_uds_api.get_logger(), logging.Logger)
 
+    def test_request_id_helpers_are_exported(self):
+        import async_uds_api
+
+        for name in (
+            "get_origin_request_id",
+            "reset_origin_request_id",
+            "set_origin_request_id",
+            "use_origin_request_id",
+        ):
+            assert name in async_uds_api.__all__
+            assert callable(getattr(async_uds_api, name))
+
 
 class BrokenHandler(logging.Handler):
     def __init__(self):

@@ -384,6 +384,70 @@ class TestClientLogging:
         assert fields["status"] == 404
         assert fields["error_code"] == "notFound"
 
+    async def test_response_event_carries_both_request_ids(self, mock_httpx):
+        fake = FakeLogger()
+        respx.get("https://api.uds.app/partner/v2/customers").mock(
+            return_value=httpx.Response(
+                200,
+                json={"rows": []},
+                headers={"X-Request-Id": "srv-42"},
+            )
+        )
+
+        async with UDSClient(
+            company_id="123456",
+            api_key="test-api-key",
+            retries=1,
+            logger=fake,
+        ) as client:
+            await client._get_json("/customers", request_id="trace-7")
+
+        fields = [e for e in fake.events if e[1] == "uds.response"][0][2]
+        assert fields["request_id"] == "trace-7"
+        assert fields["uds_request_id"] == "srv-42"
+
+    async def test_response_event_tolerates_missing_server_id(
+        self, mock_httpx
+    ):
+        fake = FakeLogger()
+        respx.get("https://api.uds.app/partner/v2/customers").mock(
+            return_value=httpx.Response(200, json={"rows": []})
+        )
+
+        async with UDSClient(
+            company_id="123456",
+            api_key="test-api-key",
+            retries=1,
+            logger=fake,
+        ) as client:
+            await client._get_json("/customers", request_id="trace-7")
+
+        fields = [e for e in fake.events if e[1] == "uds.response"][0][2]
+        assert fields["uds_request_id"] is None
+
+    async def test_error_event_carries_both_request_ids(self, mock_httpx):
+        fake = FakeLogger()
+        respx.get("https://api.uds.app/partner/v2/customers/find").mock(
+            return_value=httpx.Response(
+                404,
+                json={"errorCode": "notFound", "message": "Not found"},
+                headers={"X-Request-Id": "srv-42"},
+            )
+        )
+
+        async with UDSClient(
+            company_id="123456",
+            api_key="test-api-key",
+            retries=1,
+            logger=fake,
+        ) as client:
+            with pytest.raises(Exception):
+                await client._get_json("/customers/find", request_id="trace-7")
+
+        fields = [e for e in fake.events if e[1] == "uds.error"][0][2]
+        assert fields["request_id"] == "trace-7"
+        assert fields["uds_request_id"] == "srv-42"
+
     async def test_retry_event_emitted_with_fields(self, mock_httpx):
         fake = FakeLogger()
         route = respx.get("https://api.uds.app/partner/v2/customers")

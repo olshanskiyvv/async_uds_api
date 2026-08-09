@@ -269,6 +269,8 @@ class UDSClient:
                 path=path,
                 status=response.status_code,
                 elapsed=elapsed,
+                request_id=origin_request_id,
+                uds_request_id=response.headers.get("X-Request-Id"),
             )
             return response
         except httpx.HTTPStatusError as exc:
@@ -298,6 +300,8 @@ class UDSClient:
                 status=status,
                 elapsed=elapsed,
                 error_code=error_code,
+                request_id=origin_request_id,
+                uds_request_id=res.headers.get("X-Request-Id"),
             )
 
             exc_cls: type[UDSAPIError]

@@ -34,14 +34,18 @@ class ImagesAPI:
         """Close the underlying HTTP client used for presigned-URL uploads."""
         await self._upload_client.aclose()
 
-    async def get_upload_url(self, content_type: str) -> ImageUploadUrl:
+    async def get_upload_url(
+        self, content_type: str, *, request_id: str | None = None
+    ) -> ImageUploadUrl:
         """Request a presigned upload URL for the given MIME type."""
         self._validate_content_type(content_type)
         self._logger.debug(
             "uds.image.upload_url_request", content_type=content_type
         )
         body = {"contentType": content_type}
-        data = await self._client._post_json("/image-upload-url", body=body)
+        data = await self._client._post_json(
+            "/image-upload-url", body=body, request_id=request_id
+        )
         result = ImageUploadUrl.model_validate(data)
         self._logger.info(
             "uds.image.upload_url_received", image_id=result.image_id
@@ -52,8 +56,15 @@ class ImagesAPI:
         self,
         source: str | Path | bytes,
         content_type: str | None = None,
+        *,
+        request_id: str | None = None,
     ) -> str:
-        """Upload an image from a path, URL, or bytes; return the image ID."""
+        """Upload an image from a path, URL, or bytes; return the image ID.
+
+        request_id reaches only the UDS call that issues the presigned URL.
+        The upload itself goes to third-party storage and carries no
+        X-Origin-Request-Id header.
+        """
         if isinstance(source, bytes):
             if content_type is None:
                 raise UDSImageUnsupportedSourceError(
@@ -79,7 +90,9 @@ class ImagesAPI:
         image_data = await self._read_image_data(source)
         self._logger.debug("uds.image.read", size=len(image_data))
 
-        upload_info = await self.get_upload_url(content_type)
+        upload_info = await self.get_upload_url(
+            content_type, request_id=request_id
+        )
         await self._upload_to_url(upload_info, image_data)
 
         self._logger.info("uds.image.uploaded", image_id=upload_info.image_id)

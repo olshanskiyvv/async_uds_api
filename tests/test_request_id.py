@@ -307,3 +307,66 @@ class TestExplicitParamInApiMethods:
             route.calls[0].request.headers["X-Origin-Request-Id"]
             == "trace-settings"
         )
+
+
+class TestExplicitParamInRemainingModules:
+    async def test_goods_delete(self, uds_client):
+        route = respx.delete("https://api.uds.app/partner/v2/goods/5").mock(
+            return_value=httpx.Response(200, json={})
+        )
+
+        await uds_client.goods.delete(5, request_id="trace-goods")
+
+        assert (
+            route.calls[0].request.headers["X-Origin-Request-Id"]
+            == "trace-goods"
+        )
+
+    async def test_goods_external_delete(self, uds_client):
+        route = respx.delete(
+            "https://api.uds.app/partner/v2/goods/external/sku-1"
+        ).mock(return_value=httpx.Response(200, json={}))
+
+        await uds_client.goods.external.delete(
+            "sku-1", request_id="trace-external"
+        )
+
+        assert (
+            route.calls[0].request.headers["X-Origin-Request-Id"]
+            == "trace-external"
+        )
+
+    async def test_orders_cancel(self, uds_client):
+        route = respx.post(
+            "https://api.uds.app/partner/v2/goods-orders/3/cancel"
+        ).mock(return_value=httpx.Response(200, json={"purchase": {}}))
+
+        await uds_client.goods_orders.cancel(3, request_id="trace-orders")
+
+        assert (
+            route.calls[0].request.headers["X-Origin-Request-Id"]
+            == "trace-orders"
+        )
+
+    async def test_images_get_upload_url(self, uds_client):
+        route = respx.post(
+            "https://api.uds.app/partner/v2/image-upload-url"
+        ).mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "imageId": "img-1",
+                    "method": "PUT",
+                    "url": "https://storage.example.com/img-1",
+                },
+            )
+        )
+
+        await uds_client.images.get_upload_url(
+            "image/jpeg", request_id="trace-images"
+        )
+
+        assert (
+            route.calls[0].request.headers["X-Origin-Request-Id"]
+            == "trace-images"
+        )

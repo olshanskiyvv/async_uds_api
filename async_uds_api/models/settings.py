@@ -53,6 +53,10 @@ class MembershipTier(APIModel):
         default=None,
         description="Conditions to upgrade customer's status automatically.",
     )
+    system: bool | None = Field(
+        default=None,
+        description="Whether the tier is a system tier (undocumented field).",
+    )
 
 
 class LoyaltyProgramSettings(APIModel):

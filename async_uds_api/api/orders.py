@@ -1,10 +1,12 @@
 from typing import TYPE_CHECKING, Any
 
 from async_uds_api.models import (
+    DeliveryCase,
     GoodsOrderCode,
     GoodsOrderCompleteResult,
     GoodsOrderDetailed,
-    GoodsOrderItem,
+    GoodsOrderItemNew,
+    GoodsOrderItemUpdate,
     GoodsOrderUpdateStatus,
 )
 
@@ -29,22 +31,21 @@ class GoodsOrdersAPI:
         self,
         order_id: int,
         *,
-        order_status: GoodsOrderUpdateStatus | None = None,
-        items: list[GoodsOrderItem] | None = None,
-        comment: str | None = None,
+        delivery_case: DeliveryCase | None = None,
+        items: list[GoodsOrderItemUpdate | GoodsOrderItemNew] | None = None,
         request_id: str | None = None,
     ) -> GoodsOrderDetailed:
-        """Update order status, line items, or comment."""
+        """Update order delivery case or line items."""
         body: dict[str, Any] = {}
-        if order_status is not None:
-            body["orderStatus"] = order_status.value
+        if delivery_case is not None:
+            body["deliveryCase"] = delivery_case.model_dump(
+                by_alias=True, exclude_none=True
+            )
         if items is not None:
             body["items"] = [
                 item.model_dump(by_alias=True, exclude_none=True)
                 for item in items
             ]
-        if comment is not None:
-            body["comment"] = comment
 
         data = await self._client._put_json(
             f"/goods-orders/{order_id}",

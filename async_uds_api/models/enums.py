@@ -81,6 +81,7 @@ class GoodsOrderState(str, Enum):
 class GoodsOrderUpdateStatus(str, Enum):
     ACCEPTED = "ACCEPTED"
     READY = "READY"
+    WAITING_PAYMENT = "WAITING_PAYMENT"
 
 
 class GoodsOrderItemType(str, Enum):

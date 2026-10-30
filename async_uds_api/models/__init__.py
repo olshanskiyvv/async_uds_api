@@ -57,6 +57,7 @@ from async_uds_api.models.operations import (
     PurchaseCalcRequestReceipt,
     RefundOperationRequest,
     RewardRequest,
+    RewardResponse,
     VoucherInfo,
 )
 from async_uds_api.models.orders import (
@@ -161,6 +162,7 @@ __all__ = [
     "ReceiverInfo",
     "RefundOperationRequest",
     "RewardRequest",
+    "RewardResponse",
     "TagModel",
     "TagsPage",
     "TaxSystemCode",

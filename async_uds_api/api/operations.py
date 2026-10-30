@@ -10,6 +10,7 @@ from async_uds_api.models import (
     PurchaseCalcResponse,
     RefundOperationRequest,
     RewardRequest,
+    RewardResponse,
     VoucherInfo,
 )
 
@@ -125,12 +126,13 @@ class OperationsAPI:
         reward_request: RewardRequest,
         *,
         request_id: str | None = None,
-    ) -> None:
+    ) -> RewardResponse:
         """Issue a non-purchase reward (e.g. referral bonus) to a customer."""
         body = reward_request.model_dump(by_alias=True, exclude_none=True)
-        await self._client._post_json(
+        data = await self._client._post_json(
             "/operations/reward", body=body, request_id=request_id
         )
+        return RewardResponse.model_validate(data)
 
     async def create_voucher(
         self, voucher: CreateVoucher, *, request_id: str | None = None

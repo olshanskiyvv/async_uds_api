@@ -7,10 +7,15 @@ from pydantic import Field
 from async_uds_api.models.base import APIModel
 from async_uds_api.models.common import BranchInfo, ParticipantShortInfo
 from async_uds_api.models.enums import Action, ActionState
+from async_uds_api.models.settings import MembershipTier
 
 
 class OperationCustomer(ParticipantShortInfo):
     uid: str | None = None
+    membership_tier: MembershipTier | None = Field(
+        default=None,
+        description="Customer membership tier (present in real payloads).",
+    )
 
 
 class CashierInfo(APIModel):
@@ -89,6 +94,12 @@ class RewardRequest(APIModel):
     points: float
     participants: list[int]
     silent: bool = False
+
+
+class RewardResponse(APIModel):
+    accepted: int = Field(
+        description="Number of users who will be rewarded with points.",
+    )
 
 
 class CreateVoucherReceipt(APIModel):

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import Field
 
@@ -141,6 +141,38 @@ class GoodsOrderItem(APIModel):
         default=None,
         description="Goods measurement.",
     )
+    data_matrix_codes: list[str] | None = Field(
+        default=None,
+        description="Data matrix codes (undocumented, for marketplaces).",
+    )
+    delivery_state: str | None = Field(
+        default=None,
+        description="Delivery state (undocumented).",
+    )
+    weight_grams: int | None = Field(
+        default=None,
+        ge=1,
+        le=30000,
+        description="Weight in whole grams (PIECE goods only).",
+    )
+    width_cm: float | None = Field(
+        default=None,
+        ge=1,
+        le=120,
+        description="Width in cm (PIECE goods only).",
+    )
+    height_cm: float | None = Field(
+        default=None,
+        ge=1,
+        le=120,
+        description="Height in cm (PIECE goods only).",
+    )
+    length_cm: float | None = Field(
+        default=None,
+        ge=1,
+        le=120,
+        description="Length in cm (PIECE goods only).",
+    )
 
 
 class GoodsOrderItemUpdate(APIModel):
@@ -230,6 +262,10 @@ class GoodsOrderDetailed(APIModel):
         description="Items information.",
     )
     purchase: PurchaseCalc
+    external_order: Any | None = Field(
+        default=None,
+        description="External order (undocumented, observed as null).",
+    )
 
 
 class GoodsOrderCode(APIModel):

@@ -4,10 +4,11 @@ from httpx import Response
 
 from async_uds_api import UDSNotFoundError
 from async_uds_api.models import (
+    DeliveryCase,
     GoodsOrderCode,
     GoodsOrderCompleteResult,
     GoodsOrderDetailed,
-    GoodsOrderItem,
+    GoodsOrderItemUpdate,
     GoodsOrderUpdateStatus,
 )
 from tests.fixtures.orders import (
@@ -36,24 +37,13 @@ class TestGoodsOrdersAPI:
         with pytest.raises(UDSNotFoundError):
             await uds_client.goods_orders.get(999)
 
-    async def test_update_order_success(self, uds_client):
+    async def test_update_order_with_delivery_case(self, uds_client):
         respx.put("https://api.uds.app/partner/v2/goods-orders/42").mock(
             return_value=Response(200, json=GOODS_ORDER_RESPONSE)
         )
 
         result = await uds_client.goods_orders.update(
-            42, comment="Test comment"
-        )
-
-        assert isinstance(result, GoodsOrderDetailed)
-
-    async def test_update_order_with_status(self, uds_client):
-        respx.put("https://api.uds.app/partner/v2/goods-orders/42").mock(
-            return_value=Response(200, json=GOODS_ORDER_RESPONSE)
-        )
-
-        result = await uds_client.goods_orders.update(
-            42, order_status=GoodsOrderUpdateStatus.ACCEPTED
+            42, delivery_case=DeliveryCase(name="new zone", value=0.0)
         )
 
         assert isinstance(result, GoodsOrderDetailed)
@@ -63,11 +53,7 @@ class TestGoodsOrdersAPI:
             return_value=Response(200, json=GOODS_ORDER_RESPONSE)
         )
 
-        items = [
-            GoodsOrderItem(
-                id=1, name="Item A", type="ITEM", qty=1, price=100.0
-            )
-        ]
+        items = [GoodsOrderItemUpdate(id=1, qty=2)]
         result = await uds_client.goods_orders.update(42, items=items)
 
         assert isinstance(result, GoodsOrderDetailed)

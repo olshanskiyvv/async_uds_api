@@ -1,14 +1,14 @@
-## async-uds-api
+# async-uds-api
 
 Асинхронный Python-клиент для публичного UDS Partner API v2.
 
-### Установка
+## Установка
 
 ```bash
 pip install async-uds-api
 ```
 
-### Быстрый старт
+## Быстрый старт
 
 ```python
 import asyncio
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-### Возможности
+## Возможности
 
 - **Асинхронный HTTP-клиент** на базе `httpx.AsyncClient`
 - **Авторизация** через Basic Auth (`companyId:apiKey`)
@@ -46,140 +46,193 @@ if __name__ == "__main__":
 - **Типизация** — полная поддержка статических анализаторов
 - **Обработка ошибок** — иерархия исключений с детальной информацией
 
-### API
+## API
 
-#### Settings
+Ресурсы клиента и их назначение:
+
+| Ресурс | Назначение |
+|---|---|
+| `client.settings` | настройки компании и программы лояльности |
+| `client.customers` | клиенты: поиск, карточка, теги |
+| `client.operations` | операции: расчёт, покупка, возврат, начисление/списание баллов, ваучеры |
+| `client.tags` | теги компании |
+| `client.goods` | товары (в т.ч. по `externalId` через `client.goods.external`) |
+| `client.images` | загрузка изображений |
+| `client.goods_orders` | заказы товаров |
+
+Подробности по каждому методу — в docstring соответствующих классов и методов,
+примеры использования — в [Сценариях](#сценарии).
+
+## Сценарии
+
+### Оплата (покупка)
+
+Общий сценарий оплаты: поиск клиента → расчёт → проведение → возврат
+(опционально). Покрывает оплату баллами и сертификатом — обрабатываются
+одинаково, разница только в источнике списания.
+
+**Механика баллов и сертификатов:**
+
+- **Баллы** — накапливаются на балансе клиента (кэшбэк за покупки). Списание
+  баллов уменьшает баланс.
+- **Сертификат** — отдельный баланс баллов с собственным лимитом списания на одну
+  покупку (вне лимита уровня лояльности). Списание сертификата не трогает обычный
+  баланс баллов, а кэшбэк на оплаченную сумму всё равно поступает на обычный
+  баланс.
+
+Сначала найдите клиента, чтобы получить его `token_type` и код:
 
 ```python
-settings = await client.settings.get()
+# По коду из приложения — доступно списание баллов/сертификата.
+found = await client.customers.find(code="950692")
+found.token_type  # PURCHASE (баллы) или CERTIFICATE (сертификат)
+
+# По телефону — только начисление (списание по телефону возможно, только если
+# компания разрешила его в настройках).
+found = await client.customers.find(phone="+79123456789")
 ```
 
-#### Customers
+В операции списание с баланса видно по полю `points`, с сертификата — по
+`certificate_points`.
 
 ```python
-# Список клиентов
-customers = await client.customers.list(max=100, offset=0)
-
-# Поиск клиента по коду/телефону/UID
-result = await client.customers.find(code="ABC123", total=1000.0)
-
-# Получение клиента по ID
-customer = await client.customers.get(customer_id=12345)
-
-# Теги клиента
-tags = await client.customers.get_tags(customer_id=12345)
-await client.customers.set_tags(customer_id=12345, tag_ids=[1, 2, 3])
-```
-
-#### Operations
-
-```python
-from async_uds_api.models import CreateOperation
-
-# Список операций
-operations = await client.operations.list(max=100)
-
-# Создание операции (покупка/начисление)
-operation = await client.operations.create(CreateOperation(...))
-
-# Получение операции по ID
-operation = await client.operations.get(operation_id=12345)
-
-# Возврат операции
-refunded = await client.operations.refund(operation_id=12345)
-
-# Расчёт покупки
-calc_result = await client.operations.calc(calc_request)
-
-# Начисление бонусов
-await client.operations.reward(reward_request)
-
-# Создание ваучера
-voucher = await client.operations.create_voucher(voucher)
-```
-
-#### Tags
-
-```python
-# Список тегов компании
-tags = await client.tags.list()
-```
-
-#### Goods
-
-```python
-from async_uds_api.models import GoodsDetailed
-
-# Список товаров
-goods = await client.goods.list(max=100)
-
-# Создание товара
-new_goods = await client.goods.create(GoodsDetailed(name="Товар", ...))
-
-# Получение по ID
-item = await client.goods.get(goods_id=123)
-
-# Обновление
-updated = await client.goods.update(goods_id=123, goods=GoodsDetailed(...))
-
-# Удаление
-await client.goods.delete(goods_id=123)
-
-# Работа с externalId
-item = await client.goods.external.get(external_id="ext-123")
-updated = await client.goods.external.update(external_id="ext-123", goods=...)
-await client.goods.external.delete(external_id="ext-123")
-```
-
-#### Images
-
-```python
-# Загрузка изображения из файла
-image_id = await client.images.upload("/path/to/image.jpg")
-
-# Загрузка из URL
-image_id = await client.images.upload("https://example.com/image.png")
-
-# Загрузка из байтов
-image_id = await client.images.upload(image_bytes, content_type="image/png")
-
-# Получение URL для загрузки
-upload_url = await client.images.get_upload_url("image/jpeg")
-```
-
-Источником может быть путь в файловой системе, http(s)-URL или байты.
-Строка со схемой `http` или `https` скачивается по сети, любая другая
-строка интерпретируется как путь в файловой системе.
-
-#### Goods Orders
-
-```python
-from async_uds_api import GoodsOrderUpdate, GoodsOrderUpdateStatus
-
-# Получение заказа
-order = await client.goods_orders.get(order_id=123)
-
-# Обновление заказа (позиции, доставка)
-await client.goods_orders.update(order_id=123, body=GoodsOrderUpdate(...))
-
-# Смена статуса заказа
-await client.goods_orders.change_status(
-    order_id=123, status=GoodsOrderUpdateStatus.READY
+from async_uds_api.models import (
+    CreateOperation,
+    CreateOperationReceipt,
+    PurchaseCalcRequest,
+    PurchaseCalcRequestReceipt,
 )
 
-# Отмена заказа
-await client.goods_orders.cancel(order_id=123)
+# 1. Расчёт. Передаём код из приложения UDS.
+calc = await client.operations.calc(
+    PurchaseCalcRequest(
+        code="950692",
+        receipt=PurchaseCalcRequestReceipt(total=1000.0),
+    )
+)
 
-# Завершение заказа (создаёт транзакцию)
-result = await client.goods_orders.complete(order_id=123)
-result.transaction.id  # ID созданной транзакции
-result.order  # GoodsOrderDetailed
+# 2. Проведение операции. Передаём ровно значения calc — без самостоятельного расчёта.
+op = await client.operations.create(
+    CreateOperation(
+        code="950692",
+        receipt=CreateOperationReceipt(
+            total=calc.purchase.total,
+            cash=calc.purchase.cash,
+            points=calc.purchase.points,
+        ),
+    )
+)
 
-# Генерация кода оплаты
-code_info = await client.goods_orders.generate_code(order_id=123)
+# Опционально: возврат.
+refunded = await client.operations.refund(operation_id=op.id)
+refunded.state  # ActionState.REVERSAL
 ```
 
-### Логирование
+Нюансы:
+
+- **Точность расчёта.** UDS считает в дробных баллах. Рекомендуется брать
+  `total`/`cash`/`points` из ответа `calc`, а не пересчитывать их через float:
+  при округлении возможна погрешность (`100.05 - 25.01 = 75.03999999999999`,
+  а не `75.04`), и `create` с таким значением вернёт `400 invalidChecksum` или
+  `400 badRequest`.
+- **Код одноразовый.** Код из приложения расходуется после успешного `create`;
+  повторное использование возвращает `404 notFound`. Для повторных операций —
+  новый код или `find(code=..., exchange_code=True)` (долгосрочный код).
+- **Знаки.** В операции `points` при списании отрицательный, `certificate_points`
+  при списании сертификата положительный. Возврат зеркален: `points` положительный
+  (баллы вернулись), `cash` и `certificate_points` отрицательные (деньги/сертификат
+  вернулись).
+
+### Заказы товаров
+
+```python
+from async_uds_api.models import GoodsOrderItemUpdate, GoodsOrderUpdateStatus
+
+order = await client.goods_orders.get(order_id=123)
+order.state  # NEW / NEED_ACK / WAITING_PAYMENT / COMPLETED / DELETED
+
+# Правка позиций (для VARYING_ITEM обязателен variant_name)
+await client.goods_orders.update(
+    order_id=123,
+    items=[GoodsOrderItemUpdate(id=1, variant_name="Модуль 1", qty=2)],
+)
+
+# Подтверждение заказа с онлайн-оплатой: NEED_ACK -> WAITING_PAYMENT
+await client.goods_orders.change_status(
+    order_id=123, status=GoodsOrderUpdateStatus.WAITING_PAYMENT
+)
+
+# Смена статуса обработки (из NEW)
+await client.goods_orders.change_status(
+    order_id=123, status=GoodsOrderUpdateStatus.ACCEPTED
+)
+
+# Завершение (создаёт транзакцию)
+result = await client.goods_orders.complete(order_id=123)
+result.transaction.id  # созданная транзакция
+
+# Отмена
+await client.goods_orders.cancel(order_id=123)  # state=DELETED
+```
+
+Соответствие состояния (`state`) и статуса обработки (`order_status`) заказа:
+
+| `state` | `order_status` |
+|---|---|
+| `NEED_ACK` | — |
+| `WAITING_PAYMENT` | — |
+| `NEW` | `ACCEPTED` → `READY` |
+| `COMPLETED` | — |
+| `DELETED` | — |
+
+`NEED_ACK` и `WAITING_PAYMENT` доступны только при подтверждении заказа
+(онлайн-оплата); заказ, полностью оплаченный баллами, приходит сразу в `NEW`.
+`change_status` переводит `NEED_ACK` → `WAITING_PAYMENT`, а из `NEW` ставит
+`ACCEPTED`/`READY`.
+
+### Вебхуки
+
+Вебхуки приходят в тех же моделях, что и ответы API:
+
+| Событие | Модель |
+|---|---|
+| новый клиент | `Customer` |
+| новая операция (не от заказа) | `Operation` |
+| новый заказ | `GoodsOrderDetailed` |
+| обновление заказа | `GoodsOrderDetailed` |
+
+Подпись проверяется через `verify_webhook_signature`. Пример FastAPI-обработчика:
+
+```python
+from fastapi import FastAPI, Request
+
+from async_uds_api import UDSClient
+from async_uds_api.models import GoodsOrderDetailed
+
+app = FastAPI()
+client = UDSClient(company_id="...", api_key="...")
+
+
+@app.post("/webhooks/goods-order")
+async def on_goods_order(request: Request):
+    if not client.verify_webhook_signature(
+        request_id=request.headers.get("X-RequestId", ""),
+        timestamp=request.headers.get("X-Timestamp", ""),
+        signature=request.headers.get("X-Signature", ""),
+    ):
+        return {"error": "invalid signature"}, 401
+
+    order = GoodsOrderDetailed.model_validate(await request.json())
+    # обработайте заказ...
+    return {"ok": True}
+```
+
+События «новый заказ» и «обновление заказа» — **разные вебхуки**, настраиваются
+раздельно. Вебхук обновления шлёт весь заказ с обновлёнными значениями (не diff).
+В openapi вебхук обновления не описан, а добавлен он недавно — актуально на
+октябрь 2026.
+
+## Логирование
 
 Библиотека пишет в логгер `async_uds_api` и по умолчанию ничего не выводит
 (`NullHandler`). Чтобы увидеть сообщения, настройте стандартный `logging`:
@@ -202,7 +255,7 @@ GET /customers/find [phone=***4567] [X-Origin-Request-Id=6e1c89d3-...] [X-Timest
 GET /customers/find -> 200 OK in 0.312s [X-Origin-Request-Id=6e1c89d3-...] [X-Request-Id=8c828ee7-...]
 ```
 
-#### Маскирование персональных данных
+### Маскирование персональных данных
 
 В лог попадают все query-параметры запроса. Маскируются только `phone`,
 `uid` и `code` — они сокращаются до последних четырёх символов и никогда
@@ -261,11 +314,11 @@ client = UDSClient(company_id="...", api_key="...", silence_httpx_log=False)
 Учтите, что при `silence_httpx_log=False` номера телефонов, uid и коды клиентов
 будут утекать в лог через URL запросов httpx.
 
-#### Свой логгер
+### Свой логгер
 
 `UDSClient` принимает любой объект с методами `debug`/`info`/`warning`/`error`,
 которые получают имя события и поля через `**kwargs`. `structlog` и `loguru`
-подходят без обёртки:
+поддерживаются без обёртки:
 
 ```python
 import structlog
@@ -326,7 +379,7 @@ presigned-ссылки короткоживущие, а `https://cdn.example.com
 `StdlibLoggerAdapter`, включая события `async_uds_api.api.images`. Читать
 его всё равно стоит защищённо: `getattr(record, "uds", None)`.
 
-#### Диагностика логирования
+### Диагностика логирования
 
 Логирование никогда не должно ронять запрос: если пользовательский
 обработчик логов бросает исключение, `StdlibLoggerAdapter` по умолчанию
@@ -338,7 +391,7 @@ presigned-ссылки короткоживущие, а `https://cdn.example.com
 export ASYNC_UDS_API_DEBUG_LOGGING=1
 ```
 
-### Сквозной origin request id
+## Сквозной origin request id
 
 По умолчанию клиент генерирует `X-Origin-Request-Id` сам — новый UUID на
 каждый HTTP-запрос. Чтобы связать вызовы UDS с трассировкой вашего
@@ -360,7 +413,7 @@ with use_origin_request_id("trace-42"):
     await client.operations.create(operation)
 ```
 
-#### Значение не валидируется
+### Значение не валидируется
 
 Библиотека передаёт значение в заголовок как есть: требования UUID нет,
 подойдёт любая строка. Санитизация — ответственность вызывающей стороны.
@@ -425,28 +478,18 @@ async def bind_request_id(request, call_next):
   вытянутые после выхода из `with`, получают новый сгенерированный
   uuid4.
 
-#### Три разных request id
+### Три разных request id
 
-Имена в API и в логах не совпадают с именами HTTP-заголовков — здесь
-легко запутаться:
+В HTTP-заголовках и API используются три разных идентификатора; они
+различаются именем заголовка и направлением передачи:
 
-| Что это | HTTP-заголовок | Имя в API и логах |
+| Идентификатор | HTTP-заголовок | Имя в API и логах |
 |---|---|---|
-| Идентификатор цепочки, который клиент шлёт в UDS | `X-Origin-Request-Id`, исходящий | `set_origin_request_id()`, `use_origin_request_id()`, параметр `request_id=`, поле лога `request_id` |
-| Идентификатор, присвоенный запросу сервером UDS | `X-Request-Id`, в ответе | поле лога `uds_request_id` |
-| Идентификатор вебхука, пришедшего от UDS | `X-RequestId`, без дефиса | параметр `verify_webhook_signature(request_id=...)` |
+| Трассировочный id цепочки запросов (отправляется клиентом) | `X-Origin-Request-Id` (исходящий) | параметр `request_id=`, `use_origin_request_id()`, `set_origin_request_id()`, поле лога `request_id` |
+| id запроса, присвоенный на стороне UDS (в ответе) | `X-Request-Id` | поле лога `uds_request_id` |
+| id входящего вебхука UDS | `X-RequestId` (без дефиса) | параметр `verify_webhook_signature(request_id=...)` |
 
-### Webhooks
-
-```python
-is_valid = client.verify_webhook_signature(
-    request_id=request.headers.get("X-RequestId"),
-    timestamp=request.headers.get("X-Timestamp"),
-    signature=request.headers.get("X-Signature"),
-)
-```
-
-### Обработка ошибок
+## Обработка ошибок
 
 ```python
 from async_uds_api import (
@@ -476,14 +519,14 @@ except UDSClientError as e:
 читайте его осознанно и не пишите в лог не подумав. Подробнее — в
 разделе [Маскирование персональных данных](#маскирование-персональных-данных).
 
-### Требования
+## Требования
 
 - Python >= 3.10
 - httpx >= 0.27.0
 - pydantic >= 2.0.0
 - aiofiles >= 23.0.0
 
-### Разработка
+## Разработка
 
 ```bash
 # Установка зависимостей для разработки
@@ -502,6 +545,6 @@ uv run ruff format async_uds_api/ tests/
 uv run mypy
 ```
 
-### Лицензия
+## Лицензия
 
 MIT

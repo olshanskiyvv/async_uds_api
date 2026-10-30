@@ -1,0 +1,35 @@
+{
+  "id": 1019,
+  "dateCreated": "2026-10-19T04:06:06.840Z",
+  "action": "PURCHASE",
+  "state": "NORMAL",
+  "customer": {
+    "id": 1020,
+    "displayName": "Имя Фамилия",
+    "uid": "7b48b7e5-84d6-52b9-8400-31331a04169e",
+    "membershipTier": {
+      "uid": "2b1ff310-5be4-55d2-ab25-33971bdd960c",
+      "name": "Название",
+      "rate": 20,
+      "maxScoresDiscount": 35,
+      "conditions": {
+        "totalCashSpent": {
+          "target": 100000
+        },
+        "effectiveInvitedCount": {
+          "target": 10
+        }
+      },
+      "system": false
+    }
+  },
+  "cashier": {
+    "id": 1021,
+    "displayName": "Имя Фамилия"
+  },
+  "points": -759.85,
+  "certificatePoints": 0,
+  "cash": 4240.15,
+  "total": 5000,
+  "receiptNumber": null
+}

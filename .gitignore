@@ -17,3 +17,7 @@ docs/
 
 .worktrees/
 .idea
+
+.env
+
+scripts/

@@ -1,0 +1,85 @@
+{
+  "id": 1015,
+  "dateCreated": "2026-10-18T23:10:41.576Z",
+  "total": 5000,
+  "cash": 5000,
+  "points": 0,
+  "certificatePoints": 0,
+  "state": "NEW",
+  "orderStatus": null,
+  "comment": null,
+  "customer": {
+    "id": 1016,
+    "displayName": "Имя Фамилия",
+    "uid": "9ed81b39-8e13-59a7-9a1b-6b709d26435e",
+    "membershipTier": {
+      "uid": "44509683-5ba0-5852-904c-edc7a84c2d57",
+      "name": "Название",
+      "rate": 5,
+      "maxScoresDiscount": 50,
+      "conditions": {
+        "totalCashSpent": null
+      },
+      "system": false
+    }
+  },
+  "onlinePayment": null,
+  "paymentMethod": {
+    "type": "CASH",
+    "name": null,
+    "providerType": null,
+    "online": false
+  },
+  "delivery": {
+    "type": "PICKUP",
+    "deliveryCase": null,
+    "receiverName": "Имя Фамилия",
+    "receiverPhone": "+70000000000",
+    "address": null,
+    "branch": {
+      "id": 1017,
+      "displayName": "Имя Фамилия"
+    },
+    "userComment": null
+  },
+  "items": [
+    {
+      "id": 1018,
+      "externalId": null,
+      "name": "Название",
+      "variantName": null,
+      "type": "ITEM",
+      "sku": null,
+      "price": 5000,
+      "offerPrice": null,
+      "skipLoyalty": false,
+      "qty": 1,
+      "measurement": "PIECE",
+      "dataMatrixCodes": null,
+      "deliveryState": null,
+      "weightGrams": null,
+      "widthCm": null,
+      "heightCm": null,
+      "lengthCm": null
+    }
+  ],
+  "purchase": {
+    "total": 5000,
+    "skipLoyaltyTotal": 0,
+    "unredeemableTotal": 0,
+    "points": 0,
+    "maxPoints": 0,
+    "pointsPercent": 0,
+    "discountAmount": 0,
+    "discountPercent": 0,
+    "netDiscount": 0,
+    "netDiscountPercent": 0,
+    "cash": 5000,
+    "cashTotal": 5000,
+    "cashBack": 250,
+    "certificatePoints": 0,
+    "maxScoresDiscount": 50,
+    "extras": {}
+  },
+  "externalOrder": null
+}

@@ -1,0 +1,93 @@
+{
+  "cash": 6000.0,
+  "comment": null,
+  "dateCreated": "2026-10-30T19:53:50.804Z",
+  "id": 1058,
+  "points": 0.0,
+  "total": 6000.0,
+  "orderStatus": null,
+  "items": [
+    {
+      "dataMatrixCodes": null,
+      "deliveryState": null,
+      "externalId": null,
+      "heightCm": null,
+      "id": 1044,
+      "lengthCm": null,
+      "measurement": "PIECE",
+      "name": "Название",
+      "offerPrice": null,
+      "price": 3000,
+      "qty": 2,
+      "skipLoyalty": false,
+      "sku": null,
+      "type": "VARYING_ITEM",
+      "variantName": "Модуль 1 (только доступ к записи)",
+      "weightGrams": null,
+      "widthCm": null
+    }
+  ],
+  "paymentMethod": {
+    "cloudPayments": false,
+    "name": null,
+    "online": true,
+    "providerType": "YOOKASSA",
+    "type": "CUSTOM",
+    "yookassa": true
+  },
+  "onlinePayment": null,
+  "delivery": {
+    "address": null,
+    "branch": {
+      "displayName": "Имя Фамилия",
+      "id": 1055
+    },
+    "deliveryCase": null,
+    "receiverName": "Имя Фамилия",
+    "receiverPhone": "+70000000000",
+    "storeDeliveryData": null,
+    "type": "PICKUP",
+    "userComment": null
+  },
+  "purchase": {
+    "cash": 6000.0,
+    "discountAmount": 0.0,
+    "unredeemableTotal": 0.0,
+    "certificatePoints": 0.0,
+    "maxPoints": 0.0,
+    "extras": {},
+    "netDiscount": 0.0,
+    "points": 0.0,
+    "netDiscountPercent": 0,
+    "cashBack": 600.0,
+    "total": 6000.0,
+    "cashTotal": 6000.0,
+    "skipLoyaltyTotal": 0.0,
+    "pointsPercent": 0,
+    "maxScoresDiscount": 25,
+    "discountPercent": 0
+  },
+  "externalOrder": null,
+  "certificatePoints": 0,
+  "customer": {
+    "uid": "d3910086-9fe6-502b-a800-aa71991cb28c",
+    "id": 1001,
+    "membershipTier": {
+      "conditions": {
+        "effectiveInvitedCount": {
+          "target": 1
+        },
+        "totalCashSpent": {
+          "target": 25000
+        }
+      },
+      "maxScoresDiscount": 25,
+      "name": "Название",
+      "rate": 10,
+      "system": false,
+      "uid": "4afe599f-26c1-5dd1-9e8f-294049f44a31"
+    },
+    "displayName": "Имя Фамилия"
+  },
+  "state": "NEED_ACK"
+}

@@ -1,0 +1,89 @@
+{
+  "id": 1008,
+  "dateCreated": "2026-07-06T11:15:20.895Z",
+  "total": 4000,
+  "cash": 3000,
+  "points": 0,
+  "certificatePoints": 1000,
+  "state": "NEW",
+  "orderStatus": null,
+  "comment": null,
+  "customer": {
+    "id": 1009,
+    "displayName": "Имя Фамилия",
+    "uid": "c2538859-b9d1-5b9d-843c-5f7cc8eb9233",
+    "membershipTier": {
+      "uid": "44509683-5ba0-5852-904c-edc7a84c2d57",
+      "name": "Название",
+      "rate": 5,
+      "maxScoresDiscount": 50,
+      "conditions": {
+        "totalCashSpent": null
+      },
+      "system": false
+    }
+  },
+  "onlinePayment": {
+    "id": "1222435",
+    "paymentProvider": "YOOKASSA",
+    "completed": true
+  },
+  "paymentMethod": {
+    "type": "CUSTOM",
+    "name": null,
+    "providerType": "YOOKASSA",
+    "online": true
+  },
+  "delivery": {
+    "type": "PICKUP",
+    "deliveryCase": null,
+    "receiverName": "Имя Фамилия",
+    "receiverPhone": "+70000000000",
+    "address": null,
+    "branch": {
+      "id": 1010,
+      "displayName": "Имя Фамилия"
+    },
+    "userComment": null
+  },
+  "items": [
+    {
+      "id": 1011,
+      "externalId": null,
+      "name": "Название",
+      "variantName": null,
+      "type": "ITEM",
+      "sku": null,
+      "price": 4000,
+      "offerPrice": null,
+      "skipLoyalty": false,
+      "qty": 1,
+      "measurement": "PIECE",
+      "dataMatrixCodes": null,
+      "deliveryState": null,
+      "weightGrams": null,
+      "widthCm": null,
+      "heightCm": null,
+      "lengthCm": null
+    }
+  ],
+  "purchase": {
+    "total": 4000,
+    "skipLoyaltyTotal": 0,
+    "unredeemableTotal": 0,
+    "points": 0,
+    "maxPoints": 1000,
+    "pointsPercent": 25,
+    "discountAmount": 0,
+    "discountPercent": 0,
+    "netDiscount": 1000,
+    "netDiscountPercent": 25,
+    "cash": 3000,
+    "cashTotal": 3000,
+    "cashBack": 150,
+    "certificatePoints": 1000,
+    "maxScoresDiscount": 50,
+    "extras": {}
+  },
+  "externalOrder": null
+}

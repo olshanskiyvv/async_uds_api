@@ -1,0 +1,47 @@
+{
+  "user": {
+    "uid": "d3910086-9fe6-502b-a800-aa71991cb28c",
+    "avatar": null,
+    "displayName": "Имя Фамилия",
+    "gender": "MALE",
+    "phone": "+70000000000",
+    "birthDate": "2003-07-04",
+    "participant": {
+      "id": 1001,
+      "inviterId": null,
+      "points": 500.0,
+      "discountRate": 0.0,
+      "cashbackRate": 10.0,
+      "cashSpent": 198.0,
+      "savedFunds": 30002.0,
+      "invitedCount": 0,
+      "effectiveInvitedCount": 0,
+      "operationsCount": 8,
+      "fullRefundsCount": 3,
+      "note": null,
+      "membershipTier": {
+        "uid": "4afe599f-26c1-5dd1-9e8f-294049f44a31",
+        "name": "Название",
+        "rate": 10.0,
+        "maxScoresDiscount": 25.0,
+        "conditions": {
+          "totalCashSpent": {
+            "target": 25000.0
+          },
+          "effectiveInvitedCount": {
+            "target": 1
+          }
+        }
+      },
+      "dateCreated": "2025-04-08T09:39:39.362000Z",
+      "lastTransactionTime": "2026-10-30T19:12:04.872000Z",
+      "pointsExpireIn": null
+    },
+    "channelName": "Telegram bot",
+    "email": "user@example.com",
+    "tags": []
+  },
+  "purchase": null,
+  "code": "321240",
+  "type": "CERTIFICATE"
+}

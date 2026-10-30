@@ -1,0 +1,26 @@
+{
+  "id": 1062,
+  "name": "Название",
+  "data": {
+    "type": "ITEM",
+    "sku": "test-5da5ef95",
+    "price": 1.0,
+    "description": null,
+    "offer": null,
+    "inventory": {
+      "inStock": null
+    },
+    "photos": [],
+    "measurement": "PIECE",
+    "increment": null,
+    "minQuantity": null,
+    "vatCode": null,
+    "paymentSubject": null
+  },
+  "hidden": true,
+  "blocked": false,
+  "nodeId": null,
+  "imageUrls": [],
+  "externalId": "ext-5da5ef95",
+  "dateCreated": "2026-10-30T20:22:57.755000Z"
+}

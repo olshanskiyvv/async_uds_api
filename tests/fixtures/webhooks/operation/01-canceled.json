@@ -1,0 +1,33 @@
+{
+  "cash": 2000.0,
+  "action": "PURCHASE",
+  "cashier": {
+    "id": 1005,
+    "displayName": "Имя Фамилия"
+  },
+  "certificatePoints": 0.0,
+  "customer": {
+    "uid": "757e80ef-9702-5ec2-9a30-8f4e6989958c",
+    "id": 1006,
+    "membershipTier": {
+      "conditions": {
+        "effectiveInvitedCount": null,
+        "totalCashSpent": null
+      },
+      "maxScoresDiscount": 100,
+      "name": "Название",
+      "rate": 5,
+      "system": false,
+      "uid": "44509683-5ba0-5852-904c-edc7a84c2d57"
+    },
+    "displayName": "Имя Фамилия"
+  },
+  "origin": null,
+  "dateCreated": "2025-04-14T18:20:34.848Z",
+  "points": 0.0,
+  "id": 1007,
+  "total": 2000.0,
+  "receiptNumber": null,
+  "branch": null,
+  "state": "CANCELED"
+}

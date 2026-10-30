@@ -1,0 +1,92 @@
+{
+  "id": 1000,
+  "name": "Название",
+  "promoCode": "fyac9484",
+  "currency": "RUB",
+  "baseDiscountPolicy": "CHARGE_SCORES",
+  "loyaltyProgramSettings": {
+    "baseMembershipTier": {
+      "uid": "44509683-5ba0-5852-904c-edc7a84c2d57",
+      "name": "Название",
+      "rate": 5.0,
+      "maxScoresDiscount": 20.0,
+      "conditions": {
+        "totalCashSpent": null,
+        "effectiveInvitedCount": null
+      }
+    },
+    "membershipTiers": [
+      {
+        "uid": "4afe599f-26c1-5dd1-9e8f-294049f44a31",
+        "name": "Название",
+        "rate": 10.0,
+        "maxScoresDiscount": 25.0,
+        "conditions": {
+          "totalCashSpent": {
+            "target": 25000.0
+          },
+          "effectiveInvitedCount": {
+            "target": 1
+          }
+        }
+      },
+      {
+        "uid": "a1fb0c98-7457-5fbd-bd69-d4d43371ef6c",
+        "name": "Название",
+        "rate": 15.0,
+        "maxScoresDiscount": 30.0,
+        "conditions": {
+          "totalCashSpent": {
+            "target": 50000.0
+          },
+          "effectiveInvitedCount": {
+            "target": 3
+          }
+        }
+      },
+      {
+        "uid": "2b1ff310-5be4-55d2-ab25-33971bdd960c",
+        "name": "Название",
+        "rate": 20.0,
+        "maxScoresDiscount": 35.0,
+        "conditions": {
+          "totalCashSpent": {
+            "target": 100000.0
+          },
+          "effectiveInvitedCount": {
+            "target": 10
+          }
+        }
+      },
+      {
+        "uid": "71ec261d-fb22-5178-b754-a9ca5022209d",
+        "name": "Название",
+        "rate": 50.0,
+        "maxScoresDiscount": 50.0,
+        "conditions": {
+          "totalCashSpent": {
+            "target": 250000.0
+          },
+          "effectiveInvitedCount": {
+            "target": 25
+          }
+        }
+      }
+    ],
+    "referralCashbackRates": [
+      10.0,
+      3.0,
+      1.0
+    ],
+    "cashierAward": null,
+    "referralReward": 1000.0,
+    "discountVip": null,
+    "receiptLimit": null,
+    "deferPointsForDays": null,
+    "firstPurchasePoints": null
+  },
+  "purchaseByPhone": true,
+  "usePointsByPhone": false,
+  "writeInvoice": false,
+  "slug": "psychogrowth"
+}

@@ -94,6 +94,32 @@ class GoodsOrdersAPI:
         )
         return GoodsOrderDetailed.model_validate(data)
 
+    async def confirm(
+        self, order_id: int, *, request_id: str | None = None
+    ) -> GoodsOrderDetailed:
+        """Confirm an order (NEED_ACK -> WAITING_PAYMENT)."""
+        return await self.change_status(
+            order_id,
+            GoodsOrderUpdateStatus.WAITING_PAYMENT,
+            request_id=request_id,
+        )
+
+    async def accept(
+        self, order_id: int, *, request_id: str | None = None
+    ) -> GoodsOrderDetailed:
+        """Accept a new order (NEW -> ACCEPTED)."""
+        return await self.change_status(
+            order_id, GoodsOrderUpdateStatus.ACCEPTED, request_id=request_id
+        )
+
+    async def ready(
+        self, order_id: int, *, request_id: str | None = None
+    ) -> GoodsOrderDetailed:
+        """Mark an order as ready for pickup or delivery (NEW -> READY)."""
+        return await self.change_status(
+            order_id, GoodsOrderUpdateStatus.READY, request_id=request_id
+        )
+
     async def cancel(
         self, order_id: int, *, request_id: str | None = None
     ) -> GoodsOrderDetailed:

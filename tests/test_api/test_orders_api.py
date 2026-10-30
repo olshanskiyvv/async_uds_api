@@ -1,3 +1,5 @@
+import json
+
 import pytest
 import respx
 from httpx import Response
@@ -91,6 +93,25 @@ class TestGoodsOrdersAPI:
         )
 
         assert isinstance(result, GoodsOrderDetailed)
+
+    @pytest.mark.parametrize(
+        ("method", "expected_status"),
+        [
+            ("confirm", "WAITING_PAYMENT"),
+            ("accept", "ACCEPTED"),
+            ("ready", "READY"),
+        ],
+    )
+    async def test_status_shortcuts(self, uds_client, method, expected_status):
+        respx.post(
+            "https://api.uds.app/partner/v2/goods-orders/42/change-status"
+        ).mock(return_value=Response(200, json=GOODS_ORDER_RESPONSE))
+
+        result = await getattr(uds_client.goods_orders, method)(42)
+
+        assert isinstance(result, GoodsOrderDetailed)
+        body = json.loads(respx.calls.last.request.content)
+        assert body == {"orderStatus": expected_status}
 
     async def test_cancel_order_success(self, uds_client):
         respx.post(

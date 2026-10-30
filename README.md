@@ -59,6 +59,7 @@ if __name__ == "__main__":
 | `client.goods` | товары (в т.ч. по `externalId` через `client.goods.external`) |
 | `client.images` | загрузка изображений |
 | `client.goods_orders` | заказы товаров |
+| `client.webhooks` | вебхуки: проверка подписи и разбор payload |
 
 Подробности по каждому методу — в docstring соответствующих классов и методов,
 примеры использования — в [Сценариях](#сценарии).
@@ -146,7 +147,7 @@ refunded.state  # ActionState.REVERSAL
 ### Заказы товаров
 
 ```python
-from async_uds_api.models import GoodsOrderItemUpdate, GoodsOrderUpdateStatus
+from async_uds_api.models import GoodsOrderItemUpdate
 
 order = await client.goods_orders.get(order_id=123)
 order.state  # NEW / NEED_ACK / WAITING_PAYMENT / COMPLETED / DELETED
@@ -158,14 +159,13 @@ await client.goods_orders.update(
 )
 
 # Подтверждение заказа с онлайн-оплатой: NEED_ACK -> WAITING_PAYMENT
-await client.goods_orders.change_status(
-    order_id=123, status=GoodsOrderUpdateStatus.WAITING_PAYMENT
-)
+await client.goods_orders.confirm(order_id=123)
 
-# Смена статуса обработки (из NEW)
-await client.goods_orders.change_status(
-    order_id=123, status=GoodsOrderUpdateStatus.ACCEPTED
-)
+# Принять заказ (order_status: None -> ACCEPTED)
+await client.goods_orders.accept(order_id=123)
+
+# Готов к выдаче (order_status: ACCEPTED -> READY)
+await client.goods_orders.ready(order_id=123)
 
 # Завершение (создаёт транзакцию)
 result = await client.goods_orders.complete(order_id=123)
@@ -175,20 +175,24 @@ result.transaction.id  # созданная транзакция
 await client.goods_orders.cancel(order_id=123)  # state=DELETED
 ```
 
-Соответствие состояния (`state`) и статуса обработки (`order_status`) заказа:
+Жизненный цикл заказа:
 
-| `state` | `order_status` |
-|---|---|
-| `NEED_ACK` | — |
-| `WAITING_PAYMENT` | — |
-| `NEW` | `ACCEPTED` → `READY` |
-| `COMPLETED` | — |
-| `DELETED` | — |
+| Заказ | `state` | `order_status` |
+|---|---|---|
+| Требует подтверждения | `NEED_ACK` | - |
+| Ожидает оплаты | `WAITING_PAYMENT` | - |
+| Новый заказ | `NEW` | - |
+| Принят | `NEW` | `ACCEPTED` |
+| Готов к выдаче | `NEW` | `READY` |
+| Выполнен | `COMPLETED` | - |
+| Отменён | `DELETED` | - |
 
 `NEED_ACK` и `WAITING_PAYMENT` доступны только при подтверждении заказа
 (онлайн-оплата); заказ, полностью оплаченный баллами, приходит сразу в `NEW`.
-`change_status` переводит `NEED_ACK` → `WAITING_PAYMENT`, а из `NEW` ставит
-`ACCEPTED`/`READY`.
+`confirm()` переводит `NEED_ACK` → `WAITING_PAYMENT`. В состоянии `NEW` поле
+`order_status` проходит цепочку `None` → `ACCEPTED` → `READY`: `None` — заказ
+только создан (без статуса обработки), `accept()` ставит `ACCEPTED`, а `ready()` —
+`READY`.
 
 ### Вебхуки
 
@@ -207,7 +211,6 @@ await client.goods_orders.cancel(order_id=123)  # state=DELETED
 from fastapi import FastAPI, Request
 
 from async_uds_api import UDSClient
-from async_uds_api.models import GoodsOrderDetailed
 
 app = FastAPI()
 client = UDSClient(company_id="...", api_key="...")
@@ -222,7 +225,7 @@ async def on_goods_order(request: Request):
     ):
         return {"error": "invalid signature"}, 401
 
-    order = GoodsOrderDetailed.model_validate(await request.json())
+    order = client.webhooks.parse_goods_order(await request.json())
     # обработайте заказ...
     return {"ok": True}
 ```

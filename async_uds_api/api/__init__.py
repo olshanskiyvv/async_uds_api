@@ -5,6 +5,7 @@ from async_uds_api.api.operations import OperationsAPI
 from async_uds_api.api.orders import GoodsOrdersAPI
 from async_uds_api.api.settings import SettingsAPI
 from async_uds_api.api.tags import TagsAPI
+from async_uds_api.api.webhooks import WebhooksAPI
 
 __all__ = [
     "SettingsAPI",
@@ -14,4 +15,5 @@ __all__ = [
     "GoodsAPI",
     "ImagesAPI",
     "GoodsOrdersAPI",
+    "WebhooksAPI",
 ]

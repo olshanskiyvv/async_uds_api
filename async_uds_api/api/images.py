@@ -24,6 +24,8 @@ _MIME_RE = re.compile(
 
 
 class ImagesAPI:
+    """Images API methods."""
+
     def __init__(self, client: "UDSClient", timeout: float) -> None:
         self._client = client
         self._timeout = timeout

@@ -1,0 +1,11 @@
+{
+  "imageId": "IMAGE_ID_MASKED",
+  "url": "https://s3.uds.app/thumbor/storage/game-prod/COMPANY/GOODS/b41df67d-bdaa-4662-96e5-56166b3ad715?X-Amz-Algorithm=MASKED&X-Amz-Date=MASKED&X-Amz-SignedHeaders=MASKED&X-Amz-Credential=MASKED&X-Amz-Expires=MASKED&X-Amz-Signature=MASKED",
+  "method": "PUT",
+  "headers": {
+    "Content-Type": [
+      "image/jpeg"
+    ]
+  },
+  "expires": 1793388816383
+}

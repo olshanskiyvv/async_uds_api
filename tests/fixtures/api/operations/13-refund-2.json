@@ -1,0 +1,21 @@
+{
+  "id": 1022,
+  "dateCreated": "2026-10-30T19:16:49.322000Z",
+  "action": "PURCHASE",
+  "state": "REVERSAL",
+  "customer": {
+    "id": 1001,
+    "displayName": "Имя Фамилия",
+    "uid": "d3910086-9fe6-502b-a800-aa71991cb28c"
+  },
+  "cashier": null,
+  "branch": null,
+  "points": 249.25,
+  "certificatePoints": null,
+  "receiptNumber": null,
+  "origin": {
+    "id": 1021
+  },
+  "total": -997.0,
+  "cash": -747.75
+}

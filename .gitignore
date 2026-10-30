@@ -12,8 +12,13 @@ dist/
 
 *.md
 !README.md
+!CHANGELOG.md
 docs/
 .worktrees/
 
 .worktrees/
 .idea
+
+.env
+
+scripts/

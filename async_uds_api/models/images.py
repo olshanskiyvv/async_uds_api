@@ -6,6 +6,8 @@ from async_uds_api.models.base import APIModel
 
 
 class ImageUploadUrlHeaders(APIModel):
+    """Headers required for the image upload."""
+
     content_type: list[str] = Field(
         alias="Content-Type",
         validation_alias="Content-Type",
@@ -15,6 +17,8 @@ class ImageUploadUrlHeaders(APIModel):
 
 
 class ImageUploadUrl(APIModel):
+    """Image upload URL and headers."""
+
     image_id: str = Field(
         description=(
             "Image identifier. This value has to be attached to goods entity."

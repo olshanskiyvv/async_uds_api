@@ -1,0 +1,94 @@
+{
+  "id": 1022,
+  "dateCreated": "2026-07-03T21:55:04.810Z",
+  "total": 5000,
+  "cash": 4000,
+  "points": 0,
+  "certificatePoints": 1000,
+  "state": "NEW",
+  "orderStatus": null,
+  "comment": null,
+  "customer": {
+    "id": 1020,
+    "displayName": "Имя Фамилия",
+    "uid": "7b48b7e5-84d6-52b9-8400-31331a04169e",
+    "membershipTier": {
+      "uid": "2b1ff310-5be4-55d2-ab25-33971bdd960c",
+      "name": "Название",
+      "rate": 20,
+      "maxScoresDiscount": 75,
+      "conditions": {
+        "totalCashSpent": {
+          "target": 100000
+        },
+        "effectiveInvitedCount": {
+          "target": 10
+        }
+      },
+      "system": false
+    }
+  },
+  "onlinePayment": {
+    "id": "1221195",
+    "paymentProvider": "YOOKASSA",
+    "completed": true
+  },
+  "paymentMethod": {
+    "type": "CUSTOM",
+    "name": null,
+    "providerType": "YOOKASSA",
+    "online": true
+  },
+  "delivery": {
+    "type": "PICKUP",
+    "deliveryCase": null,
+    "receiverName": "Имя Фамилия",
+    "receiverPhone": "+70000000000",
+    "address": null,
+    "branch": {
+      "id": 1010,
+      "displayName": "Имя Фамилия"
+    },
+    "userComment": null
+  },
+  "items": [
+    {
+      "id": 1023,
+      "externalId": null,
+      "name": "Название",
+      "variantName": "1 месяц доступа",
+      "type": "VARYING_ITEM",
+      "sku": null,
+      "price": 5000,
+      "offerPrice": null,
+      "skipLoyalty": false,
+      "qty": 1,
+      "measurement": "PIECE",
+      "dataMatrixCodes": null,
+      "deliveryState": null,
+      "weightGrams": null,
+      "widthCm": null,
+      "heightCm": null,
+      "lengthCm": null
+    }
+  ],
+  "purchase": {
+    "total": 5000,
+    "skipLoyaltyTotal": 0,
+    "unredeemableTotal": 0,
+    "points": 0,
+    "maxPoints": 1000,
+    "pointsPercent": 20,
+    "discountAmount": 0,
+    "discountPercent": 0,
+    "netDiscount": 1000,
+    "netDiscountPercent": 20,
+    "cash": 4000,
+    "cashTotal": 4000,
+    "cashBack": 800,
+    "certificatePoints": 1000,
+    "maxScoresDiscount": 50,
+    "extras": {}
+  },
+  "externalOrder": null
+}

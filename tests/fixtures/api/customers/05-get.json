@@ -1,0 +1,38 @@
+{
+  "uid": "3866e0d6-7017-5f1a-8c86-0d169abcc183",
+  "avatar": null,
+  "displayName": "Имя Фамилия",
+  "gender": "FEMALE",
+  "phone": "+70000000000",
+  "birthDate": "1984-02-17",
+  "participant": {
+    "id": 1023,
+    "inviterId": 1010,
+    "points": 500.0,
+    "discountRate": 0.0,
+    "cashbackRate": 5.0,
+    "cashSpent": 0.0,
+    "savedFunds": 0.0,
+    "invitedCount": 0,
+    "effectiveInvitedCount": 0,
+    "operationsCount": 0,
+    "fullRefundsCount": 0,
+    "note": null,
+    "membershipTier": {
+      "uid": "44509683-5ba0-5852-904c-edc7a84c2d57",
+      "name": "Название",
+      "rate": 5.0,
+      "maxScoresDiscount": 20.0,
+      "conditions": {
+        "totalCashSpent": null,
+        "effectiveInvitedCount": null
+      }
+    },
+    "dateCreated": "2026-10-19T19:46:05.976000Z",
+    "lastTransactionTime": null,
+    "pointsExpireIn": null
+  },
+  "channelName": null,
+  "email": null,
+  "tags": []
+}

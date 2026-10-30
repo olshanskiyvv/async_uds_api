@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import hashlib
-import hmac
 import logging
 import time
 import uuid
@@ -25,6 +23,7 @@ from async_uds_api.api import (
     OperationsAPI,
     SettingsAPI,
     TagsAPI,
+    WebhooksAPI,
 )
 from async_uds_api.errors import (
     UDSAPIError,
@@ -66,6 +65,8 @@ class UDSClient:
     - tags: TagsAPI
     - goods: GoodsAPI
     - images: ImagesAPI
+    - goods_orders: GoodsOrdersAPI
+    - webhooks: WebhooksAPI
 
     Параметры логирования:
     - logger: объект с методами debug/info/warning/error, принимающими
@@ -141,6 +142,7 @@ class UDSClient:
         self.goods = GoodsAPI(self)
         self.images = ImagesAPI(self, timeout=self._timeout)
         self.goods_orders = GoodsOrdersAPI(self)
+        self.webhooks = WebhooksAPI(company_id, api_key)
 
     def __repr__(self) -> str:
         masked = self._api_key[:4] + "***" if len(self._api_key) > 4 else "***"
@@ -184,16 +186,13 @@ class UDSClient:
         timestamp: str,
         signature: str,
     ) -> bool:
-        """
-        Verify webhook X-Signature header.
+        """Verify the webhook X-Signature header.
 
-        Signature = md5(concat(X-RequestId, X-Timestamp, Client-Id, Api-Key))
+        Alias of webhooks.verify_signature.
         """
-        concatenated = (
-            f"{request_id}{timestamp}{self._company_id}{self._api_key}"
+        return self.webhooks.verify_signature(
+            request_id, timestamp, signature
         )
-        expected_signature = hashlib.md5(concatenated.encode()).hexdigest()
-        return hmac.compare_digest(expected_signature, signature)
 
     async def _request(
         self,

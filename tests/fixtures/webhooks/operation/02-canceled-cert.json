@@ -1,0 +1,34 @@
+{
+  "cash": 0.0,
+  "action": "GOODS_PURCHASE",
+  "cashier": null,
+  "certificatePoints": 3000.0,
+  "customer": {
+    "uid": "d3910086-9fe6-502b-a800-aa71991cb28c",
+    "id": 1003,
+    "membershipTier": {
+      "conditions": {
+        "effectiveInvitedCount": {
+          "target": 1
+        },
+        "totalCashSpent": {
+          "target": 25000
+        }
+      },
+      "maxScoresDiscount": 50,
+      "name": "Название",
+      "rate": 10,
+      "system": false,
+      "uid": "4afe599f-26c1-5dd1-9e8f-294049f44a31"
+    },
+    "displayName": "Имя Фамилия"
+  },
+  "origin": null,
+  "dateCreated": "2026-07-16T19:20:28.007Z",
+  "points": 0.0,
+  "id": 1004,
+  "total": 3000.0,
+  "receiptNumber": null,
+  "branch": null,
+  "state": "CANCELED"
+}

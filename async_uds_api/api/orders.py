@@ -1,10 +1,12 @@
 from typing import TYPE_CHECKING, Any
 
 from async_uds_api.models import (
+    DeliveryCase,
     GoodsOrderCode,
     GoodsOrderCompleteResult,
     GoodsOrderDetailed,
-    GoodsOrderItem,
+    GoodsOrderItemNew,
+    GoodsOrderItemUpdate,
     GoodsOrderUpdateStatus,
 )
 
@@ -13,6 +15,8 @@ if TYPE_CHECKING:
 
 
 class GoodsOrdersAPI:
+    """Goods orders API methods."""
+
     def __init__(self, client: "UDSClient") -> None:
         self._client = client
 
@@ -29,22 +33,21 @@ class GoodsOrdersAPI:
         self,
         order_id: int,
         *,
-        order_status: GoodsOrderUpdateStatus | None = None,
-        items: list[GoodsOrderItem] | None = None,
-        comment: str | None = None,
+        delivery_case: DeliveryCase | None = None,
+        items: list[GoodsOrderItemUpdate | GoodsOrderItemNew] | None = None,
         request_id: str | None = None,
     ) -> GoodsOrderDetailed:
-        """Update order status, line items, or comment."""
+        """Update order delivery case or line items."""
         body: dict[str, Any] = {}
-        if order_status is not None:
-            body["orderStatus"] = order_status.value
+        if delivery_case is not None:
+            body["deliveryCase"] = delivery_case.model_dump(
+                by_alias=True, exclude_none=True
+            )
         if items is not None:
             body["items"] = [
                 item.model_dump(by_alias=True, exclude_none=True)
                 for item in items
             ]
-        if comment is not None:
-            body["comment"] = comment
 
         data = await self._client._put_json(
             f"/goods-orders/{order_id}",
@@ -90,6 +93,32 @@ class GoodsOrdersAPI:
             request_id=request_id,
         )
         return GoodsOrderDetailed.model_validate(data)
+
+    async def confirm(
+        self, order_id: int, *, request_id: str | None = None
+    ) -> GoodsOrderDetailed:
+        """Confirm an order (NEED_ACK -> WAITING_PAYMENT)."""
+        return await self.change_status(
+            order_id,
+            GoodsOrderUpdateStatus.WAITING_PAYMENT,
+            request_id=request_id,
+        )
+
+    async def accept(
+        self, order_id: int, *, request_id: str | None = None
+    ) -> GoodsOrderDetailed:
+        """Accept a new order (NEW -> ACCEPTED)."""
+        return await self.change_status(
+            order_id, GoodsOrderUpdateStatus.ACCEPTED, request_id=request_id
+        )
+
+    async def ready(
+        self, order_id: int, *, request_id: str | None = None
+    ) -> GoodsOrderDetailed:
+        """Mark an order as ready for pickup or delivery (NEW -> READY)."""
+        return await self.change_status(
+            order_id, GoodsOrderUpdateStatus.READY, request_id=request_id
+        )
 
     async def cancel(
         self, order_id: int, *, request_id: str | None = None

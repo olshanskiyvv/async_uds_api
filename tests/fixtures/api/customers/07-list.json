@@ -1,0 +1,375 @@
+{
+  "rows": [
+    {
+      "uid": "3866e0d6-7017-5f1a-8c86-0d169abcc183",
+      "avatar": null,
+      "displayName": "Имя Фамилия",
+      "gender": "FEMALE",
+      "phone": "+70000000000",
+      "birthDate": "1984-02-17",
+      "participant": {
+        "id": 1023,
+        "inviterId": 1010,
+        "points": 500.0,
+        "discountRate": 0.0,
+        "cashbackRate": 5.0,
+        "cashSpent": 0.0,
+        "savedFunds": 0.0,
+        "invitedCount": 0,
+        "effectiveInvitedCount": 0,
+        "operationsCount": 0,
+        "fullRefundsCount": 0,
+        "note": null,
+        "membershipTier": {
+          "uid": "44509683-5ba0-5852-904c-edc7a84c2d57",
+          "name": "Название",
+          "rate": 5.0,
+          "maxScoresDiscount": 20.0,
+          "conditions": {
+            "totalCashSpent": null,
+            "effectiveInvitedCount": null
+          }
+        },
+        "dateCreated": "2026-10-19T19:46:05.976000Z",
+        "lastTransactionTime": null,
+        "pointsExpireIn": null
+      },
+      "channelName": null,
+      "email": null
+    },
+    {
+      "uid": "622d880d-9b36-5547-b674-0bace63149b4",
+      "avatar": null,
+      "displayName": "Имя Фамилия",
+      "gender": "FEMALE",
+      "phone": "+70000000000",
+      "birthDate": "1968-11-05",
+      "participant": {
+        "id": 1024,
+        "inviterId": 1025,
+        "points": 500.0,
+        "discountRate": 0.0,
+        "cashbackRate": 5.0,
+        "cashSpent": 0.0,
+        "savedFunds": 0.0,
+        "invitedCount": 0,
+        "effectiveInvitedCount": 0,
+        "operationsCount": 0,
+        "fullRefundsCount": 0,
+        "note": null,
+        "membershipTier": {
+          "uid": "44509683-5ba0-5852-904c-edc7a84c2d57",
+          "name": "Название",
+          "rate": 5.0,
+          "maxScoresDiscount": 20.0,
+          "conditions": {
+            "totalCashSpent": null,
+            "effectiveInvitedCount": null
+          }
+        },
+        "dateCreated": "2026-10-19T14:23:37.717000Z",
+        "lastTransactionTime": null,
+        "pointsExpireIn": null
+      },
+      "channelName": null,
+      "email": "user@example.com"
+    },
+    {
+      "uid": "17729db2-7909-51b1-8c70-d5d8ffadc81f",
+      "avatar": null,
+      "displayName": "Имя Фамилия",
+      "gender": "FEMALE",
+      "phone": "+70000000000",
+      "birthDate": "1971-05-09",
+      "participant": {
+        "id": 1026,
+        "inviterId": 1008,
+        "points": 500.0,
+        "discountRate": 0.0,
+        "cashbackRate": 5.0,
+        "cashSpent": 0.0,
+        "savedFunds": 0.0,
+        "invitedCount": 0,
+        "effectiveInvitedCount": 0,
+        "operationsCount": 0,
+        "fullRefundsCount": 0,
+        "note": null,
+        "membershipTier": {
+          "uid": "44509683-5ba0-5852-904c-edc7a84c2d57",
+          "name": "Название",
+          "rate": 5.0,
+          "maxScoresDiscount": 20.0,
+          "conditions": {
+            "totalCashSpent": null,
+            "effectiveInvitedCount": null
+          }
+        },
+        "dateCreated": "2026-10-14T02:49:24.274000Z",
+        "lastTransactionTime": null,
+        "pointsExpireIn": null
+      },
+      "channelName": null,
+      "email": null
+    },
+    {
+      "uid": "e0fc6319-cabd-57f0-9515-1f21a2d3bd3a",
+      "avatar": null,
+      "displayName": "Имя Фамилия",
+      "gender": "FEMALE",
+      "phone": "+70000000000",
+      "birthDate": "2000-10-09",
+      "participant": {
+        "id": 1027,
+        "inviterId": null,
+        "points": 500.0,
+        "discountRate": 0.0,
+        "cashbackRate": 5.0,
+        "cashSpent": 0.0,
+        "savedFunds": 0.0,
+        "invitedCount": 0,
+        "effectiveInvitedCount": 0,
+        "operationsCount": 0,
+        "fullRefundsCount": 0,
+        "note": null,
+        "membershipTier": {
+          "uid": "44509683-5ba0-5852-904c-edc7a84c2d57",
+          "name": "Название",
+          "rate": 5.0,
+          "maxScoresDiscount": 20.0,
+          "conditions": {
+            "totalCashSpent": null,
+            "effectiveInvitedCount": null
+          }
+        },
+        "dateCreated": "2026-10-11T00:55:29.799000Z",
+        "lastTransactionTime": null,
+        "pointsExpireIn": null
+      },
+      "channelName": "UDS App",
+      "email": "user@example.com"
+    },
+    {
+      "uid": "bee7c097-e8f8-5da0-8727-23679bd1c634",
+      "avatar": "https://thumbor.uds.app/DFKNrtNx1gMeCdsvZxQwxpQCSJI=/128x128/game-prod/AVATAR/71207442-c5c8-404f-acf6-9247afea17f3",
+      "displayName": "Имя Фамилия",
+      "gender": "FEMALE",
+      "phone": "+70000000000",
+      "birthDate": "1984-12-19",
+      "participant": {
+        "id": 1028,
+        "inviterId": 1008,
+        "points": 500.0,
+        "discountRate": 0.0,
+        "cashbackRate": 5.0,
+        "cashSpent": 0.0,
+        "savedFunds": 0.0,
+        "invitedCount": 0,
+        "effectiveInvitedCount": 0,
+        "operationsCount": 0,
+        "fullRefundsCount": 0,
+        "note": null,
+        "membershipTier": {
+          "uid": "44509683-5ba0-5852-904c-edc7a84c2d57",
+          "name": "Название",
+          "rate": 5.0,
+          "maxScoresDiscount": 20.0,
+          "conditions": {
+            "totalCashSpent": null,
+            "effectiveInvitedCount": null
+          }
+        },
+        "dateCreated": "2026-10-03T08:28:17.127000Z",
+        "lastTransactionTime": null,
+        "pointsExpireIn": null
+      },
+      "channelName": null,
+      "email": "user@example.com"
+    },
+    {
+      "uid": "14eaa5ee-deda-5ee2-ad62-e5115dbcb354",
+      "avatar": null,
+      "displayName": "Имя Фамилия",
+      "gender": "FEMALE",
+      "phone": "+70000000000",
+      "birthDate": "1976-12-06",
+      "participant": {
+        "id": 1029,
+        "inviterId": 1030,
+        "points": 500.0,
+        "discountRate": 0.0,
+        "cashbackRate": 5.0,
+        "cashSpent": 0.0,
+        "savedFunds": 0.0,
+        "invitedCount": 0,
+        "effectiveInvitedCount": 0,
+        "operationsCount": 0,
+        "fullRefundsCount": 0,
+        "note": null,
+        "membershipTier": {
+          "uid": "44509683-5ba0-5852-904c-edc7a84c2d57",
+          "name": "Название",
+          "rate": 5.0,
+          "maxScoresDiscount": 20.0,
+          "conditions": {
+            "totalCashSpent": null,
+            "effectiveInvitedCount": null
+          }
+        },
+        "dateCreated": "2026-09-29T07:07:12.261000Z",
+        "lastTransactionTime": null,
+        "pointsExpireIn": null
+      },
+      "channelName": null,
+      "email": null
+    },
+    {
+      "uid": "bad4c4d4-3cb0-5531-b5ea-abaa108c5feb",
+      "avatar": "https://thumbor.uds.app/bzrx2PAdcXLwCkFwpQN3iH-lF3o=/128x128/game-prod/AVATAR/66f2f0c2-f126-48b2-b855-ffa728b06549",
+      "displayName": "Имя Фамилия",
+      "gender": "NOT_SPECIFIED",
+      "phone": "+70000000000",
+      "birthDate": "1988-05-16",
+      "participant": {
+        "id": 1031,
+        "inviterId": 1032,
+        "points": 500.0,
+        "discountRate": 0.0,
+        "cashbackRate": 5.0,
+        "cashSpent": 0.0,
+        "savedFunds": 0.0,
+        "invitedCount": 0,
+        "effectiveInvitedCount": 0,
+        "operationsCount": 0,
+        "fullRefundsCount": 0,
+        "note": null,
+        "membershipTier": {
+          "uid": "44509683-5ba0-5852-904c-edc7a84c2d57",
+          "name": "Название",
+          "rate": 5.0,
+          "maxScoresDiscount": 20.0,
+          "conditions": {
+            "totalCashSpent": null,
+            "effectiveInvitedCount": null
+          }
+        },
+        "dateCreated": "2026-09-29T06:15:40.206000Z",
+        "lastTransactionTime": null,
+        "pointsExpireIn": null
+      },
+      "channelName": null,
+      "email": null
+    },
+    {
+      "uid": "a32a74d3-0a36-5a34-8f9b-ecb2ee1a5a75",
+      "avatar": null,
+      "displayName": "Имя Фамилия",
+      "gender": "FEMALE",
+      "phone": "+70000000000",
+      "birthDate": "1982-10-30",
+      "participant": {
+        "id": 1033,
+        "inviterId": 1008,
+        "points": 500.0,
+        "discountRate": 0.0,
+        "cashbackRate": 5.0,
+        "cashSpent": 0.0,
+        "savedFunds": 0.0,
+        "invitedCount": 0,
+        "effectiveInvitedCount": 0,
+        "operationsCount": 0,
+        "fullRefundsCount": 0,
+        "note": null,
+        "membershipTier": {
+          "uid": "44509683-5ba0-5852-904c-edc7a84c2d57",
+          "name": "Название",
+          "rate": 5.0,
+          "maxScoresDiscount": 20.0,
+          "conditions": {
+            "totalCashSpent": null,
+            "effectiveInvitedCount": null
+          }
+        },
+        "dateCreated": "2026-09-29T05:41:27.657000Z",
+        "lastTransactionTime": null,
+        "pointsExpireIn": null
+      },
+      "channelName": null,
+      "email": null
+    },
+    {
+      "uid": "692407e6-0bc5-5522-831a-d4943c2bc2c8",
+      "avatar": "https://thumbor.uds.app/CCd33YJ7dEiBXildfw0Y_WeOjw0=/128x128/game-prod/AVATAR/62f8ed68-f43d-4e4f-acb1-ee7cd5638a5d",
+      "displayName": "Имя Фамилия",
+      "gender": "FEMALE",
+      "phone": "+70000000000",
+      "birthDate": "1997-04-12",
+      "participant": {
+        "id": 1030,
+        "inviterId": null,
+        "points": 500.0,
+        "discountRate": 0.0,
+        "cashbackRate": 5.0,
+        "cashSpent": 0.0,
+        "savedFunds": 0.0,
+        "invitedCount": 1,
+        "effectiveInvitedCount": 0,
+        "operationsCount": 0,
+        "fullRefundsCount": 0,
+        "note": null,
+        "membershipTier": {
+          "uid": "44509683-5ba0-5852-904c-edc7a84c2d57",
+          "name": "Название",
+          "rate": 5.0,
+          "maxScoresDiscount": 20.0,
+          "conditions": {
+            "totalCashSpent": null,
+            "effectiveInvitedCount": null
+          }
+        },
+        "dateCreated": "2026-09-29T05:35:51.070000Z",
+        "lastTransactionTime": null,
+        "pointsExpireIn": null
+      },
+      "channelName": "UDS App",
+      "email": "user@example.com"
+    },
+    {
+      "uid": "a803efd5-6216-5f34-a97b-c334b4aa8c23",
+      "avatar": null,
+      "displayName": "Имя Фамилия",
+      "gender": "FEMALE",
+      "phone": "+70000000000",
+      "birthDate": "1981-11-20",
+      "participant": {
+        "id": 1034,
+        "inviterId": null,
+        "points": 500.0,
+        "discountRate": 0.0,
+        "cashbackRate": 5.0,
+        "cashSpent": 0.0,
+        "savedFunds": 0.0,
+        "invitedCount": 0,
+        "effectiveInvitedCount": 0,
+        "operationsCount": 0,
+        "fullRefundsCount": 0,
+        "note": null,
+        "membershipTier": {
+          "uid": "44509683-5ba0-5852-904c-edc7a84c2d57",
+          "name": "Название",
+          "rate": 5.0,
+          "maxScoresDiscount": 20.0,
+          "conditions": {
+            "totalCashSpent": null,
+            "effectiveInvitedCount": null
+          }
+        },
+        "dateCreated": "2026-09-28T18:28:30.032000Z",
+        "lastTransactionTime": null,
+        "pointsExpireIn": null
+      },
+      "channelName": "UDS App",
+      "email": null
+    }
+  ],
+  "cursor": "MTA5OTY0MTY1NjIxMg"
+}

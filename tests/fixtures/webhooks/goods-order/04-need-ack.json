@@ -1,0 +1,90 @@
+{
+  "id": 1024,
+  "dateCreated": "2026-10-30T19:53:50.804Z",
+  "total": 3000,
+  "cash": 3000,
+  "points": 0,
+  "certificatePoints": 0,
+  "state": "NEED_ACK",
+  "orderStatus": null,
+  "comment": null,
+  "customer": {
+    "id": 1003,
+    "displayName": "Имя Фамилия",
+    "uid": "d3910086-9fe6-502b-a800-aa71991cb28c",
+    "membershipTier": {
+      "uid": "4afe599f-26c1-5dd1-9e8f-294049f44a31",
+      "name": "Название",
+      "rate": 10,
+      "maxScoresDiscount": 25,
+      "conditions": {
+        "totalCashSpent": {
+          "target": 25000
+        },
+        "effectiveInvitedCount": {
+          "target": 1
+        }
+      },
+      "system": false
+    }
+  },
+  "onlinePayment": null,
+  "paymentMethod": {
+    "type": "CUSTOM",
+    "name": null,
+    "providerType": "YOOKASSA",
+    "online": true
+  },
+  "delivery": {
+    "type": "PICKUP",
+    "deliveryCase": null,
+    "receiverName": "Имя Фамилия",
+    "receiverPhone": "+70000000000",
+    "address": null,
+    "branch": {
+      "id": 1010,
+      "displayName": "Имя Фамилия"
+    },
+    "userComment": null
+  },
+  "items": [
+    {
+      "id": 1025,
+      "externalId": null,
+      "name": "Название",
+      "variantName": "Модуль 1 (только доступ к записи)",
+      "type": "VARYING_ITEM",
+      "sku": null,
+      "price": 3000,
+      "offerPrice": null,
+      "skipLoyalty": false,
+      "qty": 1,
+      "measurement": "PIECE",
+      "dataMatrixCodes": null,
+      "deliveryState": null,
+      "weightGrams": null,
+      "widthCm": null,
+      "heightCm": null,
+      "lengthCm": null
+    }
+  ],
+  "purchase": {
+    "total": 3000,
+    "skipLoyaltyTotal": 0,
+    "unredeemableTotal": 0,
+    "points": 0,
+    "maxPoints": 0,
+    "pointsPercent": 0,
+    "discountAmount": 0,
+    "discountPercent": 0,
+    "netDiscount": 0,
+    "netDiscountPercent": 0,
+    "cash": 3000,
+    "cashTotal": 3000,
+    "cashBack": 300,
+    "certificatePoints": 0,
+    "maxScoresDiscount": 25,
+    "extras": {}
+  },
+  "externalOrder": null
+}

@@ -1,0 +1,19 @@
+{
+  "id": 1002,
+  "dateCreated": "2026-10-27T18:07:37.227000Z",
+  "action": "GOODS_PURCHASE",
+  "state": "NORMAL",
+  "customer": {
+    "id": 1003,
+    "displayName": "Имя Фамилия",
+    "uid": "02201b15-3bb7-5627-8b21-41479ea726cf"
+  },
+  "cashier": null,
+  "branch": null,
+  "points": -1750.0,
+  "certificatePoints": 0.0,
+  "receiptNumber": null,
+  "origin": null,
+  "total": 5000.0,
+  "cash": 3250.0
+}

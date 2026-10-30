@@ -14,6 +14,8 @@ from async_uds_api.models.enums import (
 
 
 class GoodsOffer(APIModel):
+    """Goods offer."""
+
     offer_price: float | None = Field(
         default=None,
         description="Discount price.",
@@ -28,6 +30,8 @@ class GoodsOffer(APIModel):
 
 
 class GoodsInventory(APIModel):
+    """Goods inventory (stock)."""
+
     in_stock: int | None = Field(
         default=None,
         description=(
@@ -38,6 +42,8 @@ class GoodsInventory(APIModel):
 
 
 class GoodsVariantType(APIModel):
+    """Goods variant."""
+
     name: str = Field(description="Variant name.")
     sku: str | None = Field(
         default=None,
@@ -49,10 +55,14 @@ class GoodsVariantType(APIModel):
 
 
 class GoodsCategoryType(APIModel):
+    """Goods category."""
+
     type: Literal["CATEGORY"] = "CATEGORY"
 
 
 class GoodsItemType(APIModel):
+    """Goods data (a single ITEM)."""
+
     type: Literal["ITEM"] = "ITEM"
     sku: str | None = Field(default=None, description="Item stock number.")
     price: float = Field(description="Item price.")
@@ -91,6 +101,8 @@ class GoodsItemType(APIModel):
 
 
 class GoodsVaryingItemType(APIModel):
+    """Goods data (a VARYING_ITEM with options)."""
+
     type: Literal["VARYING_ITEM"] = "VARYING_ITEM"
     variants: list[GoodsVariantType] | None = Field(
         default=None,
@@ -120,6 +132,8 @@ GoodsData = Annotated[
 
 
 class GoodsInfoType(APIModel):
+    """Goods data (ITEM or VARYING_ITEM)."""
+
     id: int | None = Field(default=None, description="Goods ID in the UDS.")
     name: str = Field(description="Goods name.")
     data: GoodsData
@@ -155,6 +169,8 @@ class GoodsDetailed(GoodsInfoType):
 
 
 class GoodsPage(APIModel):
+    """A page of goods."""
+
     rows: list[GoodsInfoType] = Field(
         default_factory=list,
         description="Goods information.",

@@ -19,6 +19,8 @@ if TYPE_CHECKING:
 
 
 class OperationsAPI:
+    """Operations API methods."""
+
     def __init__(self, client: "UDSClient") -> None:
         self._client = client
 

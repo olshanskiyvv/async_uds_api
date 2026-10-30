@@ -11,6 +11,8 @@ from async_uds_api.models.settings import MembershipTier
 
 
 class OperationCustomer(ParticipantShortInfo):
+    """Customer from an operation."""
+
     uid: str | None = None
     membership_tier: MembershipTier | None = Field(
         default=None,
@@ -19,15 +21,21 @@ class OperationCustomer(ParticipantShortInfo):
 
 
 class CashierInfo(APIModel):
+    """Cashier information."""
+
     id: int
     display_name: str
 
 
 class OperationOrigin(APIModel):
+    """Operation origin."""
+
     id: int | None = None
 
 
 class Operation(APIModel):
+    """Operation (purchase, refund, reward, etc.)."""
+
     id: int | None = Field(
         default=None, description="Transaction ID in the UDS."
     )
@@ -49,22 +57,30 @@ class Operation(APIModel):
 
 
 class OperationsPage(APIModel):
+    """A page of operations."""
+
     rows: list[Operation]
     total: int | None = None
     cursor: str | None = None
 
 
 class CreateOperationParticipant(APIModel):
+    """Participant for creating an operation."""
+
     uid: str | None = None
     phone: str | None = None
 
 
 class CashierInput(APIModel):
+    """Cashier for creating an operation."""
+
     external_id: str
     name: str | None = None
 
 
 class CreateOperationReceipt(APIModel):
+    """Receipt for creating an operation."""
+
     total: float
     cash: float
     points: float
@@ -74,6 +90,8 @@ class CreateOperationReceipt(APIModel):
 
 
 class CreateOperation(APIModel):
+    """Request to create an operation."""
+
     code: str | None = None
     participant: CreateOperationParticipant | None = None
     nonce: str | None = None
@@ -83,6 +101,8 @@ class CreateOperation(APIModel):
 
 
 class RefundOperationRequest(APIModel):
+    """Request to refund an operation."""
+
     partial_amount: float | None = Field(
         default=None,
         description="Refund amount.",
@@ -90,6 +110,8 @@ class RefundOperationRequest(APIModel):
 
 
 class RewardRequest(APIModel):
+    """Request to accrue or deduct points."""
+
     comment: str | None = None
     points: float
     participants: list[int]
@@ -97,12 +119,16 @@ class RewardRequest(APIModel):
 
 
 class RewardResponse(APIModel):
+    """Reward result (number of accepted participants)."""
+
     accepted: int = Field(
         description="Number of users who will be rewarded with points.",
     )
 
 
 class CreateVoucherReceipt(APIModel):
+    """Receipt for creating a voucher."""
+
     total: float = Field(
         description="Total receipt amount (in currency units)."
     )
@@ -117,6 +143,8 @@ class CreateVoucherReceipt(APIModel):
 
 
 class CreateVoucher(APIModel):
+    """Request to create a voucher."""
+
     nonce: str | None = Field(
         default=None,
         description="Nonce for voucher (UUID).",
@@ -126,6 +154,8 @@ class CreateVoucher(APIModel):
 
 
 class VoucherInfo(APIModel):
+    """Voucher information."""
+
     code: str = Field(description="UDS voucher code.")
     qr_code_text: str = Field(
         description="UDS voucher info for qrcode.",
@@ -143,6 +173,8 @@ class VoucherInfo(APIModel):
 
 
 class PurchaseCalcExtras(APIModel):
+    """Additional purchase calculation data."""
+
     delivery: float | None = Field(
         default=None,
         description="Delivery cost (in currency units).",
@@ -150,6 +182,8 @@ class PurchaseCalcExtras(APIModel):
 
 
 class PurchaseCalc(APIModel):
+    """Purchase calculation result."""
+
     max_points: float | None = Field(
         default=None,
         description="Maximum number of points available.",
@@ -227,11 +261,15 @@ class PurchaseCalc(APIModel):
 
 
 class PurchaseCalcRequestParticipant(APIModel):
+    """Participant for purchase calculation."""
+
     uid: str | None = None
     phone: str | None = None
 
 
 class PurchaseCalcRequestReceipt(APIModel):
+    """Receipt for purchase calculation."""
+
     total: float
     skip_loyalty_total: float | None = None
     unredeemable_total: float | None = None
@@ -239,6 +277,8 @@ class PurchaseCalcRequestReceipt(APIModel):
 
 
 class PurchaseCalcRequest(APIModel):
+    """Request to calculate a purchase."""
+
     code: str | None = None
     participant: PurchaseCalcRequestParticipant | None = None
     receipt: PurchaseCalcRequestReceipt

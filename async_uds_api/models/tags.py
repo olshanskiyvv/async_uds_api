@@ -6,11 +6,15 @@ from async_uds_api.models.base import APIModel
 
 
 class TagModel(APIModel):
+    """Company tag."""
+
     id: int = Field(description="Tag identifier.")
     name: str = Field(description="Tag name.")
 
 
 class TagsPage(APIModel):
+    """A page of tags."""
+
     rows: list[TagModel] = Field(
         default_factory=list, description="List of tags."
     )

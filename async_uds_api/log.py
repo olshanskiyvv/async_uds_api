@@ -12,6 +12,7 @@ _VISIBLE_TAIL = 4
 
 
 def mask_value(value: object) -> str:
+    """Mask a sensitive value, keeping only a short visible tail."""
     text = str(value)
     if len(text) <= _VISIBLE_TAIL:
         return _MASK
@@ -21,6 +22,7 @@ def mask_value(value: object) -> str:
 def mask_params(
     params: Mapping[str, Any] | None,
 ) -> dict[str, Any] | None:
+    """Mask sensitive parameter values (phone, uid, code) in a mapping."""
     if params is None:
         return None
     return {
@@ -78,6 +80,8 @@ _TEMPLATES: dict[str, str] = {
 
 
 class LoggerProtocol(Protocol):
+    """Structured logging protocol."""
+
     def debug(self, event: str, **fields: Any) -> None: ...
 
     def info(self, event: str, **fields: Any) -> None: ...

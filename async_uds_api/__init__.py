@@ -68,6 +68,7 @@ _logger.addHandler(logging.NullHandler())
 
 
 def get_logger() -> logging.Logger:
+    """Return the library logger."""
     return _logger
 
 

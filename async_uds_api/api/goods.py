@@ -8,6 +8,8 @@ if TYPE_CHECKING:
 
 
 class GoodsExternalAPI:
+    """Goods API methods working with external IDs."""
+
     def __init__(self, client: "UDSClient") -> None:
         self._client = client
 
@@ -46,6 +48,8 @@ class GoodsExternalAPI:
 
 
 class GoodsAPI:
+    """Goods API methods."""
+
     def __init__(self, client: "UDSClient") -> None:
         self._client = client
         self.external = GoodsExternalAPI(client)

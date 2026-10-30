@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Annotated, Any, Literal
+from typing import Annotated, Literal
 
 from pydantic import Field
 
@@ -21,6 +21,8 @@ from async_uds_api.models.settings import MembershipTier
 
 
 class CustomerShortInfo(ParticipantShortInfo):
+    """Short customer information inside an order."""
+
     uid: str | None = Field(
         default=None,
         description="Customer UID in the UDS.",
@@ -29,6 +31,8 @@ class CustomerShortInfo(ParticipantShortInfo):
 
 
 class ReceiverInfo(APIModel):
+    """Order receiver information."""
+
     receiver_name: str | None = Field(
         default=None,
         description="Name of the customer who will pick up the order.",
@@ -44,6 +48,8 @@ class ReceiverInfo(APIModel):
 
 
 class DeliveryCase(APIModel):
+    """Delivery case for updating an order."""
+
     name: str | None = Field(
         default=None,
         description="Delivery name.",
@@ -55,11 +61,15 @@ class DeliveryCase(APIModel):
 
 
 class Pickup(ReceiverInfo):
+    """Self-pickup delivery."""
+
     branch: BranchInfo | None = None
     type: Literal[DeliveryTypes.PICKUP] = DeliveryTypes.PICKUP
 
 
 class Delivery(ReceiverInfo):
+    """Courier or other delivery."""
+
     delivery_case: DeliveryCase | None = None
     address: str | None = Field(
         default=None,
@@ -72,6 +82,8 @@ DeliveryType = Annotated[Pickup | Delivery, Field(discriminator="type")]
 
 
 class OnlinePayment(APIModel):
+    """Online payment information."""
+
     payment_provider: PaymentProvider | None = Field(
         default=None,
         description="Payment provider type.",
@@ -87,6 +99,8 @@ class OnlinePayment(APIModel):
 
 
 class PaymentMethod(APIModel):
+    """Payment method."""
+
     type: PaymentType | None = Field(
         default=None,
         description="Payment type.",
@@ -106,6 +120,8 @@ class PaymentMethod(APIModel):
 
 
 class GoodsOrderItem(APIModel):
+    """Goods order item."""
+
     id: int | None = Field(
         default=None,
         description="Item ID in the UDS.",
@@ -143,11 +159,11 @@ class GoodsOrderItem(APIModel):
     )
     data_matrix_codes: list[str] | None = Field(
         default=None,
-        description="Data matrix codes (undocumented, for marketplaces).",
+        description="Data matrix codes (Честный знак) for the item.",
     )
-    delivery_state: str | None = Field(
+    delivery_state: DeliveryState | None = Field(
         default=None,
-        description="Delivery state (undocumented).",
+        description="Delivery state of the order item.",
     )
     weight_grams: int | None = Field(
         default=None,
@@ -176,6 +192,8 @@ class GoodsOrderItem(APIModel):
 
 
 class GoodsOrderItemUpdate(APIModel):
+    """Update of an existing order item."""
+
     id: int | None = Field(default=None, description="Item ID in the UDS.")
     variant_name: str | None = Field(
         default=None,
@@ -188,6 +206,8 @@ class GoodsOrderItemUpdate(APIModel):
 
 
 class GoodsOrderItemNew(APIModel):
+    """A new order item."""
+
     external_id: str | None = Field(
         default=None,
         description="External item identifier.",
@@ -209,6 +229,8 @@ class GoodsOrderItemNew(APIModel):
 
 
 class GoodsOrderUpdate(APIModel):
+    """Goods order update request."""
+
     delivery_case: DeliveryCase | None = None
     items: list[GoodsOrderItemUpdate | GoodsOrderItemNew] | None = Field(
         default=None,
@@ -216,7 +238,29 @@ class GoodsOrderUpdate(APIModel):
     )
 
 
+class DeliveryState(APIModel):
+    """Delivery state of an order item."""
+
+    delivered_qty: float | None = Field(
+        default=None,
+        description="Quantity of delivered items.",
+    )
+    canceled_qty: float | None = Field(
+        default=None,
+        description="Quantity of canceled items.",
+    )
+
+
+class ExternalOrder(APIModel):
+    """External order information."""
+
+    id: str | None = Field(default=None, description="External order id.")
+    link: str = Field(description="External order link.")
+
+
 class GoodsOrderDetailed(APIModel):
+    """Goods order."""
+
     id: int | None = Field(
         default=None,
         description="Order ID in the UDS.",
@@ -262,17 +306,21 @@ class GoodsOrderDetailed(APIModel):
         description="Items information.",
     )
     purchase: PurchaseCalc
-    external_order: Any | None = Field(
+    external_order: ExternalOrder | None = Field(
         default=None,
-        description="External order (undocumented, observed as null).",
+        description="External order information.",
     )
 
 
 class GoodsOrderCode(APIModel):
+    """Payment code to complete the order."""
+
     code: str = Field(description="Payment code to complete the order.")
 
 
 class TransactionInfo(APIModel):
+    """Transaction information."""
+
     id: int | None = Field(
         default=None,
         description="Transaction ID.",
@@ -280,6 +328,8 @@ class TransactionInfo(APIModel):
 
 
 class GoodsOrderCompleteResult(APIModel):
+    """Result of completing a goods order."""
+
     transaction: TransactionInfo | None = Field(
         default=None,
         description="Transaction information.",

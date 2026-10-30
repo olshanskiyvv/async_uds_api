@@ -7,18 +7,24 @@ from async_uds_api.models.enums import BaseDiscountPolicy
 
 
 class MembershipTierConditionsTotalCashSpent(APIModel):
+    """Tier condition: total cash spent."""
+
     target: float | None = Field(
         default=None, description="Amount of cash spent."
     )
 
 
 class MembershipTierConditionsEffectiveInvitedCount(APIModel):
+    """Tier condition: number of invited friends."""
+
     target: int | None = Field(
         default=None, description="Amount of invited count."
     )
 
 
 class MembershipTierConditions(APIModel):
+    """Conditions for automatic membership tier upgrade."""
+
     total_cash_spent: MembershipTierConditionsTotalCashSpent | None = Field(
         default=None,
         description=(
@@ -37,6 +43,8 @@ class MembershipTierConditions(APIModel):
 
 
 class MembershipTier(APIModel):
+    """Loyalty program membership tier."""
+
     uid: str | None = Field(
         default=None,
         description="Status UID.",
@@ -60,6 +68,8 @@ class MembershipTier(APIModel):
 
 
 class LoyaltyProgramSettings(APIModel):
+    """Loyalty program settings."""
+
     base_membership_tier: MembershipTier
     membership_tiers: list[MembershipTier] = Field(
         description="Status settings.",
@@ -97,6 +107,8 @@ class LoyaltyProgramSettings(APIModel):
 
 
 class CompanySettings(APIModel):
+    """Company settings."""
+
     id: int = Field(description="Company ID.")
     name: str = Field(description="Company name.")
     promo_code: str = Field(

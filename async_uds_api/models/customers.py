@@ -13,6 +13,8 @@ from async_uds_api.models.tags import TagModel
 
 
 class Participant(APIModel):
+    """Loyalty program participant."""
+
     id: int | None = None
     inviter_id: int | None = None
     points: float | None = None
@@ -32,6 +34,8 @@ class Participant(APIModel):
 
 
 class Customer(APIModel):
+    """Customer (loyalty program participant)."""
+
     uid: str | None = None
     avatar: str | None = None
     display_name: str | None = None
@@ -44,11 +48,15 @@ class Customer(APIModel):
 
 
 class CustomersPage(APIModel):
+    """A page of customers."""
+
     rows: list[Customer]
     cursor: str | None = None
 
 
 class CustomerDetail(Customer):
+    """Detailed customer information."""
+
     tags: Sequence[TagModel] = Field(
         default_factory=list,
         description="Customer tags list.",
@@ -56,11 +64,15 @@ class CustomerDetail(Customer):
 
 
 class PurchaseCalcResponse(APIModel):
+    """Purchase calculation result returned with a customer."""
+
     user: CustomerDetail
     purchase: PurchaseCalc | None = None
 
 
 class FindCustomerResponse(PurchaseCalcResponse):
+    """Customer lookup result."""
+
     code: str | None = Field(
         default=None,
         description=(

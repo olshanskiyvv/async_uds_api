@@ -8,6 +8,8 @@ if TYPE_CHECKING:
 
 
 class SettingsAPI:
+    """Settings API methods."""
+
     def __init__(self, client: "UDSClient", ttl: float = 60.0) -> None:
         self._client = client
         self._ttl = ttl

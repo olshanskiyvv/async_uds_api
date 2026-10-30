@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 
 
 class GoodsOrdersAPI:
+    """Goods orders API methods."""
+
     def __init__(self, client: "UDSClient") -> None:
         self._client = client
 
